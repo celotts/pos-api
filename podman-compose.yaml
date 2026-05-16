@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pos_db
+    environment:
+      POSTGRES_DB: pos_db
+      POSTGRES_USER: pos_user
+      POSTGRES_PASSWORD: pos_password
+    volumes:
+      # Persistencia de los datos de la base de datos
+      - db_data:/var/lib/postgresql/data
+      # Monta el directorio de scripts SQL para que se ejecuten en el primer inicio del contenedor
+      # PostgreSQL ejecuta automáticamente los scripts .sql en este directorio
+      - ./src/main/resources/db/migration/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432" # Opcional: para acceder a la BD desde el host
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pos_user -d pos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: . # Construye la imagen usando el Containerfile en el directorio actual
+    container_name: pos_api_app
+    ports:
+      - "8080:8080" # Mapea el puerto de la aplicación al host
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pos_db
+      SPRING_DATASOURCE_USERNAME: pos_user
+      SPRING_DATASOURCE_PASSWORD: pos_password
+      # Importante: Deshabilita la creación automática de DDL por Hibernate
+      # Ya que el esquema lo gestiona el script inicial de PostgreSQL
+      SPRING_JPA_HIBERNATE_DDL_AUTO: none
+      # Si usas Flyway/Liquibase para futuras migraciones, asegúrate de configurarlo aquí
+      # SPRING_FLYWAY_ENABLED: true
+    depends_on:
+      db:
+        condition: service_healthy # Espera a que la BD esté saludable antes de iniciar la app
+    # Para ver los logs de la aplicación en tiempo real
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+volumes:
+  db_data: # Define el volumen para la persistencia de la base de datos
