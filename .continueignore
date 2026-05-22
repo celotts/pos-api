@@ -1,0 +1,10 @@
+.gradle/
+build/
+target/
+.idea/
+bin/
+out/
+*.class
+*.jar
+*.war
+.podman/

@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: pos_db
       POSTGRES_USER: pos_user
       POSTGRES_PASSWORD: pos_password
+      POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
       # Persistencia de los datos de la base de datos
       - db_data:/var/lib/postgresql/data
@@ -18,8 +19,8 @@ services:
       - "5432:5432" # Opcional: para acceder a la BD desde el host
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U pos_user -d pos_db"]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
 
   app:

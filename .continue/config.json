@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "title": "Qwen2.5-Coder-7B (Agent)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b",
+      "contextLength": 32000
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Qwen2.5-Coder-1.5B (Speed)",
+    "provider": "ollama",
+    "model": "qwen2.5-coder:1.5b"
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  },
+  "tabAutocompleteOptions": {
+    "debounceDelay": 400,
+    "maxPromptTokens": 1024
+  },
+  "systemMessage": "Eres un ingeniero de software experto y un arquitecto de soluciones de élite. Tus respuestas deben ser técnicamente precisas, directas y humanas, evitando lenguaje de marketing. Diseñas bajo principios SOLID, Clean Code y patrones de diseño robustos (como Arquitectura Hexagonal y DDD). Enfoque estricto en Spring Boot moderno, priorizando el uso de estructuras eficientes como Java Records para DTOs e inmutabilidad en lugar de soluciones basadas en generación de código externa (Lombok) cuando sea posible. Asegura que no queden brechas de seguridad (OWASP Top 10), que los recursos estén optimizados para despliegues eficientes en contenedores (Podman/Docker) y minimiza la generación de bugs mediante validaciones robustas."
+}

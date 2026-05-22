@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.NonNull; // Importar NonNull
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,18 +17,25 @@ import java.util.UUID;
 @AllArgsConstructor
 public class User {
 
+    @NonNull
     private UUID id;
+    @NonNull
     private String email;
-    private String passwordHash;
+    @NonNull
+    private String passwordHash; // Asumimos que la contraseña siempre estará presente
+    @NonNull
     private String fullName;
-    private Boolean isActive;
-    private String role; // Representará el ENUM user_role como String en el dominio
+    private Boolean isActive; // Puede ser null si no se inicializa, pero en UserService lo forzamos a true
+    @NonNull
+    private String role; // Asumimos que el rol siempre estará presente
+    @NonNull
     private Instant createdAt;
+    @NonNull
     private Instant updatedAt;
-    private Instant deletedAt;
-    private UUID createdByUserId;
-    private UUID updatedByUserId;
-    private UUID deletedByUserId;
+    private Instant deletedAt; // Puede ser null
+    private UUID createdByUserId; // Puede ser null
+    private UUID updatedByUserId; // Puede ser null
+    private UUID deletedByUserId; // Puede ser null
 
     // Métodos de dominio específicos para User podrían ir aquí
     // Por ejemplo, para verificar la contraseña, asignar roles, etc.
