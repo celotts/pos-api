@@ -7,7 +7,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import jakarta.validation.constraints.NotNull; // Importar NotNull de Jakarta Validation
-import lombok.NonNull; // Mantener para los campos si se desea, o cambiar a NotNull también
+// Mantener para los campos si se desea, o cambiar a NotNull también
 
 import java.time.Instant;
 import java.util.UUID;
