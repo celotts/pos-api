@@ -1,5 +1,5 @@
 # Usa una imagen base de Java para construir la aplicación
-FROM eclipse-temurin:17-jdk-jammy as builder
+FROM eclipse-temurin:21-jdk-jammy as builder
 
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar
 
 # Usa una imagen base más ligera para la aplicación final
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 
 # Establece el directorio de trabajo
 WORKDIR /app
