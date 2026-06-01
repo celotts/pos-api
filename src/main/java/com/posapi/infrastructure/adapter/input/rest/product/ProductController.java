@@ -5,6 +5,7 @@ import com.posapi.domain.model.product.Product; // Actualizado
 import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest; // Actualizado
 import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse; // Actualizado
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,7 +60,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteProduct(@PathVariable @NotNull  UUID id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }

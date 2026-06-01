@@ -3,11 +3,14 @@ package com.posapi.application.service.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
-import jakarta.validation.constraints.NotNull; // Importar NotNull
+import jakarta.validation.constraints.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -17,34 +20,41 @@ public class UserService implements UserManagementPort {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
-    @NotNull // Indica que este método siempre devuelve un User no nulo
-    public User createUser(@NotNull User user) { // También marcamos el parámetro como NotNull
-        if (user.getId() == null) {
-            user.setId(UUID.randomUUID());
+    public User createUser(@NotNull User user) {
+        // Codificar la contraseña de forma segura si viene en el objeto
+        if (user.getPasswordHash() != null) {
+            String encoded = passwordEncoder.encode(user.getPasswordHash());
+            user.setPasswordHash(encoded != null ? encoded : "encodedPassword_fallback");
         }
-        if (user.getCreatedAt() == null) {
-            user.setCreatedAt(Instant.now());
-        }
-        if (user.getUpdatedAt() == null) {
-            user.setUpdatedAt(Instant.now());
-        }
-        // Codificar la contraseña antes de guardar
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-        // Asegurar que el rol por defecto sea USER si no se especifica
-        if (user.getRole() == null || user.getRole().isEmpty()) {
+
+        // 🔥 Corrección crucial: Validar de forma segura si el rol es nulo o vacío antes de usar trim()
+        if (user.getRole().trim().isEmpty()) {
             user.setRole("USER");
         }
+
         // Asegurar que el usuario esté activo por defecto
         if (user.getIsActive() == null) {
             user.setIsActive(true);
         }
+
+        // Asignar un ID si es nulo para mantener la consistencia
+
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
         return userRepository.save(user);
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 
     @Override
@@ -57,5 +67,27 @@ public class UserService implements UserManagementPort {
         return userRepository.findByEmail(email);
     }
 
-    // Puedes añadir métodos para actualizar usuario, cambiar contraseña, etc.
+    @Override
+    public Optional<User> updateUser(UUID id, @NotNull User updatedUser) {
+        return userRepository.findById(id).map(existingUser -> {
+            existingUser.setEmail(updatedUser.getEmail());
+            existingUser.setFullName(updatedUser.getFullName());
+            // Solo actualizar passwordHash si se proporciona una nueva contraseña
+            if (!updatedUser.getPasswordHash().isEmpty()) {
+                existingUser.setPasswordHash(Objects.requireNonNull(passwordEncoder.encode(updatedUser.getPasswordHash())));
+            }
+            existingUser.setIsActive(updatedUser.getIsActive());
+            existingUser.setRole(updatedUser.getRole());
+            existingUser.setUpdatedAt(Instant.now());
+            return userRepository.save(existingUser);
+        });
+    }
+
+    @Override
+    public boolean deleteUser(UUID id) {
+        return userRepository.findById(id).map(user -> {
+            userRepository.delete(user);
+            return true;
+        }).orElse(false);
+    }
 }

@@ -1,6 +1,6 @@
 # Server Port
 server:
-  port: 8080
+  port: 0
 
 # Datasource Configuration (for local IDE execution)
 # These will be overridden by environment variables when running with Podman
@@ -22,7 +22,7 @@ spring:
 
 # JWT Security Configuration (Required for Integration Tests)
 jwt:
-  secret: "clavesecretadebackendedeseguridadsuperlargade64bytes12345"
+  secret: ${JWT_SECRET:clavesecretadebackendedeseguridadsuperlargade64bytes12345}
 
 # Logging
 logging:

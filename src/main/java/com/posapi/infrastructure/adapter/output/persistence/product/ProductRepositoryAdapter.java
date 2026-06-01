@@ -48,6 +48,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
         return productJpaRepository.findBySku(sku).map(this::toDomain);
     }
 
+    @Override
+    public List<Product> findByProductNameAndCategory(String name, String category) {
+        return List.of();
+    }
+
     // --- Mappers ---
     private ProductEntity toEntity(Product product) {
         return ProductEntity.builder()

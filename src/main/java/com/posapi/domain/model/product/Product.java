@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.NonNull; // Importar NonNull de Lombok
 
 @Getter
 @Setter
@@ -17,21 +18,29 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class Product {
 
+    @NonNull
     private UUID id;
+    @NonNull
     private String sku;
+    @NonNull
     private String name;
-    private String description;
+    private String description; // Puede ser null
+    @NonNull
     private BigDecimal purchasePrice;
+    @NonNull
     private BigDecimal salePrice;
+    @NonNull
     private BigDecimal currentStock;
-    private UUID taxId; // Referencia al ID del impuesto
-    private UUID supplierId; // Referencia al ID del proveedor
+    private UUID taxId; // Referencia al ID del impuesto (puede ser null)
+    private UUID supplierId; // Referencia al ID del proveedor (puede ser null)
+    @NonNull
     private Instant createdAt;
+    @NonNull
     private Instant updatedAt;
-    private Instant deletedAt;
-    private UUID createdByUserId;
-    private UUID updatedByUserId;
-    private UUID deletedByUserId;
+    private Instant deletedAt; // Puede ser null
+    private UUID createdByUserId; // Puede ser null
+    private UUID updatedByUserId; // Puede ser null
+    private UUID deletedByUserId; // Puede ser null
 
     // Métodos de dominio específicos para Product podrían ir aquí
     // Por ejemplo, para actualizar stock, calcular precios con impuestos, etc.

@@ -18,7 +18,7 @@ RUN chmod +x gradlew
 RUN ./gradlew bootJar
 
 # Usa una imagen base más ligera para la aplicación final
-FROM eclipse-temurin:17-jre-jammy
+FROM eclipse-temurin:21-jre-jammy
 
 # Establece el directorio de trabajo
 WORKDIR /app

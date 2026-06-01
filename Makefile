@@ -78,6 +78,11 @@ clean:
 	./gradlew clean
 	@echo "Limpieza completada."
 
+# Compila el proyecto generando el JAR de forma ultra rápida sin ejecutar tests
+build-fast:
+	@echo "🚀 Compilando proyecto sin ejecutar pruebas..."
+	./gradlew bootJar -x test
+	@echo "✅ Compilación completada con éxito."
 # Ayuda
 help:
 	@echo "Uso: make [comando]"
@@ -89,6 +94,7 @@ help:
 	@echo "  down          - Detiene y elimina los contenedores y la red."
 	@echo "  down-volumes  - Detiene y elimina los contenedores, la red y los volúmenes de datos (¡BORRA LA BD!)."
 	@echo "  build         - Construye solo la imagen de la aplicación."
+	@echo "  build-fast    - Compila el proyecto con Gradle omitiendo los tests (ahorra CPU/ventiladores)."
 	@echo "  logs          - Muestra los logs de todos los servicios en tiempo real (puede fallar en remoto)."
 	@echo "  logs-app      - Muestra los logs solo del servicio de la aplicación."
 	@echo "  logs-db       - Muestra los logs solo del servicio de la base de datos."

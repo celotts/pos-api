@@ -6,6 +6,7 @@ import com.posapi.infrastructure.persistence.entity.user.UserEntity;
 import com.posapi.infrastructure.persistence.entity.user.UserRole;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,6 +34,16 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByEmail(String email) {
         return userJpaRepository.findByEmail(email).map(this::toDomain);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return List.of();
+    }
+
+    @Override
+    public void delete(User user) {
+
     }
 
     // --- Mappers ---
