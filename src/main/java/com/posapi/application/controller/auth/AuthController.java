@@ -2,14 +2,13 @@ package com.posapi.application.controller.auth;
 
 import com.posapi.application.payload.AuthenticationRequest; // Importar el DTO separado
 import com.posapi.infrastructure.security.JwtUtil;
-import com.posapi.infrastructure.security.UserDetailsServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException; // Importar
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,11 +22,10 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsServiceImpl userDetailsService;
+    private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    @Autowired
-    public AuthController(AuthenticationManager authenticationManager, UserDetailsServiceImpl userDetailsService, JwtUtil jwtUtil) {
+    public AuthController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
