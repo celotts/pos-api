@@ -13,12 +13,25 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none # 'none' because we are managing the schema with SQL scripts (V1, V2)
+      ddl-auto: none
+    # 'none' because we are managing the schema with SQL scripts (V1, V2)
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  cloud:
+    gateway:
+      routes:
+        - id: rate_limit_route
+          uri: http://localhost:8080
+          predicates:
+            - Path=/api/v1/users/register
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 5
 
 # JWT Security Configuration (Required for Integration Tests)
 jwt:
@@ -35,3 +48,4 @@ logging:
         orm:
           jdbc:
             bind: TRACE
+
