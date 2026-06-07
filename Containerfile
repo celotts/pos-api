@@ -1,5 +1,5 @@
 # Usa una imagen base de Java para construir la aplicación
-FROM eclipse-temurin:17-jdk-jammy as builder
+FROM eclipse-temurin:21-jdk-jammy as builder
 
 # Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
