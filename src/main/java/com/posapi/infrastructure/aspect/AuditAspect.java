@@ -21,11 +21,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 @Aspect
-@Component
+@Component("infrastructureAuditAspect")
 public class AuditAspect {
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
     private static final int MAX_PAYLOAD_LENGTH = 65535; // Límite estándar para columnas TEXT
-    private static final String PROTECTED_CONTENT = "[PROTECTED]";
+    private static final String MASK_PATTERN = "\"(password|token|secret|credit_card|cvv)\"\\s*:\\s*\"([^\"]+)\"";
 
     private final AuditLogService auditLogService;
 
@@ -79,19 +79,27 @@ public class AuditAspect {
     }
 
     private String getClientIp(HttpServletRequest request) {
-        String remoteAddr = request.getRemoteAddr();
-        return (remoteAddr != null) ? remoteAddr : "UNKNOWN";
+        String xForwardedFor = request.getHeader("X-Forwarded-For");
+        if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
+            return xForwardedFor.split(",")[0].trim();
+        }
+        return request.getRemoteAddr() != null ? request.getRemoteAddr() : "UNKNOWN";
     }
 
     private String getPayload(HttpServletRequest request) {
         if (request instanceof ContentCachingRequestWrapper wrapper) {
             byte[] buf = wrapper.getContentAsByteArray();
             if (buf.length > 0) {
-                String rawPayload = new String(buf, 0, buf.length, StandardCharsets.UTF_8);
-                return request.getRequestURI().contains("/auth") ? PROTECTED_CONTENT : rawPayload;
+                String raw = new String(buf, 0, buf.length, StandardCharsets.UTF_8);
+                return maskSensitiveData(raw);
             }
         }
         return null;
+    }
+
+    private String maskSensitiveData(String payload) {
+        if (payload == null) return null;
+        return payload.replaceAll(MASK_PATTERN, "\"$1\":\"****\"");
     }
 
     private String truncatePayload(String payload) {

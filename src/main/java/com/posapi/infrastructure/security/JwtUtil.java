@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-@Component
+@Component("customJwtUtil")
 public class JwtUtil {
 
     @Value("${jwt.secret}")

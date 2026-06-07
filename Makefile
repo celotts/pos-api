@@ -11,7 +11,7 @@ all: up
 # Levanta los contenedores (construye la imagen de la app si es necesario)
 up:
 	@START_TIME=$$(date +%s); \
-	echo "🚀 Levantando contenedores..."; \
+	echo "Levantando contenedores..."; \
 	podman-compose -f $(COMPOSE_FILE) up --build -d; \
 	if [ $$(podman ps --filter "name=pos" --format "{{.Status}}" | grep -c "Up") -gt 0 ] && \
 	   [ $$(podman ps --filter "name=pos" --format "{{.Status}}" | grep -cvE "Up|healthy") -eq 0 ]; then \
@@ -85,8 +85,12 @@ restart:
 
 # Ejecuta un comando dentro del contenedor de la aplicación (ej. make exec cmd="ls -l")
 exec:
-	@echo "Ejecutando comando en el contenedor $(APP_SERVICE)..."
-	podman-compose -f $(COMPOSE_FILE) exec $(APP_SERVICE) $(cmd)
+	@if [ -z "$(cmd)" ]; then \
+		echo "Error: Debes proporcionar un comando. Ejemplo: make exec cmd=\"ls -l\""; \
+		exit 1; \
+	fi
+	@echo "🛠️  Ejecutando en $(APP_SERVICE): $(cmd)"
+	@podman-compose -f $(COMPOSE_FILE) exec $(APP_SERVICE) $(cmd)
 
 # Limpia los artefactos de construcción locales (ej. el JAR generado por Gradle)
 clean:

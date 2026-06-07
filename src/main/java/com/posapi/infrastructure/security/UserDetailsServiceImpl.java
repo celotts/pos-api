@@ -1,7 +1,6 @@
 package com.posapi.infrastructure.security;
 
 import com.posapi.domain.repository.user.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority; // Importación añadida
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,12 +9,11 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-@Service
+@Service("customUserDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
 
-    @Autowired
     public UserDetailsServiceImpl(UserRepository userRepository) {
         this.userRepository = userRepository;
     }

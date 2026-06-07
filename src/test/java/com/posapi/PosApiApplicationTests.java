@@ -1,10 +1,11 @@
 package com.posapi;
-
+import com.posapi.infrastructure.security.JwtAuthenticationEntryPoint;
 import com.posapi.infrastructure.security.JwtRequestFilter;
 import com.posapi.infrastructure.security.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -16,11 +17,17 @@ import org.springframework.test.context.TestPropertySource;
 @ActiveProfiles("test")
 class PosApiApplicationTests {
 
-    @MockBean
+    @MockBean(name = "customJwtRequestFilter")
     private JwtRequestFilter jwtRequestFilter;
 
-    @MockBean
+    @MockBean(name = "customJwtAuthenticationEntryPoint")
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockBean(name = "customUserDetailsService")
     private UserDetailsServiceImpl userDetailsService;
+
+    @MockBean
+    private PasswordEncoder passwordEncoder;
 
     @Test
     void contextLoads() {
