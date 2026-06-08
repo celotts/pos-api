@@ -1,11 +1,11 @@
-package com.posapi.application.controller.auth;
+package com.posapi.infrastructure.adapter.input.rest.auth;
 
-import com.posapi.application.payload.AuthenticationRequest; // Importar el DTO separado
+import com.posapi.application.payload.AuthenticationRequest;
 import com.posapi.infrastructure.security.JwtUtil;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException; // Importar
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

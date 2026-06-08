@@ -4,6 +4,7 @@ import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
 import com.posapi.infrastructure.persistence.entity.user.UserEntity;
 import com.posapi.infrastructure.persistence.entity.user.UserRole;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Component
+@Primary
 public class UserRepositoryAdapter implements UserRepository {
 
     private final UserJpaRepository userJpaRepository;
