@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
-
 @Service
 public class UserService implements UserManagementPort {
 
@@ -29,10 +28,8 @@ public class UserService implements UserManagementPort {
     @Override
     public User createUser(@NotNull User user) {
         // Codificar la contraseña de forma segura si viene en el objeto
-        if (user.getPasswordHash() != null) {
-            String encoded = passwordEncoder.encode(user.getPasswordHash());
-            user.setPasswordHash(encoded != null ? encoded : "encodedPassword_fallback");
-        }
+        String encoded = passwordEncoder.encode(user.getPasswordHash());
+        user.setPasswordHash(encoded != null ? encoded : "encodedPassword_fallback");
 
         // 🔥 Corrección crucial: Validar de forma segura si el rol es nulo o vacío antes de usar trim()
         if (user.getRole().trim().isEmpty()) {
@@ -83,7 +80,6 @@ public class UserService implements UserManagementPort {
         });
     }
 
-    @Override
     public boolean deleteUser(UUID id) {
         return userRepository.findById(id).map(user -> {
             userRepository.delete(user);

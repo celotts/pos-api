@@ -13,6 +13,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -35,29 +36,34 @@ class SecurityConfigTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean(name = "customJwtRequestFilter")
-    private JwtRequestFilter jwtRequestFilter;
+    @MockBean(name = "jwtUtil")
+    private JwtUtil jwtUtil;
 
-    @MockBean(name = "customUserDetailsService")
-    private UserDetailsServiceImpl userDetailsService;
+    @MockBean(name = "customUserDetailsService") // 🛡️ Debe coincidir con el @Service o @Qualifier de tu implementación real
+    private UserDetailsService userDetailsService; 
 
-    @MockBean(name = "customJwtAuthenticationEntryPoint")
+    @MockBean(name = "customJwtAuthenticationEntryPoint") 
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-    @MockBean(name = "passwordEncoder")
+    @MockBean
     private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+
+    @MockBean(name = "customJwtRequestFilter") 
+    private JwtRequestFilter jwtRequestFilter;
 
     @BeforeEach
     void setUp() throws Exception {
-        // 🛡️ Limpiar el contexto para asegurar que cada test es independiente y anónimo
+        // 🛡️ Limpiar el contexto para evitar interferencias entre ejecuciones
         SecurityContextHolder.clearContext();
 
-        // 🛡️ Configurar el filtro mock como un "pass-through" limpio
+        // 🛡️ Configurar el filtro mock como pass-through (deja pasar la petición)
         Mockito.doAnswer(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0, HttpServletRequest.class);
-            HttpServletResponse response = invocation.getArgument(1, HttpServletResponse.class);
-            FilterChain chain = invocation.getArgument(2, FilterChain.class);
-            chain.doFilter(request, response);
+            HttpServletRequest req = invocation.getArgument(0);
+            HttpServletResponse res = invocation.getArgument(1);
+            FilterChain chain = invocation.getArgument(2);
+            
+            // No establecemos autenticación, solo permitimos que la cadena continúe
+            chain.doFilter(req, res);
             return null;
         }).when(jwtRequestFilter).doFilterInternal(any(), any(), any());
     }
@@ -71,22 +77,23 @@ class SecurityConfigTest {
 
     @Test
     void testProtectedEndpointUnauthenticated() throws Exception {
-        // 🛡️ PROGRAMAR EL MOCK: Forzamos al EntryPoint a emitir un error 401 real
-        // 🛡️ PROGRAMAR EL MOCK: Forzamos al EntryPoint a establecer el status 401 y comprometer la respuesta
-        Mockito.doAnswer(invocation -> {
-            HttpServletResponse response = invocation.getArgument(1, HttpServletResponse.class);
+        // 🛡️ Asegurar que no hay autenticación previa
+        SecurityContextHolder.clearContext();
 
-            // sendError es el mecanismo que MockMvc captura de forma robusta para devolver 401
-            // y detener el flujo de la cadena de filtros antes de llegar al controlador.
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-            HttpServletResponse responseq = invocation.getArgument(1, HttpServletResponse.class);
-            // Establecemos el status explícitamente
+        // 🛡️ PROGRAMAR EL MOCK: Forzar al EntryPoint a emitir un error 401 real
+        Mockito.doAnswer(invocation -> {
+            HttpServletResponse response = invocation.getArgument(1);
+            // Usamos setStatus y flush para obligar a MockMvc a reconocer la interrupción de seguridad
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            // Escribimos algo en el cuerpo y hacemos flush para "comprometer" la respuesta
-            response.getWriter().write("Unauthorized Access Required");
-            response.getWriter().flush();
+            response.getWriter().write("Unauthorized Access");
+            response.getWriter().flush(); 
             return null;
         }).when(jwtAuthenticationEntryPoint).commence(any(), any(), any());
+
+        // 3. 🚀 EJECUTAR Y VALIDAR: Realizamos la petición sin token
+        mockMvc.perform(get("/users/protected")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     @RestController

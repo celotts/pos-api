@@ -1,5 +1,6 @@
 package com.posapi.infrastructure.security;
 
+import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority; // Importación añadida
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,14 +21,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        com.posapi.domain.model.user.User user = userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
         // Construir un objeto UserDetails de Spring Security
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPasswordHash(),
-                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getRole())) // Asignar el rol del usuario
-        );
+        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+                .password(user.getPasswordHash())
+                .authorities("ROLE_" + user.getRole())
+                .build();
     }
 }

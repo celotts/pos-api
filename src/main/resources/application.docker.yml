@@ -4,6 +4,9 @@ server:
   port: ${PRODUCT_PORT:9090}
 
 spring:
+  cloud:
+    gateway:
+      enabled: false
   application:
     name: product-service
   datasource:
