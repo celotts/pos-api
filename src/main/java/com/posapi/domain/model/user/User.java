@@ -1,9 +1,6 @@
 package com.posapi.domain.model.user;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Instant;
 import java.util.Objects;
@@ -12,6 +9,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor // Necesario para frameworks de persistencia y serialización
+@AllArgsConstructor // Genera el constructor PÚBLICO que el Builder y otras capas necesitan
 public class User {
     @NonNull
     private UUID id;

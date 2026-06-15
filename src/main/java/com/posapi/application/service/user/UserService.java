@@ -28,11 +28,11 @@ public class UserService implements UserManagementPort {
     @Override
     public User createUser(@NotNull User user) {
         // Codificar la contraseña de forma segura si viene en el objeto
-        String encoded = passwordEncoder.encode(user.getPasswordHash());
-        user.setPasswordHash(encoded != null ? encoded : "encodedPassword_fallback");
+        String rawPassword = user.getPasswordHash();
+        user.setPasswordHash(rawPassword != null ? passwordEncoder.encode(rawPassword) : "encodedPassword_fallback");
 
-        // 🔥 Corrección crucial: Validar de forma segura si el rol es nulo o vacío antes de usar trim()
-        if (user.getRole().trim().isEmpty()) {
+        // 🛡️ Validación robusta: Comprobar nulidad antes de procesar el String para evitar NPE
+        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
             user.setRole("USER");
         }
 

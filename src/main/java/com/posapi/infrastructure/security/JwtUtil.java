@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.nio.charset.StandardCharsets;
 
 @Component("customJwtUtil")
 public class JwtUtil {
@@ -36,18 +38,22 @@ public class JwtUtil {
 
     private String createToken(Map<String, Object> claims, String subject) {
         return Jwts.builder()
-                .claims(claims)                                     // 🔥 Antes .setClaims()
-                .subject(subject)                                   // 🔥 Antes .setSubject()
-                .issuedAt(new Date(System.currentTimeMillis()))     // 🔥 Antes .setIssuedAt()
-                .expiration(new Date(System.currentTimeMillis() + expiration)) // 🔥 Antes .setExpiration()
-                .signWith(getSignKey())                             // 🔥 Antes requería SignatureAlgorithm.HS256 de forma explícita
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSignKey())
                 .compact();
     }
 
     // Validar token
     public Boolean validateToken(String token, UserDetails userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        try {
+            final String username = extractUsername(token);
+            return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     // Extraer nombre de usuario del token
@@ -68,11 +74,15 @@ public class JwtUtil {
 
     // Extraer todos los claims del token
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()                                        // 🔥 Solución: .parser() reemplaza a .parserBuilder()
-                .verifyWith(getSignKey())                           // 🔥 Solución: .verifyWith() reemplaza a .setSigningKey()
-                .build()
-                .parseSignedClaims(token)                           // 🔥 Solución: .parseSignedClaims() reemplaza a .parseClaimsJws()
-                .getPayload();                                      // 🔥 Solución: .getPayload() reemplaza a .getBody()
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSignKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid JWT token", e);
+        }
     }
 
     // Verificar si el token ha expirado
@@ -81,8 +91,14 @@ public class JwtUtil {
     }
 
     // Obtener la clave de firma
-    private SecretKey getSignKey() {                                // 🔥 Cambiado de Key a SecretKey (Requerido por la nueva API)
-        byte[] keyBytes = Decoders.BASE64.decode(secret);
+    private SecretKey getSignKey() { // 🔥 Cambiado de Key a SecretKey (Requerido por la nueva API)
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(secret);
+        } catch (IllegalArgumentException e) {
+            // si la propiedad no está en Base64, usar bytes UTF-8 directamente
+            keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        }
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }
