@@ -1,5 +1,9 @@
 .PHONY: all up down down-volumes build logs logs-app logs-db restart clean app-only status help
 
+test:
+	@echo "Running tests..."
+	./gradlew test
+
 # Variables
 COMPOSE_FILE := podman-compose.yaml
 APP_NAME := pos-api
