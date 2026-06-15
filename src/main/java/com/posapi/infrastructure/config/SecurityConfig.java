@@ -26,15 +26,12 @@ public class SecurityConfig {
 
     private final JwtAuthenticationEntryPoint entryPoint;
     private final JwtRequestFilter requestFilter;
-    private final AuthenticationConfiguration authConfiguration;
 
     public SecurityConfig(
             @Qualifier("customJwtAuthenticationEntryPoint") JwtAuthenticationEntryPoint entryPoint,
-            @Qualifier("customJwtRequestFilter") JwtRequestFilter requestFilter,
-            AuthenticationConfiguration authConfiguration) {
+            @Qualifier("customJwtRequestFilter") JwtRequestFilter requestFilter) {
         this.entryPoint = entryPoint;
         this.requestFilter = requestFilter;
-        this.authConfiguration = authConfiguration;
     }
 
     @Bean
@@ -59,7 +56,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfiguration) throws Exception {
         return authConfiguration.getAuthenticationManager();
     }
 

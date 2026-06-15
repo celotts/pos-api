@@ -9,15 +9,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.mapping.JpaMetamodelMappingContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,25 +37,12 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@TestConfiguration
-class SecurityTestConfig {
-    @Bean
-    public AuthenticationManager authenticationManager() {
-        return org.mockito.Mockito.mock(AuthenticationManager.class);
-    }
-
-    @Bean(name = "userDetailsService")
-    public UserDetailsService userDetailsService() {
-        return org.mockito.Mockito.mock(UserDetailsService.class);
-    }
-}
-
 @WebMvcTest(value = SecurityConfigTest.SecurityTestController.class, excludeAutoConfiguration = {
         DataSourceAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class,
         JpaRepositoriesAutoConfiguration.class
 })
-@Import({ SecurityConfig.class, SecurityTestConfig.class })
+@Import(SecurityConfig.class)
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
         "spring.main.allow-bean-definition-overriding=true",
@@ -66,12 +50,14 @@ class SecurityTestConfig {
 })
 public class SecurityConfigTest {
 
-    @SpringBootConfiguration
-    static class WebMvcTestConfig {
-    }
-
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private AuthenticationManager authenticationManager;
+
+    @MockBean(name = "customUserDetailsService")
+    private UserDetailsService userDetailsService;
 
     @MockBean(name = "customJwtAuthenticationEntryPoint")
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
@@ -81,11 +67,6 @@ public class SecurityConfigTest {
     private JwtUtil jwtUtil;
     @MockBean
     private PasswordEncoder passwordEncoder;
-
-    // Ya no usamos MockBean para AuthenticationManager porque viene de
-    // SecurityTestConfig
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     @MockBean
     private UserRepository userRepository;
@@ -142,7 +123,7 @@ public class SecurityConfigTest {
     void testProtectedEndpoint_ShouldReturn401WhenAnonymous() throws Exception {
         mockMvc.perform(get("/users/protected").accept(MediaType.APPLICATION_JSON))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isUnauthorized());
     }
 
     @RestController
