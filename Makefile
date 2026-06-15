@@ -1,8 +1,20 @@
-.PHONY: all up down down-volumes build logs logs-app logs-db restart clean app-only status help
+.PHONY: all up down down-volumes build logs logs-app logs-db restart clean app-only status help test check ci run
 
 test:
 	@echo "Running tests..."
 	./gradlew test
+
+check:
+	@echo "Running checks (tests + static analysis)..."
+	./gradlew check
+
+ci:
+	@echo "CI: clean and run checks..."
+	./gradlew clean check
+
+run:
+	@echo "Starting application (bootRun)..."
+	./gradlew bootRun
 
 # Variables
 COMPOSE_FILE := podman-compose.yaml
