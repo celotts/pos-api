@@ -6,6 +6,7 @@ import com.posapi.infrastructure.persistence.entity.product.ProductEntity; // Ac
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,12 +24,12 @@ public class ProductRepositoryAdapter implements ProductRepository {
     public Product save(Product product) {
         ProductEntity productEntity = toEntity(product);
         ProductEntity savedEntity = productJpaRepository.save(productEntity);
-        return toDomain(savedEntity);
+        return toDomain(Objects.requireNonNull(savedEntity));
     }
 
     @Override
     public Optional<Product> findById(UUID id) {
-        return productJpaRepository.findById(id).map(this::toDomain);
+        return productJpaRepository.findById(Objects.requireNonNull(id)).map(this::toDomain);
     }
 
     @Override
@@ -46,6 +47,11 @@ public class ProductRepositoryAdapter implements ProductRepository {
     @Override
     public Optional<Product> findBySku(String sku) {
         return productJpaRepository.findBySku(sku).map(this::toDomain);
+    }
+
+    @Override
+    public List<Product> findByProductNameAndCategory(String name, String category) {
+        return List.of();
     }
 
     // --- Mappers ---

@@ -1,51 +1,53 @@
-version: '3.8'
-
 services:
   db:
     image: postgres:15-alpine
     container_name: pos_db
     environment:
       POSTGRES_DB: pos_db
-      POSTGRES_USER: pos_user
-      POSTGRES_PASSWORD: pos_password
+      POSTGRES_USER: product
+      POSTGRES_PASSWORD: product123
       POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
-      # Persistencia de los datos de la base de datos
       - db_data:/var/lib/postgresql/data
-      # Monta el directorio de scripts SQL para que se ejecuten en el primer inicio del contenedor
-      # PostgreSQL ejecuta automáticamente los scripts .sql en este directorio
       - ./src/main/resources/db/migration/:/docker-entrypoint-initdb.d/
     ports:
-      - "5432:5432" # Opcional: para acceder a la BD desde el host
+      - "5432:5432"
+    networks:
+      - pos-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pos_user -d pos_db"]
+      test: ["CMD-SHELL", "pg_isready -U product -d pos_db"]
       interval: 10s
       timeout: 10s
       retries: 5
 
   app:
-    build: . # Construye la imagen usando el Containerfile en el directorio actual
+    build: .
     container_name: pos_api_app
     ports:
-      - "8080:8080" # Mapea el puerto de la aplicación al host
+      - "9090:8080"
     environment:
+      SPRING_PROFILES_ACTIVE: docker
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pos_db
-      SPRING_DATASOURCE_USERNAME: pos_user
-      SPRING_DATASOURCE_PASSWORD: pos_password
-      # Importante: Deshabilita la creación automática de DDL por Hibernate
-      # Ya que el esquema lo gestiona el script inicial de PostgreSQL
+      SPRING_DATASOURCE_USERNAME: product
+      SPRING_DATASOURCE_PASSWORD: product123
       SPRING_JPA_HIBERNATE_DDL_AUTO: none
-      # Si usas Flyway/Liquibase para futuras migraciones, asegúrate de configurarlo aquí
-      # SPRING_FLYWAY_ENABLED: true
+      JWT_SECRET: "======================CelottsJWTSecretDefaultDevKey==========================="
+      # AÑADE ESTA LÍNEA (ajusta el valor a los milisegundos que necesites, ej: 1 hora = 3600000)
+      JWT_EXPIRATION: "3600000"
     depends_on:
       db:
-        condition: service_healthy # Espera a que la BD esté saludable antes de iniciar la app
-    # Para ver los logs de la aplicación en tiempo real
+        condition: service_healthy
+    networks:
+      - pos-network
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "5"
 
+networks:
+  pos-network:
+    driver: bridge
+
 volumes:
-  db_data: # Define el volumen para la persistencia de la base de datos
+  db_data:

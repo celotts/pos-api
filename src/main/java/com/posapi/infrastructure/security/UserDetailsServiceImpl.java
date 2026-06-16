@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.config;
+package com.posapi.infrastructure.security;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
-@Service
+@Service("customUserDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
@@ -23,15 +23,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
 
-        // Construye un UserDetails de Spring Security a partir de tu User de dominio
-        return new org.springframework.security.core.userdetails.User(
-                user.getEmail(),
-                user.getPasswordHash(),
-                user.getIsActive(), // enabled
-                true, // accountNonExpired
-                true, // credentialsNonExpired
-                true, // accountNonLocked
-                Collections.singletonList(() -> "ROLE_" + user.getRole()) // Asigna el rol del usuario
-        );
+        // Construir un objeto UserDetails de Spring Security
+        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+                .password(user.getPasswordHash())
+                .authorities("ROLE_" + user.getRole())
+                .build();
     }
 }

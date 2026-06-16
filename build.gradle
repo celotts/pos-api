@@ -1,10 +1,16 @@
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
+
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.6' // Revertido a la versión original
+
+	id 'org.springframework.boot' version '3.4.2'
 	id 'io.spring.dependency-management' version '1.1.7'
+    id 'checkstyle'
+    id 'com.github.spotbugs' version '6.5.6'
 }
 
-group = 'com.posapi'
+group = 'pos.api'
 version = '0.0.1-SNAPSHOT'
 
 java {
@@ -13,23 +19,82 @@ java {
 	}
 }
 
+checkstyle {
+    toolVersion = '10.12.4'
+    configDirectory = file('config/checkstyle')
+}
+
+configurations.checkstyle {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
+        select("com.google.guava:guava:0")
+    }
+}
+
+spotbugs {
+    toolVersion = '4.8.6'
+    effort.set(Effort.valueOf('MAX'))
+    reportLevel.set(Confidence.valueOf('LOW'))
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
+    reports {
+        xml.required.set(false)
+        html.required.set(true)
+    }
+    // Do not fail the build on SpotBugs findings by default in CI
+    ignoreFailures = true
+}
+
+tasks.withType(Checkstyle) {
+    // Do not fail build on style violations by default
+    ignoreFailures = true
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
+
 repositories {
 	mavenCentral()
 }
 
 dependencies {
+    // 1. Entidades y Persistencia (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+
+    // 2. Seguridad (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-security'
+
+    // 3. Validación (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+    // 4. Web Starter
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    // Seguridad JWT (Estos sí requieren su versión específica)
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
+
+    // Driver de Base de Datos
     runtimeOnly 'org.postgresql:postgresql'
-    compileOnly 'org.projectlombok:lombok' // Lombok para tiempo de compilación
-    annotationProcessor 'org.projectlombok:lombok' // Procesador de anotaciones de Lombok
-    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-    testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+    // Lombok dependencia (Para usar anotaciones como @Getter, @Setter, etc.)
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Bloque de pruebas corregido
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Lombok dependencia para pruebas
+    testCompileOnly 'org.projectlombok:lombok'
+    testAnnotationProcessor 'org.projectlombok:lombok'
+
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 tasks.named('test') {

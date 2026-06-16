@@ -1,22 +1,48 @@
 # Server Port
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
 # Datasource Configuration (for local IDE execution)
-# These will be overridden by environment variables when running with Podman
 spring:
+  application:
+    name: pos-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/pos_db
-    username: pos_user
-    password: pos_password
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:pos_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:pos_password}
     driver-class-name: org.postgresql.Driver
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: none # 'none' because we are managing the schema with SQL scripts (V1, V2)
+      ddl-auto: none
+    # 'none' because we are managing the schema with SQL scripts (V1, V2)
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  cloud:
+    gateway:
+      routes:
+        - id: rate_limit_route
+          uri: lb://pos-api
+          predicates:
+            - Path=/api/v1/users/register
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 5
+
+# JWT Security Configuration (Required for Integration Tests)
+jwt:
+  # 🛡️ SECURITY ADVISORY: 
+  # - En producción, sobreescribir JWT_SECRET mediante variables de entorno.
+  # - Se requiere una clave Base64 de al menos 256 bits (32 bytes).
+  # - Comando para generar: openssl rand -base64 32
+  secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+  # Duración en milisegundos
+  expiration: ${JWT_EXPIRATION:3600000}
 
 # Logging
 logging:

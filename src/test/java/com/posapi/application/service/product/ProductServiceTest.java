@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,6 +25,10 @@ class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
 
     @InjectMocks
     private ProductService productService;
@@ -104,39 +109,40 @@ class ProductServiceTest {
 
     @Test
     void updateProduct_shouldReturnUpdatedProduct_whenFound() {
-        Product updatedDetails = Product.builder()
-                .sku("SKU001-UPDATED")
-                .name("Product 1 Updated")
-                .description("Description 1 Updated")
-                .purchasePrice(BigDecimal.valueOf(12.0))
-                .salePrice(BigDecimal.valueOf(17.0))
-                .currentStock(BigDecimal.valueOf(105.0))
-                .build();
+        UUID id = UUID.randomUUID();
+        Product updatedDetails = new Product(); // Crear un objeto Product vacío
+        updatedDetails.setId(id);
+        updatedDetails.setSku("SKU001-UPDATED");
+        updatedDetails.setName("Product 1 Updated");
+        updatedDetails.setDescription("Description 1 Updated");
+        updatedDetails.setPurchasePrice(BigDecimal.valueOf(12.0));
+        updatedDetails.setSalePrice(BigDecimal.valueOf(17.0));
+        updatedDetails.setCurrentStock(BigDecimal.valueOf(105.0));
 
-        when(productRepository.findById(product1.getId())).thenReturn(Optional.of(product1));
+        when(productRepository.findById(id)).thenReturn(Optional.of(product1));
         when(productRepository.save(any(Product.class))).thenReturn(updatedDetails); // Mock the save operation
 
-        Product result = productService.updateProduct(product1.getId(), updatedDetails);
-
+        Product result = productService.updateProduct(id, updatedDetails);
         assertNotNull(result);
         assertEquals("SKU001-UPDATED", result.getSku());
         assertEquals("Product 1 Updated", result.getName());
-        verify(productRepository, times(1)).findById(product1.getId());
+        verify(productRepository, times(1)).findById(id);
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
     void updateProduct_shouldThrowException_whenNotFound() {
-        Product updatedDetails = Product.builder().name("Non Existent").build();
+        UUID id = UUID.randomUUID();
+        Product updatedDetails = new Product(); // Crear un objeto Product vacío
+        updatedDetails.setId(id);
+        updatedDetails.setName("Non Existent");
+
         when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                productService.updateProduct(UUID.randomUUID(), updatedDetails));
+                productService.updateProduct(id, updatedDetails)
+        );
 
-        // Ajuste en el mensaje de error esperado, ya que any(UUID.class) no se convierte a string en el mensaje de la excepción
-        // La excepción real contendrá el UUID generado, no la cadena "any(UUID.class)"
-        // Para una prueba más robusta, podríamos capturar el UUID pasado a la excepción o simplemente verificar el prefijo del mensaje.
-        // Por simplicidad, ajustamos la verificación para que sea más flexible.
         assertTrue(exception.getMessage().startsWith("Product not found with ID: "));
         verify(productRepository, times(1)).findById(any(UUID.class));
         verify(productRepository, never()).save(any(Product.class));
