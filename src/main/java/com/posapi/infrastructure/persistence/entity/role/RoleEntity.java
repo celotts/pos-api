@@ -8,14 +8,19 @@ import java.util.UUID;
 @Table(name = "roles")
 @Getter
 @Setter
-@Builder
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class RoleEntity {
 
     @Id
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private UUID id;
 
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(name = "name", unique = true, nullable = false, length = 50)
+    @ToString.Include
     private String name;
 }
