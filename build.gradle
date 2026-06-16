@@ -1,7 +1,10 @@
+import com.github.spotbugs.snom.Effort
+import com.github.spotbugs.snom.Confidence
+
 plugins {
 	id 'java'
 
-	id 'org.springframework.boot' version '3.2.12'
+	id 'org.springframework.boot' version '3.4.2'
 	id 'io.spring.dependency-management' version '1.1.7'
     id 'checkstyle'
     id 'com.github.spotbugs' version '6.5.6'
@@ -21,10 +24,16 @@ checkstyle {
     configDirectory = file('config/checkstyle')
 }
 
+configurations.checkstyle {
+    resolutionStrategy.capabilitiesResolution.withCapability("com.google.collections:google-collections") {
+        select("com.google.guava:guava:0")
+    }
+}
+
 spotbugs {
-    toolVersion = '4.7.3'
-    effort = 'max'
-    reportLevel = 'low'
+    toolVersion = '4.8.6'
+    effort.set(Effort.valueOf('MAX'))
+    reportLevel.set(Confidence.valueOf('LOW'))
 }
 
 tasks.withType(com.github.spotbugs.snom.SpotBugsTask) {
@@ -41,6 +50,10 @@ tasks.withType(Checkstyle) {
     ignoreFailures = true
 }
 
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-parameters'
+}
+
 repositories {
 	mavenCentral()
 }
@@ -48,6 +61,7 @@ repositories {
 dependencies {
     // 1. Entidades y Persistencia (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 
     // 2. Seguridad (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -55,11 +69,8 @@ dependencies {
     // 3. Validación (Sin versión fija)
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-    // 4. 🔥 CORRECCIÓN: Cambiado de 'spring-boot-starter-webmvc:3.2.5' al starter correcto de Spring
+    // 4. Web Starter
     implementation 'org.springframework.boot:spring-boot-starter-web'
-
-    // Validación Jakarta estándar
-    implementation 'jakarta.validation:jakarta.validation-api:3.0.2'
 
     // Seguridad JWT (Estos sí requieren su versión específica)
     implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
@@ -82,8 +93,8 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-    testImplementation 'org.testcontainers:postgresql:1.19.7'
-    testImplementation 'org.testcontainers:junit-jupiter:1.19.7'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
 }
 
 tasks.named('test') {

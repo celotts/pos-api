@@ -24,4 +24,7 @@ public abstract class Auditable {
 
     @LastModifiedBy
     private String lastModifiedBy;
+
+    @LastModifiedDate
+    private LocalDateTime lastModifiedDate;
 }

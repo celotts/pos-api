@@ -1,7 +1,9 @@
 package com.posapi.infrastructure.adapter.input.rest.auth;
 
 import com.posapi.application.payload.AuthenticationRequest;
+import com.posapi.application.payload.AuthenticationResponse;
 import com.posapi.infrastructure.security.JwtUtil;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,9 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
@@ -32,22 +31,24 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) {
+    public ResponseEntity<?> createAuthenticationToken(@Valid @RequestBody AuthenticationRequest authenticationRequest) {
         try {
+            // 🛡️ Al usar records, los getters son username() y password()
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(authenticationRequest.username(), authenticationRequest.password())
             );
         } catch (BadCredentialsException e) {
-            return new ResponseEntity<>("Incorrect username or password", HttpStatus.UNAUTHORIZED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Incorrect username or password");
         } catch (Exception e) {
-            return new ResponseEntity<>("Authentication error: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Authentication error: " + e.getMessage());
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.getUsername());
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.username());
         final String jwt = jwtUtil.generateToken(userDetails);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("jwt", jwt);
-        return ResponseEntity.ok(response);
+        // 🛡️ Devolvemos el objeto tipado en lugar de un Map
+        return ResponseEntity.ok(new AuthenticationResponse(jwt));
     }
 }

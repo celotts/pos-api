@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import java.time.Instant;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,10 +54,15 @@ class UserServiceTest {
     @Test
     @DisplayName("Debe codificar la contraseña y asignar rol por defecto al crear usuario")
     void createUser_ShouldEncodePasswordAndSetDefaults() {
-        // Arrange: Preparamos un usuario con rol vacío para probar la lógica de defaults
-        testUser.setRole(""); 
+        // Arrange: Preparamos un usuario con rol vacío para probar la lógica de
+        // defaults
+        testUser.setRole("");
         when(passwordEncoder.encode("rawPassword")).thenReturn("encoded_pass");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
+            User u = invocation.getArgument(0);
+            u.setCreatedAt(Instant.now());
+            return u;
+        });
 
         // Act
         User created = userService.createUser(testUser);

@@ -17,6 +17,8 @@ public class AuditLogService {
     @Async
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveAuditLog(AuditLog log) {
-        auditLogRepository.save(log);
+        if (log != null) {
+            auditLogRepository.save(log);
+        }
     }
 }

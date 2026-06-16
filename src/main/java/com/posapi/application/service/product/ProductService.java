@@ -4,9 +4,8 @@ import com.posapi.application.port.product.ProductManagementPort; // Importar la
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.repository.product.ProductRepository;
 import jakarta.validation.constraints.NotNull; // Importar NotNull
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,10 +13,11 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Validated
 public class ProductService implements ProductManagementPort { // Implementa la interfaz
 
     private final ProductRepository productRepository;
-    @Autowired
+
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
@@ -62,7 +62,8 @@ public class ProductService implements ProductManagementPort { // Implementa la 
 
     @Override
     public void deleteProduct(UUID id) {
-        // En un sistema real, probablemente haríamos un "soft delete" (marcar como deleted_at)
+        // En un sistema real, probablemente haríamos un "soft delete" (marcar como
+        // deleted_at)
         productRepository.deleteById(id);
     }
 
@@ -71,4 +72,3 @@ public class ProductService implements ProductManagementPort { // Implementa la 
         return productRepository.findBySku(sku);
     }
 }
-

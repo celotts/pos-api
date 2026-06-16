@@ -3,11 +3,12 @@ package com.posapi.infrastructure.aspect;
 import com.posapi.domain.model.AuditLog;
 import com.posapi.application.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.lang.NonNull;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.AfterReturning;
-import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -15,17 +16,20 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.regex.Pattern;
 
 @Aspect
 @Component("infrastructureAuditAspect")
 public class AuditAspect {
     private static final Logger logger = LoggerFactory.getLogger(AuditAspect.class);
     private static final int MAX_PAYLOAD_LENGTH = 65535; // Límite estándar para columnas TEXT
-    private static final String MASK_PATTERN = "\"(password|token|secret|credit_card|cvv)\"\\s*:\\s*\"([^\"]+)\"";
+    private static final Pattern MASK_PATTERN = Pattern
+            .compile("\"(password|token|secret|credit_card|cvv)\"\\s*:\\s*\"([^\"]+)\"");
 
     private final AuditLogService auditLogService;
 
@@ -33,21 +37,31 @@ public class AuditAspect {
         this.auditLogService = auditLogService;
     }
 
-    @AfterReturning(pointcut = "@annotation(loggableAction)", returning = "result")
-    public void logAction(JoinPoint joinPoint, @NonNull LoggableAction loggableAction, Object result) {
-        saveLog(joinPoint, loggableAction, "SUCCESS", null);
+    @Pointcut("within(com.posapi..*) && @annotation(com.posapi.infrastructure.aspect.LoggableAction)")
+    public void loggableMethods() {
     }
 
-    @AfterThrowing(pointcut = "@annotation(loggableAction)", throwing = "ex")
-    public void logFailure(JoinPoint joinPoint, @NonNull LoggableAction loggableAction, @NonNull Exception ex) {
-        saveLog(joinPoint, loggableAction, "ERROR", ex.getMessage());
+    @Around(value = "loggableMethods()", argNames = "joinPoint")
+    public Object audit(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object result;
+        try {
+            result = joinPoint.proceed();
+            LoggableAction annotation = getAnnotation(joinPoint);
+            saveLog(joinPoint, annotation, "SUCCESS", null);
+            return result;
+        } catch (Exception ex) {
+            LoggableAction annotation = getAnnotation(joinPoint);
+            saveLog(joinPoint, annotation, "ERROR", ex.getMessage());
+            throw ex;
+        }
     }
 
     private void saveLog(JoinPoint joinPoint, LoggableAction loggableAction, String status, String error) {
         try {
             String user = getCurrentUser();
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            
+            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder
+                    .getRequestAttributes();
+
             String ip = "UNKNOWN";
             String payload = null;
 
@@ -68,9 +82,17 @@ public class AuditAspect {
             log.setTimestamp(LocalDateTime.now());
 
             auditLogService.saveAuditLog(log);
-        } catch (Exception e) {
-            logger.error("Failed to save audit log: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            logger.error("Failed to save audit log", e);
         }
+    }
+
+    private LoggableAction getAnnotation(JoinPoint joinPoint) {
+        if (joinPoint.getSignature() instanceof MethodSignature methodSignature) {
+            var method = methodSignature.getMethod();
+            return method != null ? AnnotationUtils.findAnnotation(method, LoggableAction.class) : null;
+        }
+        return null;
     }
 
     private String getCurrentUser() {
@@ -98,8 +120,9 @@ public class AuditAspect {
     }
 
     private String maskSensitiveData(String payload) {
-        if (payload == null) return null;
-        return payload.replaceAll(MASK_PATTERN, "\"$1\":\"****\"");
+        if (payload == null)
+            return null;
+        return MASK_PATTERN.matcher(payload).replaceAll("\"$1\":\"****\"");
     }
 
     private String truncatePayload(String payload) {

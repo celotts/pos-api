@@ -14,13 +14,14 @@ import java.util.Optional;
 public class AuditConfig {
 
     @Bean
+    @SuppressWarnings("null")
     public AuditorAware<String> auditorProvider() {
         return () -> {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null || !authentication.isAuthenticated() || "anonymousUser".equals(authentication.getPrincipal())) {
-                return Optional.of("SYSTEM");
-            }
-            return Optional.of(authentication.getName());
+            return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+                    .filter(Authentication::isAuthenticated)
+                    .filter(auth -> !"anonymousUser".equals(auth.getPrincipal()))
+                    .map(Authentication::getName)
+                    .or(() -> Optional.of("SYSTEM"));
         };
     }
 }

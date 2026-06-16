@@ -2,7 +2,6 @@ package com.posapi.infrastructure.security;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
-import org.springframework.security.core.authority.SimpleGrantedAuthority; // Importación añadida
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;

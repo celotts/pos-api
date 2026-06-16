@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .anonymous(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll() // Endpoints públicos (login, registro)
-                        .anyRequest().hasRole("USER") // Todo lo demás requiere rol USER
+                        .anyRequest().authenticated()            // Todo lo demás requiere autenticación (luego se puede refinar con @PreAuthorize)
                 )
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(entryPoint) // Manejo de error 401

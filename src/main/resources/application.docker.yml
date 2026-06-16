@@ -1,5 +1,3 @@
-# src/main/resources/application.yml
-
 server:
   port: ${PRODUCT_PORT:9090}
 
@@ -29,8 +27,13 @@ spring:
   security:
     oauth2:
       resourceserver:
-        jwt:
-          secret-key: ${JWT_SECRET:======================CelottsJWTSecretDefaultDevKey===========================}
+        jwt: # Configuración estándar para Spring Security Resource Server
+          # 🛡️ IMPORTANTE: Genera una clave Base64 aleatoria y fuerte (ej: openssl rand -base64 32)
+          secret-key: ${JWT_SECRET:YOUR_SECURE_RANDOM_BASE64_SECRET_HERE_44_CHARS_OR_MORE}
+  jwt: # Tu sección personalizada para JwtUtil (si es diferente a la de Spring Security)
+    # 🛡️ IMPORTANTE: Esta clave debe ser la misma que la de 'secret-key' de Spring Security
+    secret: ${JWT_SECRET:YOUR_SECURE_RANDOM_BASE64_SECRET_HERE_44_CHARS_OR_MORE}
+    expiration: ${JWT_EXPIRATION:3600000} # Por defecto 1 hora en ms
   eureka:
     client:
       service-url:
@@ -55,53 +58,3 @@ spring:
       org.springframework.web: INFO
       org.hibernate.SQL: DEBUG
       org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-
-# JWT Configuration (Deprecated, use environment variables instead)
-# jwt.secret=your_super_secret_jwt_key_replace_with_a_strong_base64_encoded_one
-# jwt.expiration=3600000 # 1 hour in milliseconds
-
-# docker-compose.yml
-
-version: '3.8'
-
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: pos_db
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: md5
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./src/main/resources/db/migration/:/docker-entrypoint-initdb.d/
-    ports:
-      - "${PRODUCT_PORT}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-
-  app:
-    build: .
-    container_name: pos_api_app
-    ports:
-      - "${PRODUCT_PORT}:8080"
-    environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:${POSTGRES_PORT}/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: none
-    depends_on:
-      db:
-        condition: service_healthy
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
-
-volumes:
-  db_data:

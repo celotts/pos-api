@@ -4,9 +4,9 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.lang.NonNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,17 +28,19 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    public JwtRequestFilter(@Qualifier("customUserDetailsService") UserDetailsService userDetailsService, JwtUtil jwtUtil) {
+    public JwtRequestFilter(
+            @Qualifier("customUserDetailsService") UserDetailsService userDetailsService,
+            JwtUtil jwtUtil) {
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
     }
 
     @Override
     public void doFilterInternal(@NonNull HttpServletRequest request,
-                                 @NonNull HttpServletResponse response,
-                                 @NonNull FilterChain chain)
+            @NonNull HttpServletResponse response,
+            @NonNull FilterChain chain)
             throws ServletException, IOException {
-        
+
         final String authHeader = request.getHeader("Authorization");
 
         String username = null;
@@ -50,7 +52,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                 username = jwtUtil.extractUsername(jwt);
             } catch (ExpiredJwtException e) {
                 log.warn("JWT rejected: Token has expired");
-                request.setAttribute(AUTH_ERROR_ATTRIBUTE, "El token ha expirado. Por favor, inicie sesión nuevamente.");
+                request.setAttribute(AUTH_ERROR_ATTRIBUTE,
+                        "El token ha expirado. Por favor, inicie sesión nuevamente.");
             } catch (MalformedJwtException | SignatureException e) {
                 log.warn("JWT rejected: Invalid signature or structure");
                 request.setAttribute(AUTH_ERROR_ATTRIBUTE, "El token es inválido o ha sido manipulado.");
@@ -67,7 +70,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     private void authenticateRequest(HttpServletRequest request, String username, String jwt) {
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             log.debug("Authenticating user: {}", username);
-            
+
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
             if (jwtUtil.validateToken(jwt, userDetails)) {
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

@@ -3,35 +3,31 @@ package com.posapi.application.service.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
-import jakarta.validation.constraints.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+
 @Service
+@Validated
+@RequiredArgsConstructor
 public class UserService implements UserManagementPort {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     @Override
-    public User createUser(@NotNull User user) {
+    public User createUser(User user) {
         // Codificar la contraseña de forma segura si viene en el objeto
         String rawPassword = user.getPasswordHash();
-        user.setPasswordHash(rawPassword != null ? passwordEncoder.encode(rawPassword) : "encodedPassword_fallback");
+        user.setPasswordHash(passwordEncoder.encode(rawPassword));
 
-        // 🛡️ Validación robusta: Comprobar nulidad antes de procesar el String para evitar NPE
+        // 🛡️ Validación robusta: Comprobar nulidad antes de procesar el String para
+        // evitar NPE
         if (user.getRole() == null || user.getRole().trim().isEmpty()) {
             user.setRole("USER");
         }
@@ -41,11 +37,8 @@ public class UserService implements UserManagementPort {
             user.setIsActive(true);
         }
 
-        // Asignar un ID si es nulo para mantener la consistencia
-
-        user.setCreatedAt(Instant.now());
-        user.setUpdatedAt(Instant.now());
-
+        // Note: createdAt and updatedAt are now handled automatically by
+        // JpaAuditing via the Auditable mapped superclass.
         return userRepository.save(user);
     }
 
@@ -65,21 +58,23 @@ public class UserService implements UserManagementPort {
     }
 
     @Override
-    public Optional<User> updateUser(UUID id, @NotNull User updatedUser) {
+    public Optional<User> updateUser(UUID id, User updatedUser) {
         return userRepository.findById(id).map(existingUser -> {
             existingUser.setEmail(updatedUser.getEmail());
             existingUser.setFullName(updatedUser.getFullName());
             // Solo actualizar passwordHash si se proporciona una nueva contraseña
-            if (!updatedUser.getPasswordHash().isEmpty()) {
-                existingUser.setPasswordHash(Objects.requireNonNull(passwordEncoder.encode(updatedUser.getPasswordHash())));
+            String newPassword = updatedUser.getPasswordHash();
+            if (!newPassword.trim().isEmpty()) {
+                existingUser
+                        .setPasswordHash(passwordEncoder.encode(newPassword));
             }
             existingUser.setIsActive(updatedUser.getIsActive());
             existingUser.setRole(updatedUser.getRole());
-            existingUser.setUpdatedAt(Instant.now());
             return userRepository.save(existingUser);
         });
     }
 
+    @Override
     public boolean deleteUser(UUID id) {
         return userRepository.findById(id).map(user -> {
             userRepository.delete(user);
