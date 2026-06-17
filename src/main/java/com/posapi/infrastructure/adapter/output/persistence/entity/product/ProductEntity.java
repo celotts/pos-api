@@ -1,4 +1,5 @@
-package com.posapi.infrastructure.persistence.entity.product;
+// Cambia esto en la primera línea:
+package com.posapi.infrastructure.adapter.output.persistence.entity.product;
 
 import jakarta.persistence.*;
 import lombok.Getter;

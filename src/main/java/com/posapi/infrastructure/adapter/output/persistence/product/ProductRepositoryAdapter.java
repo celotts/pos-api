@@ -2,7 +2,7 @@ package com.posapi.infrastructure.adapter.output.persistence.product;
 
 import com.posapi.domain.model.product.Product; // Actualizado
 import com.posapi.domain.repository.product.ProductRepository; // Actualizado
-import com.posapi.infrastructure.persistence.entity.product.ProductEntity; // Actualizado
+import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
