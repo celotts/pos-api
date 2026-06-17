@@ -14,8 +14,8 @@ public class UserRepositoryAdapter implements UserRepository {
     public boolean existsByUsername(String username) {
         return userStore.containsKey(username);
     }
-@Override
-public boolean existsByEmail(String email) {
+    @Override
+    public boolean existsByEmail(String email) {
     for (User user : userStore.values()) {
         if (user.getEmail().equals(email)) {
             return true;
@@ -36,11 +36,11 @@ public boolean existsByEmail(String email) {
     }
 
     @Override
-public Optional<User> findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
     return userStore.values().stream()
             .filter(user -> user.getEmail().equals(email))
             .findFirst();
-}
+    }
 
     @Override
     public List<User> findAll() {
@@ -53,7 +53,9 @@ public Optional<User> findByEmail(String email) {
     }
 
     @Override
-public Optional<User> findByUsername(String username) {
-    return Optional.ofNullable(userStore.get(username));
-}
+    public Optional<User> findByUsername(String username) {
+        return userStore.values().stream()
+                .filter(user -> user.getUsername().equals(username))
+                .findFirst();
+    }
 }

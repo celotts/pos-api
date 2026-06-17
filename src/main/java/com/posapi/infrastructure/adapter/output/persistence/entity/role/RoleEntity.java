@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.persistence.entity.role;
+package com.posapi.infrastructure.adapter.output.persistence.entity.role;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,9 +8,9 @@ import java.util.UUID;
 @Table(name = "roles")
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
 public class RoleEntity {
@@ -23,4 +23,11 @@ public class RoleEntity {
     @Column(name = "name", unique = true, nullable = false, length = 50)
     @ToString.Include
     private String name;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.id == null) {
+            this.id = UUID.randomUUID();
+        }
+    }
 }

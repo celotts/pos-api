@@ -27,10 +27,8 @@ class PosApiApplicationTests {
 
     // --- MOCKS NECESARIOS ---
 
-    @MockitoBean
-    private UserRepository userRepository;
-
-
+    // @MockitoBean
+    // private UserRepository userRepository;
 
     @MockitoBean(name = "customJwtRequestFilter")
     private JwtRequestFilter jwtRequestFilter;

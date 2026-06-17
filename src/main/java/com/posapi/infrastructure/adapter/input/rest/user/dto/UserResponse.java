@@ -47,14 +47,11 @@ public class UserResponse {
                     .build();
         }
 
-        // Aseguramos que isActive siempre sea un boolean primitivo
-        boolean activeStatus = (user.getIsActive() != null) ? user.getIsActive() : false;
-
         return UserResponse.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .fullName(user.getFullName())
-                .isActive(activeStatus)
+                .isActive(user.getIsActive())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

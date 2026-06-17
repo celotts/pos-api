@@ -22,23 +22,15 @@ public class UserService implements UserManagementPort {
 
     @Override
     public User createUser(User user) {
-        // Codificar la contraseña de forma segura si viene en el objeto
+        // 1. Cifrar la contraseña
         String rawPassword = user.getPasswordHash();
         user.setPasswordHash(passwordEncoder.encode(rawPassword));
 
-        // 🛡️ Validación robusta: Comprobar nulidad antes de procesar el String para
-        // evitar NPE
+        // 2. 🛡️ Asignar el rol por defecto si viene vacío o nulo
         if (user.getRole() == null || user.getRole().trim().isEmpty()) {
             user.setRole("USER");
         }
 
-        // Asegurar que el usuario esté activo por defecto
-        if (user.getIsActive() == null) {
-            user.setIsActive(true);
-        }
-
-        // Note: createdAt and updatedAt are now handled automatically by
-        // JpaAuditing via the Auditable mapped superclass.
         return userRepository.save(user);
     }
 
@@ -69,7 +61,7 @@ public class UserService implements UserManagementPort {
                         .setPasswordHash(passwordEncoder.encode(newPassword));
             }
             existingUser.setIsActive(updatedUser.getIsActive());
-            existingUser.setRole(updatedUser.getRole());
+            existingUser.setRoleName(updatedUser.getRoleName()); // Actualizar el nombre del rol
             return userRepository.save(existingUser);
         });
     }
