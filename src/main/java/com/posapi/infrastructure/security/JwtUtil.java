@@ -13,6 +13,7 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.nio.charset.StandardCharsets;
 
@@ -24,6 +25,10 @@ public class JwtUtil {
 
     @Value("${jwt.expiration}")
     private long expiration; // en milisegundos
+
+    public long getExpirationTime() {
+        return expiration;
+    }
 
     // Generar token para un usuario
     public String generateToken(UserDetails userDetails) {
@@ -40,6 +45,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
+                .id(UUID.randomUUID().toString()) // 🛡️ JTI único para mayor seguridad
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignKey())

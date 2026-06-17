@@ -28,7 +28,7 @@ public class UserController {
                 .passwordHash(userRequest.getPassword()) // La contraseña se codificará en UserService
                 .fullName(userRequest.getFullName())
                 .isActive(true) // Por defecto activo
-                .role("USER") // Por defecto rol USER, un ADMIN podría cambiarlo después
+                .roleName("USER") // Por defecto rol USER, un ADMIN podría cambiarlo después
                 .build();
 
         User createdUser = userManagementPort.createUser(user);

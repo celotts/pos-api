@@ -38,17 +38,19 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(authenticationRequest.username(), authenticationRequest.password())
             );
         } catch (BadCredentialsException e) {
+            // 🛡️ Seguridad: No revelar si el usuario existe o la contraseña es incorrecta.
+            // Siempre devolver un mensaje genérico para evitar ataques de enumeración de usuarios.
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Incorrect username or password");
+                    .body("Invalid credentials");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Authentication error: " + e.getMessage());
         }
 
         final UserDetails userDetails = userDetailsService.loadUserByUsername(authenticationRequest.username());
-        final String jwt = jwtUtil.generateToken(userDetails);
+        final String jwt = jwtUtil.generateToken(userDetails); // Asumimos que JwtUtil ya genera el token con la expiración
 
-        // 🛡️ Devolvemos el objeto tipado en lugar de un Map
-        return ResponseEntity.ok(new AuthenticationResponse(jwt));
+        // 🛡️ Devolvemos el objeto tipado con el tiempo de expiración real
+        return ResponseEntity.ok(new AuthenticationResponse(jwt, "Bearer", jwtUtil.getExpirationTime()));
     }
 }

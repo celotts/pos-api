@@ -1,30 +1,44 @@
 package com.posapi.domain.model.user;
 
 import lombok.*;
-import java.time.Instant;
 import java.util.UUID;
+import java.time.Instant;
+
 
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor // Necesario para frameworks de persistencia y serialización
-@AllArgsConstructor // Genera el constructor PÚBLICO que el Builder y otras capas necesitan
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
-    @NonNull
     private UUID id;
-    @NonNull
     private String email;
-    @NonNull
     private String passwordHash;
-    @NonNull
     private String fullName;
-    private Boolean isActive;
-    private String role;
+    private String roleName;
+    @Builder.Default
+    private boolean isActive = true;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant deletedAt;
-    private UUID createdByUserId;
-    private UUID updatedByUserId;
-    private UUID deletedByUserId;
 
+    public String getRole() {
+        return roleName != null ? roleName : "";
+    }
+
+    public String getUsername() {
+        return fullName != null ? fullName : "";
+    }
+
+    public void setRole(String roleName) {
+        this.roleName = roleName != null ? roleName : "";
+    }
+
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(boolean b) {
+        isActive = b;
+
+    }
 }
