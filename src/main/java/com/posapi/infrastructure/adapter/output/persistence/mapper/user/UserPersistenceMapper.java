@@ -1,6 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.mapper.user;
 
 import com.posapi.domain.model.user.User;
+import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
 import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import org.springframework.stereotype.Component;
 
@@ -20,14 +21,16 @@ public class UserPersistenceMapper {
                 .build();
     }
 
-    public UserEntity toEntity(User domain) {
+    // Ajustado para recibir el RoleEntity y usar la propiedad correcta 'passwordHash'
+    public UserEntity toEntity(User domain, RoleEntity roleEntity) {
         if (domain == null) return null;
         return UserEntity.builder()
                 .id(domain.getId())
                 .email(domain.getEmail())
-                .passwordHash(domain.getPasswordHash())
+                .password(domain.getPassword()) // 🔄 Ajustado a 'passwordHash'
                 .fullName(domain.getFullName())
                 .isActive(domain.getIsActive())
+                .role(roleEntity)                   // 🔄 Relación con el rol resuelta
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();

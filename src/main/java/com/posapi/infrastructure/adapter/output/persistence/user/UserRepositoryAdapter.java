@@ -55,7 +55,8 @@ public class UserRepositoryAdapter implements UserRepository {
     @Override
     public Optional<User> findByUsername(String username) {
         return userStore.values().stream()
-                .filter(user -> user.getUsername().equals(username))
+                // Cambia .getUsername() por .getEmail()
+                .filter(user -> user.getEmail().equals(username))
                 .findFirst();
     }
 }

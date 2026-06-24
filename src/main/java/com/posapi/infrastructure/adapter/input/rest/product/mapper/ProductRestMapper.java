@@ -5,6 +5,8 @@ import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
 import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class ProductRestMapper {
 
@@ -17,7 +19,7 @@ public class ProductRestMapper {
                 .description(request.getDescription())
                 .purchasePrice(request.getPurchasePrice())
                 .salePrice(request.getSalePrice())
-                .currentStock(request.getCurrentStock())
+                .currentStock(request.getCurrentStock() != null ? request.getCurrentStock().intValue() : 0)
                 .taxId(request.getTaxId())
                 .supplierId(request.getSupplierId())
                 .build();
@@ -33,7 +35,7 @@ public class ProductRestMapper {
                 .description(product.getDescription())
                 .purchasePrice(product.getPurchasePrice())
                 .salePrice(product.getSalePrice())
-                .currentStock(product.getCurrentStock())
+                .currentStock(BigDecimal.valueOf(product.getCurrentStock()))
                 .taxId(product.getTaxId())
                 .supplierId(product.getSupplierId())
                 .createdAt(product.getCreatedAt())

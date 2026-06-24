@@ -1,10 +1,11 @@
 package com.posapi.infrastructure.adapter.output.persistence.product;
 
-import com.posapi.domain.model.product.Product; // Actualizado
-import com.posapi.domain.repository.product.ProductRepository; // Actualizado
+import com.posapi.domain.model.product.Product;
+import com.posapi.domain.repository.product.ProductRepository;
 import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -56,6 +57,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
 
     // --- Mappers ---
     private ProductEntity toEntity(Product product) {
+        if (product == null) return null;
+
         return ProductEntity.builder()
                 .id(product.getId())
                 .sku(product.getSku())
@@ -63,7 +66,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .description(product.getDescription())
                 .purchasePrice(product.getPurchasePrice())
                 .salePrice(product.getSalePrice())
-                .currentStock(product.getCurrentStock())
+                .currentStock(product.getCurrentStock() != null ? BigDecimal.valueOf(product.getCurrentStock()) : BigDecimal.ZERO)
                 .taxId(product.getTaxId())
                 .supplierId(product.getSupplierId())
                 .createdAt(product.getCreatedAt())
@@ -76,6 +79,8 @@ public class ProductRepositoryAdapter implements ProductRepository {
     }
 
     private Product toDomain(ProductEntity productEntity) {
+        if (productEntity == null) return null;
+
         return Product.builder()
                 .id(productEntity.getId())
                 .sku(productEntity.getSku())
@@ -83,7 +88,7 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .description(productEntity.getDescription())
                 .purchasePrice(productEntity.getPurchasePrice())
                 .salePrice(productEntity.getSalePrice())
-                .currentStock(productEntity.getCurrentStock())
+                .currentStock(productEntity.getCurrentStock() != null ? productEntity.getCurrentStock().intValue() : 0)
                 .taxId(productEntity.getTaxId())
                 .supplierId(productEntity.getSupplierId())
                 .createdAt(productEntity.getCreatedAt())
@@ -92,6 +97,6 @@ public class ProductRepositoryAdapter implements ProductRepository {
                 .createdByUserId(productEntity.getCreatedByUserId())
                 .updatedByUserId(productEntity.getUpdatedByUserId())
                 .deletedByUserId(productEntity.getDeletedByUserId())
-                .build();
+                .build(); // <- Aquí faltaba el .build()
     }
 }

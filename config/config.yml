@@ -1,0 +1,24 @@
+{
+  "models": [
+    {
+      "title": "Qwen Coder 7B (Agente)",
+      "provider": "ollama",
+      "model": "qwen2.5-coder:7b"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Qwen Coder 1.5B (Tab)",
+    "provider": "ollama",
+    "model": "qwen2.5-coder:1.5b"
+  },
+  "tabAutocompleteOptions": {
+    "debounceDelay": 200,
+    "maxPromptTokens": 1024
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text:latest"
+  },
+  "systemMessage": "Eres un asistente de desarrollo local. No utilices APIs externas.",
+  "apiBase": "http://localhost:11434/v1"
+}

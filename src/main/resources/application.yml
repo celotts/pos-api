@@ -2,6 +2,19 @@
 server:
   port: ${SERVER_PORT:8080}
 
+# 🏆 Bloque unificado alineado con el init.sql y compatible con UserController Strings
+app:
+  roles:
+    ADMIN: "ADMIN"
+    USER: "USER"
+  user:
+    default:
+      role-id: ${app.roles.USER}
+      active: true
+    admin-creation:
+      role-id: ${app.roles.ADMIN}
+      active: true
+
 # Datasource Configuration (for local IDE execution)
 spring:
   application:
@@ -47,6 +60,7 @@ jwt:
 # Logging
 logging:
   level:
+    com.celotts: DEBUG
     org:
       springframework:
         web: DEBUG

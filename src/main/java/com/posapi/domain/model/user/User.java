@@ -1,44 +1,25 @@
 package com.posapi.domain.model.user;
 
-import lombok.*;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.Instant;
+import java.util.UUID;
 
-
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
     private UUID id;
     private String email;
-    private String passwordHash;
+    private String password;
     private String fullName;
+    private Boolean isActive;
+    private Integer failedLoginAttempts;
     private String roleName;
-    @Builder.Default
-    private boolean isActive = true;
     private Instant createdAt;
     private Instant updatedAt;
-
-    public String getRole() {
-        return roleName != null ? roleName : "";
-    }
-
-    public String getUsername() {
-        return fullName != null ? fullName : "";
-    }
-
-    public void setRole(String roleName) {
-        this.roleName = roleName != null ? roleName : "";
-    }
-
-    public boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(boolean b) {
-        isActive = b;
-
-    }
 }

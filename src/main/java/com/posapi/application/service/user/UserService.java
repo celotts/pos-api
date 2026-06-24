@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -22,16 +23,35 @@ public class UserService implements UserManagementPort {
 
     @Override
     public User createUser(User user) {
-        // 1. Cifrar la contraseña
-        String rawPassword = user.getPasswordHash();
-        user.setPasswordHash(passwordEncoder.encode(rawPassword));
-
-        // 2. 🛡️ Asignar el rol por defecto si viene vacío o nulo
-        if (user.getRole() == null || user.getRole().trim().isEmpty()) {
-            user.setRole("USER");
+        // 1. 🛡️ Validar unicidad del email
+        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+            throw new IllegalArgumentException("An account with this email already exists: " + user.getEmail());
         }
 
-        return userRepository.save(user);
+        // 2. Procesar valores de forma segura reconstruyendo el dominio si es inmutable
+        String rawPassword = user.getPassword();
+        String encodedPassword = (rawPassword != null && !rawPassword.trim().isEmpty())
+                ? passwordEncoder.encode(rawPassword)
+                : rawPassword;
+
+        String finalRole = (user.getRoleName() == null || user.getRoleName().trim().isEmpty())
+                ? "USER"
+                : user.getRoleName();
+
+        // 3. Creamos la instancia final enriquecida para enviar al puerto de salida
+        User userToSave = User.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(encodedPassword)
+                .fullName(user.getFullName())
+                .isActive(user.getIsActive())
+                .failedLoginAttempts(0) // Inicializar contador de intentos fallidos
+                .roleName(finalRole)
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
+
+        return userRepository.save(userToSave);
     }
 
     @Override
@@ -52,17 +72,36 @@ public class UserService implements UserManagementPort {
     @Override
     public Optional<User> updateUser(UUID id, User updatedUser) {
         return userRepository.findById(id).map(existingUser -> {
-            existingUser.setEmail(updatedUser.getEmail());
-            existingUser.setFullName(updatedUser.getFullName());
-            // Solo actualizar passwordHash si se proporciona una nueva contraseña
-            String newPassword = updatedUser.getPasswordHash();
-            if (!newPassword.trim().isEmpty()) {
-                existingUser
-                        .setPasswordHash(passwordEncoder.encode(newPassword));
+
+            // 🛡️ Validar unicidad del email si cambia
+            String finalEmail = existingUser.getEmail();
+            if (!existingUser.getEmail().equalsIgnoreCase(updatedUser.getEmail())) {
+                if (userRepository.findByEmail(updatedUser.getEmail()).isPresent()) {
+                    throw new IllegalArgumentException("Email is already taken by another user: " + updatedUser.getEmail());
+                }
+                finalEmail = updatedUser.getEmail();
             }
-            existingUser.setIsActive(updatedUser.getIsActive());
-            existingUser.setRoleName(updatedUser.getRoleName()); // Actualizar el nombre del rol
-            return userRepository.save(existingUser);
+
+            // Procesar contraseña nueva si aplica
+            String newPassword = updatedUser.getPassword();
+            String finalPassword = (newPassword != null && !newPassword.trim().isEmpty())
+                    ? passwordEncoder.encode(newPassword)
+                    : existingUser.getPassword();
+
+            // Reconstruimos el usuario actualizado conservando fechas de creación e ID estables
+            User userToUpdate = User.builder()
+                    .id(existingUser.getId())
+                    .email(finalEmail)
+                    .password(finalPassword)
+                    .fullName(updatedUser.getFullName())
+                    .isActive(updatedUser.getIsActive())
+                    .roleName(updatedUser.getRoleName())
+                    .failedLoginAttempts(existingUser.getFailedLoginAttempts()) // Mantiene el contador de intentos
+                    .createdAt(existingUser.getCreatedAt()) // Mantiene fecha original
+                    .updatedAt(Instant.now()) // Actualiza la fecha de modificación
+                    .build();
+
+            return userRepository.save(userToUpdate);
         });
     }
 

@@ -1,26 +1,38 @@
 server:
-  port: 8080 # Puerto interno del contenedor
+  port: ${SERVER_PORT:8080}
+
+app:
+  roles:
+    ADMIN: "ADMIN"
+    USER: "USER"
+  user:
+    default:
+      role-id: ${app.roles.USER}
+      active: true
+    admin-creation:
+      role-id: ${app.roles.ADMIN}
+      active: true
 
 spring:
-  cloud:
-    gateway:
-      enabled: false
   application:
-    name: product-service
+    name: pos-api
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    # Si no hay variable de entorno, cae al localhost:5432/product del compose
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/product}
+    username: ${SPRING_DATASOURCE_USERNAME:product}
+    password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: none
     show-sql: true
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
   rabbitmq:
-    host: ${SPRING_RABBITMQ_HOST:rabbitmq}
+    host: ${SPRING_RABBITMQ_HOST:localhost}
     port: ${SPRING_RABBITMQ_PORT:5672}
     username: ${SPRING_RABBITMQ_USERNAME:guest}
     password: ${SPRING_RABBITMQ_PASSWORD:guest}
@@ -28,31 +40,33 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          # 🛡️ Homologado con la variable JWT_SECRET
-          secret-key: ${JWT_SECRET}
-  jwt:
-    # 🛡️ Homologado con la variable JWT_SECRET
-    secret: ${JWT_SECRET}
-    expiration: ${JWT_EXPIRATION:3600000}
-  eureka:
-    client:
-      service-url:
-        defaultZone: ${DISCOVERY_SERVICE_EUREKA:http://discovery-service:8761/eureka/}
-    instance:
-      prefer-ip-address: true
-      instance-id: ${spring.application.name}:${random.value}
-  management:
-    endpoints:
-      web:
-        exposure:
-          include: "*"
-    tracing:
-      sampling:
-        probability: 1.0
-      zipkin:
-        tracing:
-          endpoint: ${MANAGEMENT_ZIPKIN_TRACING_ENDPOINT:http://zipkin:9411/api/v2/spans}
-  logging:
-    level:
-      com.posapi: DEBUG
-      org.springframework.web: INFO
+          secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+  cloud:
+    gateway:
+      routes:
+        - id: rate_limit_route
+          uri: lb://pos-api
+          predicates:
+            - Path=/api/v1/users/register
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 3
+                redis-rate-limiter.burstCapacity: 5
+
+jwt:
+  secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+  expiration: ${JWT_EXPIRATION:3600000}
+
+logging:
+  level:
+    com.posapi: DEBUG
+    com.celotts: DEBUG
+    org:
+      springframework:
+        web: DEBUG
+      hibernate:
+        SQL: DEBUG
+        orm:
+          jdbc:
+            bind: TRACE

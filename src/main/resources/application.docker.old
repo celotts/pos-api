@@ -1,6 +1,16 @@
 server:
   port: ${PRODUCT_PORT:9090}
-
+app:
+  roles:
+    ADMIN: "00000000-0000-0000-0000-000000000001"
+    USER: "00000000-0000-0000-0000-000000000002"
+  user:
+    default:
+      role-id: ${app.roles.USER}
+      active: true
+    admin-creation:
+      role-id: ${app.roles.ADMIN}
+      active: false
 spring:
   cloud:
     gateway:

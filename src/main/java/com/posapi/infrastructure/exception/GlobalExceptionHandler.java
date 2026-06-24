@@ -51,6 +51,21 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(
+            IllegalArgumentException ex, WebRequest request) {
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.CONFLICT.value()) // 409
+                .error(HttpStatus.CONFLICT.getReasonPhrase()) // "Conflict"
+                .message(ex.getMessage()) // Muestra tu mensaje: "An account with this email already exists..."
+                .path(((ServletWebRequest) request).getRequest().getRequestURI())
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleAllUncaughtException(
             RuntimeException ex, WebRequest request) {

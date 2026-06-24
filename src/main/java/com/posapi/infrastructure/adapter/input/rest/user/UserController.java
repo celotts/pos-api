@@ -5,17 +5,31 @@ import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/v1/users")
 public class UserController {
 
     private final UserManagementPort userManagementPort;
+
+    @Value("${app.roles.USER:USER}")
+    private String defaultUserRole;
+
+    @Value("${app.user.default.active:true}")
+    private boolean defaultUserActiveStatus;
+
+    @Value("${app.roles.ADMIN:ADMIN}")
+    private String adminRole;
+
+    @Value("${app.user.admin-creation.active:true}")
+    private boolean adminActiveStatus;
 
     public UserController(UserManagementPort userManagementPort) {
         this.userManagementPort = userManagementPort;
@@ -23,22 +37,18 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest) {
-        User user = User.builder()
-                .email(userRequest.getEmail())
-                .passwordHash(userRequest.getPassword()) // La contraseña se codificará en UserService
-                .fullName(userRequest.getFullName())
-                .isActive(true) // Por defecto activo
-                .roleName("USER") // Por defecto rol USER, un ADMIN podría cambiarlo después
-                .build();
+        return createUserWorkflow(userRequest, defaultUserRole, defaultUserActiveStatus);
+    }
 
-        User createdUser = userManagementPort.createUser(user);
-        return new ResponseEntity<>(UserResponse.fromUser(createdUser), HttpStatus.CREATED); // Usar fromUser
+    @PostMapping("/register-admin")
+    public ResponseEntity<UserResponse> registerAdmin(@Valid @RequestBody UserRequest userRequest) {
+        return createUserWorkflow(userRequest, adminRole, adminActiveStatus);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         return userManagementPort.getUserById(id)
-                .map(UserResponse::fromUser) // Usar fromUser
+                .map(UserResponse::fromUser)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -46,8 +56,51 @@ public class UserController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
         return userManagementPort.getUserByEmail(email)
-                .map(UserResponse::fromUser) // Usar fromUser
+                .map(UserResponse::fromUser)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<UserResponse>> getAllUsers() {
+        List<UserResponse> users = userManagementPort.getAllUsers().stream()
+                .map(UserResponse::fromUser)
+                .toList();
+        return ResponseEntity.ok(users);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
+        User userTemplate = User.builder()
+                .email(userRequest.getEmail())
+                .password(userRequest.getPassword())
+                .fullName(userRequest.getFullName())
+                .isActive(defaultUserActiveStatus)
+                .build();
+
+        return userManagementPort.updateUser(id, userTemplate)
+                .map(UserResponse::fromUser)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
+        return userManagementPort.deleteUser(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
+    }
+
+    private ResponseEntity<UserResponse> createUserWorkflow(UserRequest userRequest, String roleName, boolean isActive) {
+        User user = User.builder()
+                .email(userRequest.getEmail())
+                .password(userRequest.getPassword())
+                .fullName(userRequest.getFullName())
+                .isActive(isActive)
+                .roleName(roleName)
+                .build();
+
+        User createdUser = userManagementPort.createUser(user);
+        return new ResponseEntity<>(UserResponse.fromUser(createdUser), HttpStatus.CREATED);
     }
 }

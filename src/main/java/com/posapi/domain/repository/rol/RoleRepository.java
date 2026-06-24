@@ -1,6 +1,6 @@
 package com.posapi.domain.repository.rol;
 
-import com.posapi.domain.model.Role.Role;
+import com.posapi.domain.model.role.Role;
 import lombok.NonNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 

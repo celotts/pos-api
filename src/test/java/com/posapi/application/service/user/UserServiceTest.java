@@ -46,9 +46,9 @@ class UserServiceTest {
         testUser = new User();
         testUser.setId(userId);
         testUser.setEmail("test@posapi.com");
-        testUser.setPasswordHash("rawPassword");
-        testUser.setRole("ADMIN");
-        testUser.setIsActive(true);
+        testUser.setPassword("rawPassword");
+        testUser.setRoleName("ADMIN");
+        testUser.setActive(true);
     }
 
     @Test
@@ -56,7 +56,7 @@ class UserServiceTest {
     void createUser_ShouldEncodePasswordAndSetDefaults() {
         // Arrange: Preparamos un usuario con rol vacío para probar la lógica de
         // defaults
-        testUser.setRole("");
+        testUser.setRoleName("");
         when(passwordEncoder.encode("rawPassword")).thenReturn("encoded_pass");
         when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
             User u = invocation.getArgument(0);
@@ -68,8 +68,8 @@ class UserServiceTest {
         User created = userService.createUser(testUser);
 
         // Assert
-        assertThat(created.getPasswordHash()).isEqualTo("encoded_pass");
-        assertThat(created.getRole()).isEqualTo("USER"); // Validamos el default "USER"
+        assertThat(created.getPassword()).isEqualTo("encoded_pass");
+        assertThat(created.getRoleName()).isEqualTo("USER"); // Validamos el default "USER"
         assertThat(created.getCreatedAt()).isNotNull();
         verify(userRepository).save(testUser);
     }
@@ -109,9 +109,9 @@ class UserServiceTest {
         User updatedInfo = new User();
         updatedInfo.setEmail("new@posapi.com");
         updatedInfo.setFullName("Updated Name");
-        updatedInfo.setPasswordHash("newRawPassword");
-        updatedInfo.setRole("MANAGER");
-        updatedInfo.setIsActive(false);
+        updatedInfo.setPassword("newRawPassword");
+        updatedInfo.setRoleName("MANAGER");
+        updatedInfo.setActive(false);
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.encode("newRawPassword")).thenReturn("new_encoded_pass");
@@ -124,8 +124,8 @@ class UserServiceTest {
         assertThat(result).isPresent();
         User updated = result.get();
         assertThat(updated.getEmail()).isEqualTo("new@posapi.com");
-        assertThat(updated.getPasswordHash()).isEqualTo("new_encoded_pass");
-        assertThat(updated.getRole()).isEqualTo("MANAGER");
+        assertThat(updated.getPassword()).isEqualTo("new_encoded_pass");
+        assertThat(updated.getRoleName()).isEqualTo("MANAGER");
         assertThat(updated.getIsActive()).isFalse();
         verify(userRepository).save(any(User.class));
     }
