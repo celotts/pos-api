@@ -2,67 +2,52 @@ package com.posapi.infrastructure.adapter.output.persistence.entity.user;
 
 import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true, nullable = false, length = 255)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "password", nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "full_name", nullable = false, length = 255)
+    @Column(name = "full_name", nullable = false)
     private String fullName;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @Column(name = "failed_login_attempts", nullable = false)
+    private Integer failedLoginAttempts;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private RoleEntity role;
 
-    @Column(name = "created_at", nullable = false)
+    @CreationTimestamp // 🟢 Limpio, usando el import de arriba
+    @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;
 
+    @UpdateTimestamp // 🟢 Limpio, usando el import de arriba
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
-
-    @Column(name = "created_by_user_id")
-    private UUID createdByUserId;
-
-    @Column(name = "updated_by_user_id")
-    private UUID updatedByUserId;
-
-    @Column(name = "deleted_by_user_id")
-    private UUID deletedByUserId;
-
-    @Column(name = "created_by_role_id")
-    private UUID createdByRoleId;
-
-    @Column(name = "updated_by_role_id")
-    private UUID updatedByRoleId;
-
-    @Column(name = "deleted_by_role_id")
-    private UUID deletedByRoleId;
 }

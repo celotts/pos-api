@@ -3,31 +3,30 @@ package com.posapi.infrastructure.adapter.input.rest.user.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserRequest {
 
-    @NotBlank(message = "Email cannot be empty")
-    @Email(message = "Email should be valid")
+    @NotBlank(message = "El email es obligatorio")
+    @Email(message = "El formato del email no es válido")
     private String email;
 
-    @NotBlank(message = "Password cannot be empty")
-    @Size(min = 6, message = "Password must be at least 6 characters long")
-    private String password; // Contraseña en texto plano para la entrada
+    @NotBlank(message = "La contraseña es obligatoria")
+    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    private String password;
 
-    @NotBlank(message = "Full name cannot be empty")
+    @NotBlank(message = "El nombre completo es obligatorio")
     private String fullName;
 
-    // El rol y el estado activo se pueden manejar por defecto o con lógica de negocio
-    // private String role;
-    // private Boolean isActive;
+    // Campos opcionales para control avanzado o actualizaciones (pueden ser nulos en el registro básico)
+    private Boolean isActive;
+    private Integer failedLoginAttempts;
+    private String roleName;
 }

@@ -24,7 +24,7 @@ spring:
   application:
     name: pos-api
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/product}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pos_db}
     username: ${SPRING_DATASOURCE_USERNAME:product}
     password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver

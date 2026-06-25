@@ -2,61 +2,70 @@ package com.posapi.infrastructure.adapter.output.persistence.user;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
-import org.springframework.stereotype.Repository;
+import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
+import com.posapi.infrastructure.adapter.output.persistence.mapper.user.UserPersistenceMapper;
+import com.posapi.infrastructure.adapter.output.persistence.repository.user.UserJpaRepository;
+import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
-@Repository
+@Component
 public class UserRepositoryAdapter implements UserRepository {
-    private final Map<String, User> userStore = new HashMap<>();
+
+    private final UserJpaRepository userJpaRepository;
+    private final UserPersistenceMapper userPersistenceMapper;
+
+    public UserRepositoryAdapter(UserJpaRepository userJpaRepository, UserPersistenceMapper userPersistenceMapper) {
+        this.userJpaRepository = userJpaRepository;
+        this.userPersistenceMapper = userPersistenceMapper;
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userJpaRepository.findByEmail(email).isPresent();
+    }
 
     @Override
     public boolean existsByUsername(String username) {
-        return userStore.containsKey(username);
-    }
-    @Override
-    public boolean existsByEmail(String email) {
-    for (User user : userStore.values()) {
-        if (user.getEmail().equals(email)) {
-            return true;
-        }
-    }
-    return false;
-}
-
-    @Override
-    public User save(User user) {
-        userStore.put(user.getEmail(), user);
-        return user;
-    }
-
-    @Override
-    public Optional<User> findById(UUID id) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<User> findByEmail(String email) {
-    return userStore.values().stream()
-            .filter(user -> user.getEmail().equals(email))
-            .findFirst();
-    }
-
-    @Override
-    public List<User> findAll() {
-        return List.of();
-    }
-
-    @Override
-    public void delete(User user) {
-        userStore.remove(user.getEmail());
+        return findByEmail(username).isPresent();
     }
 
     @Override
     public Optional<User> findByUsername(String username) {
-        return userStore.values().stream()
-                // Cambia .getUsername() por .getEmail()
-                .filter(user -> user.getEmail().equals(username))
-                .findFirst();
+        return findByEmail(username);
+    }
+
+    @Override
+    public User save(User user) {
+        // Usa el mapeador para ir a entidad, evitando builders rotos aquí
+        UserEntity entity = userPersistenceMapper.toEntity(user);
+        UserEntity savedEntity = userJpaRepository.save(entity);
+        return userPersistenceMapper.toDomain(savedEntity);
+    }
+
+    @Override
+    public Optional<User> findById(UUID id) {
+        return userJpaRepository.findById(id).map(userPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Optional<User> findByEmail(String email) {
+        return userJpaRepository.findByEmail(email).map(userPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public List<User> findAll() {
+        return userJpaRepository.findAll().stream()
+                .map(userPersistenceMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void delete(User user) {
+        if (user.getId() != null) {
+            userJpaRepository.deleteById(user.getId());
+        }
     }
 }

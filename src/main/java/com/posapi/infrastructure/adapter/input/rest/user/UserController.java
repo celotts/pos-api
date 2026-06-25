@@ -37,7 +37,7 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest) {
         return createUserWorkflow(userRequest, defaultUserRole, defaultUserActiveStatus);
     }
@@ -73,12 +73,17 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or authentication.principal.username == #userRequest.email")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
+        // El controlador solo mapea lo que el cliente envía hacia el dominio crudo.
+        // Toda la lógica de encriptación y combinación de fechas se procesa en tu UserService.
         User userTemplate = User.builder()
                 .email(userRequest.getEmail())
                 .password(userRequest.getPassword())
                 .fullName(userRequest.getFullName())
-                .isActive(defaultUserActiveStatus)
+                .isActive(userRequest.getIsActive() != null ? userRequest.getIsActive() : defaultUserActiveStatus)
+                .failedLoginAttempts(userRequest.getFailedLoginAttempts())
+                .roleName(userRequest.getRoleName())
                 .build();
 
         return userManagementPort.updateUser(id, userTemplate)
@@ -95,6 +100,7 @@ public class UserController {
     }
 
     private ResponseEntity<UserResponse> createUserWorkflow(UserRequest userRequest, String roleName, boolean isActive) {
+        // Mapeo inicial simple. Tu UserService se encargará de encriptar el password y forzar failedLoginAttempts a 0.
         User user = User.builder()
                 .email(userRequest.getEmail())
                 .password(userRequest.getPassword())

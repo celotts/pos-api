@@ -19,7 +19,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    // Ya no requiere import porque JwtRequestFilter está en este mismo paquete
     private final JwtRequestFilter jwtRequestFilter;
 
     public SecurityConfig(JwtRequestFilter jwtRequestFilter) {
@@ -32,6 +31,9 @@ public class SecurityConfig {
                 .csrf(CsrfConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/auth/login").permitAll()
+                        .requestMatchers("/api/v1/users/register-admin").permitAll()
+                        // 🟢 Agregamos el endpoint de registro a las rutas públicas permitidas
+                        .requestMatchers("/api/v1/users/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session
