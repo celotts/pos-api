@@ -1,9 +1,11 @@
 package com.posapi.application.service.auth;
 
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.repository.rol.RoleRepository; // Importamos el repositorio
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor; // Usamos Lombok para el constructor
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -13,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor // Inyecta automáticamente los campos final
 public class JwtService {
 
     @Value("${application.security.jwt.secret-key}")
@@ -21,23 +24,29 @@ public class JwtService {
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+    private final RoleRepository roleRepository; // Inyectado para consultar el nombre
+
     public String generateToken(User user) {
+        // Recuperamos el nombre del rol usando el roleId del dominio
+        String roleName = roleRepository.findById(user.getRoleId())
+                .map(role -> role.getName()) // Asumiendo que Role tiene getName()
+                .orElse("USER"); // Fallback por seguridad
+
         Map<String, Object> claims = new HashMap<>();
-        claims.put("role", user.getRoleName());
+        claims.put("role", roleName);
         claims.put("fullName", user.getFullName());
 
-        // Sintaxis moderna fluida de jjwt (0.12.x+)
         return Jwts.builder()
                 .claims(claims)
                 .subject(user.getEmail())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
-                .signWith(getSignInKey()) // El algoritmo se deduce automáticamente de la clave
+                .signWith(getSignInKey())
                 .compact();
     }
 
     private SecretKey getSignInKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes); // Retorna SecretKey de forma segura
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

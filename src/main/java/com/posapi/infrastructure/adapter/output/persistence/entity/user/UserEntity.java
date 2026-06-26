@@ -24,6 +24,9 @@ public class UserEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "role_id", nullable = false, insertable = false, updatable = false)
+    private UUID roleId;
+
     @Column(unique = true, nullable = false)
     private String email;
 
@@ -40,7 +43,7 @@ public class UserEntity {
     private Integer failedLoginAttempts;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id", nullable = false)
+    @JoinColumn(name = "role_id")
     private RoleEntity role;
 
     @CreationTimestamp // 🟢 Limpio, usando el import de arriba

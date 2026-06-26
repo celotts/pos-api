@@ -1,8 +1,10 @@
 package com.posapi.application.service.user;
 
 import com.posapi.application.port.user.UserManagementPort;
+import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.user.UserRepository;
+import com.posapi.domain.repository.rol.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,45 +20,38 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UserService implements UserManagementPort {
 
+    private static final String DEFAULT_ROLE_NAME = "USER";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository;
 
     @Override
     public User createUser(User user) {
-        // 1. 🛡️ Validar unicidad del email
         if (userRepository.findByEmail(user.getEmail()).isPresent()) {
             throw new IllegalArgumentException("An account with this email already exists: " + user.getEmail());
         }
 
-        // 2. Procesar valores de forma segura reconstruyendo el dominio si es inmutable
         String rawPassword = user.getPassword();
         String encodedPassword = (rawPassword != null && !rawPassword.trim().isEmpty())
-                ? passwordEncoder.encode(rawPassword)
-                : rawPassword;
+                ? passwordEncoder.encode(rawPassword) : rawPassword;
 
-        String finalRole = (user.getRoleName() == null || user.getRoleName().trim().isEmpty())
-                ? "USER"
-                : user.getRoleName();
+        Role defaultRole = roleRepository.findByName(DEFAULT_ROLE_NAME)
+                .orElseThrow(() -> new IllegalStateException("El rol por defecto '" + DEFAULT_ROLE_NAME + "' no se encuentra."));
 
-        // 3. Creamos la instancia final enriquecida para enviar al puerto de salida
         User userToSave = User.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .password(encodedPassword)
                 .fullName(user.getFullName())
-                .isActive(user.getIsActive())
-                .failedLoginAttempts(0) // Inicializar contador de intentos fallidos
-                .roleName(finalRole)
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
+                .isActive(true)
+                .failedLoginAttempts(0)
+                .roleId(defaultRole.getId()) // Se asigna el ID obtenido del repositorio
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
                 .build();
 
         return userRepository.save(userToSave);
-    }
-
-    @Override
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
     }
 
     @Override
@@ -70,35 +65,32 @@ public class UserService implements UserManagementPort {
     }
 
     @Override
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    @Override
     public Optional<User> updateUser(UUID id, User updatedUser) {
         return userRepository.findById(id).map(existingUser -> {
 
-            // 🛡️ Validar unicidad del email si cambia
-            String finalEmail = existingUser.getEmail();
-            if (!existingUser.getEmail().equalsIgnoreCase(updatedUser.getEmail())) {
-                if (userRepository.findByEmail(updatedUser.getEmail()).isPresent()) {
-                    throw new IllegalArgumentException("Email is already taken by another user: " + updatedUser.getEmail());
-                }
-                finalEmail = updatedUser.getEmail();
+            // Si el DTO trae un nuevo roleId, validamos que exista antes de asignar
+            UUID finalRoleId = existingUser.getRoleId();
+            if (updatedUser.getRoleId() != null && !updatedUser.getRoleId().equals(existingUser.getRoleId())) {
+                roleRepository.findById(updatedUser.getRoleId())
+                        .orElseThrow(() -> new IllegalArgumentException("El rol con ID " + updatedUser.getRoleId() + " no existe."));
+                finalRoleId = updatedUser.getRoleId();
             }
 
-            // Procesar contraseña nueva si aplica
-            String newPassword = updatedUser.getPassword();
-            String finalPassword = (newPassword != null && !newPassword.trim().isEmpty())
-                    ? passwordEncoder.encode(newPassword)
-                    : existingUser.getPassword();
-
-            // Reconstruimos el usuario actualizado conservando fechas de creación e ID estables
             User userToUpdate = User.builder()
                     .id(existingUser.getId())
-                    .email(finalEmail)
-                    .password(finalPassword)
+                    .email(updatedUser.getEmail() != null ? updatedUser.getEmail() : existingUser.getEmail())
+                    .password(existingUser.getPassword())
                     .fullName(updatedUser.getFullName())
-                    .isActive(updatedUser.getIsActive())
-                    .roleName(updatedUser.getRoleName())
-                    .failedLoginAttempts(existingUser.getFailedLoginAttempts()) // Mantiene el contador de intentos
-                    .createdAt(existingUser.getCreatedAt()) // Mantiene fecha original
-                    .updatedAt(Instant.now()) // Actualiza la fecha de modificación
+                    .isActive(updatedUser.getIsActive() != null ? updatedUser.getIsActive() : existingUser.getIsActive())
+                    .failedLoginAttempts(existingUser.getFailedLoginAttempts())
+                    .roleId(finalRoleId) // Usamos el ID validado
+                    .createdAt(existingUser.getCreatedAt())
+                    .updatedAt(Instant.now())
                     .build();
 
             return userRepository.save(userToUpdate);

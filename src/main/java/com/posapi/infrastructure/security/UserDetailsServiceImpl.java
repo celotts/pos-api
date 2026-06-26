@@ -1,32 +1,44 @@
 package com.posapi.infrastructure.security;
 
+import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.repository.rol.RoleRepository;
 import com.posapi.domain.repository.user.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
+// Importamos explícitamente el User de Spring Security para mayor claridad
+import org.springframework.security.core.userdetails.User.UserBuilder;
 
 @Service("customUserDetailsService")
+@RequiredArgsConstructor // Elimina la necesidad de escribir el constructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
-
-    public UserDetailsServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final RoleRepository roleRepository;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
 
-        // Construir un objeto UserDetails de Spring Security
-        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
-                .password(user.getPassword())
-                .authorities("ROLE_" + user.getRoleName())
-                .build();
+        String roleName = getRoleName(user.getRoleId());
+
+        // Usamos UserBuilder para mayor limpieza
+        UserBuilder builder = org.springframework.security.core.userdetails.User.withUsername(user.getEmail());
+        builder.password(user.getPassword());
+        builder.authorities("ROLE_" + roleName);
+
+        return builder.build();
+    }
+
+    // Movemos la lógica sucia a un método privado para que el flujo principal se vea limpio
+    private String getRoleName(java.util.UUID roleId) {
+        return roleRepository.findById(roleId)
+                .map(Role::getName)
+                .orElse("USER");
     }
 }

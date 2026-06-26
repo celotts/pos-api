@@ -1,10 +1,13 @@
 package com.posapi.infrastructure.adapter.input.rest.user;
 
 import com.posapi.application.port.user.UserManagementPort;
+import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.repository.rol.RoleRepository; // Necesario
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor; // Usar RequiredArgsConstructor para simplificar
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,9 +19,11 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@RequiredArgsConstructor // Inyecta dependencias automáticamente
 public class UserController {
 
     private final UserManagementPort userManagementPort;
+    private final RoleRepository roleRepository; // Inyectado para buscar nombres de roles
 
     @Value("${app.roles.USER:USER}")
     private String defaultUserRole;
@@ -32,12 +37,7 @@ public class UserController {
     @Value("${app.user.admin-creation.active:true}")
     private boolean adminActiveStatus;
 
-    public UserController(UserManagementPort userManagementPort) {
-        this.userManagementPort = userManagementPort;
-    }
-
     @PostMapping("/register")
-    //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest) {
         return createUserWorkflow(userRequest, defaultUserRole, defaultUserActiveStatus);
     }
@@ -51,7 +51,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         return userManagementPort.getUserById(id)
-                .map(UserResponse::fromUser)
+                .map(this::mapToResponse) // Usamos método auxiliar
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -59,7 +59,7 @@ public class UserController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
         return userManagementPort.getUserByEmail(email)
-                .map(UserResponse::fromUser)
+                .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -67,27 +67,32 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userManagementPort.getAllUsers().stream()
-                .map(UserResponse::fromUser)
+                .map(this::mapToResponse)
                 .toList();
         return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or authentication.principal.username == #userRequest.email")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
-        // El controlador solo mapea lo que el cliente envía hacia el dominio crudo.
-        // Toda la lógica de encriptación y combinación de fechas se procesa en tu UserService.
+        // Obtenemos el ID del rol si viene en el request
+        // Es mejor fallar rápido si el rol no existe.
+        UUID roleId = null;
+        if (userRequest.getRoleName() != null && !userRequest.getRoleName().isBlank()) {
+            roleId = roleRepository.findByName(userRequest.getRoleName())
+                    .map(Role::getId)
+                    .orElseThrow(() -> new IllegalArgumentException("El rol especificado no existe: " + userRequest.getRoleName()));
+        }
+
         User userTemplate = User.builder()
                 .email(userRequest.getEmail())
                 .password(userRequest.getPassword())
                 .fullName(userRequest.getFullName())
-                .isActive(userRequest.getIsActive() != null ? userRequest.getIsActive() : defaultUserActiveStatus)
-                .failedLoginAttempts(userRequest.getFailedLoginAttempts())
-                .roleName(userRequest.getRoleName())
+                .isActive(userRequest.getIsActive() != null ? userRequest.getIsActive() : true)
+                .roleId(roleId) // Pasamos el ID del rol validado
                 .build();
 
         return userManagementPort.updateUser(id, userTemplate)
-                .map(UserResponse::fromUser)
+                .map(this::mapToResponse)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -100,16 +105,27 @@ public class UserController {
     }
 
     private ResponseEntity<UserResponse> createUserWorkflow(UserRequest userRequest, String roleName, boolean isActive) {
-        // Mapeo inicial simple. Tu UserService se encargará de encriptar el password y forzar failedLoginAttempts a 0.
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new IllegalStateException("Rol no encontrado: " + roleName));
+
         User user = User.builder()
                 .email(userRequest.getEmail())
                 .password(userRequest.getPassword())
                 .fullName(userRequest.getFullName())
                 .isActive(isActive)
-                .roleName(roleName)
+                .roleId(role.getId())
+                .failedLoginAttempts(0)
                 .build();
 
         User createdUser = userManagementPort.createUser(user);
-        return new ResponseEntity<>(UserResponse.fromUser(createdUser), HttpStatus.CREATED);
+        return new ResponseEntity<>(mapToResponse(createdUser), HttpStatus.CREATED);
+    }
+
+    // Método auxiliar para obtener el nombre del rol y mapear a DTO
+    private UserResponse mapToResponse(User user) {
+        String roleName = roleRepository.findById(user.getRoleId())
+                .map(Role::getName)
+                .orElse("UNKNOWN");
+        return UserResponse.fromUser(user, roleName);
     }
 }

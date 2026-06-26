@@ -55,18 +55,35 @@ public class AuthenticationService {
         boolean shouldLockAccount = newAttemptCount >= MAX_FAILED_ATTEMPTS;
 
         User updatedUser = User.builder()
-                .id(user.getId()).email(user.getEmail()).password(user.getPassword())
-                .fullName(user.getFullName()).roleName(user.getRoleName())
-                .createdAt(user.getCreatedAt()).updatedAt(user.getUpdatedAt())
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .fullName(user.getFullName())
+                .roleId(user.getRoleId()) // Usa el ID, es lo correcto
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .failedLoginAttempts(newAttemptCount)
-                .isActive(!shouldLockAccount) // Bloquear la cuenta si se alcanza el límite
+                .isActive(!shouldLockAccount)
                 .build();
 
         userRepository.save(updatedUser);
     }
 
     private void resetFailedAttempts(User user) {
-        User updatedUser = User.builder().id(user.getId()).email(user.getEmail()).password(user.getPassword()).fullName(user.getFullName()).roleName(user.getRoleName()).createdAt(user.getCreatedAt()).updatedAt(user.getUpdatedAt()).failedLoginAttempts(0).isActive(user.getIsActive()).build();
+        // 1. Eliminamos .roleName(user.getRoleName())
+        // 2. Usamos .roleId(user.getRoleId()) para mantener la relación
+        User updatedUser = User.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .fullName(user.getFullName())
+                .roleId(user.getRoleId()) // <--- Usamos el ID en lugar del nombre
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .failedLoginAttempts(0)
+                .isActive(user.getIsActive())
+                .build();
+
         userRepository.save(updatedUser);
     }
 }

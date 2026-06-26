@@ -10,12 +10,9 @@ import java.util.UUID;
 @Component
 public class UserPersistenceMapper {
 
-    // IDs predecibles definidos exactamente en tu script SQL base
-    private static final UUID ADMIN_ROLE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
-    private static final UUID USER_ROLE_ID  = UUID.fromString("00000000-0000-0000-0000-000000000002");
-
     public User toDomain(UserEntity entity) {
         if (entity == null) return null;
+
         return User.builder()
                 .id(entity.getId())
                 .email(entity.getEmail())
@@ -23,7 +20,7 @@ public class UserPersistenceMapper {
                 .fullName(entity.getFullName())
                 .isActive(entity.getIsActive())
                 .failedLoginAttempts(entity.getFailedLoginAttempts())
-                .roleName(entity.getRole() != null ? entity.getRole().getName() : null)
+                .roleId(entity.getRole() != null ? entity.getRole().getId() : null) // Solo asignamos el ID
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
@@ -32,17 +29,9 @@ public class UserPersistenceMapper {
     public UserEntity toEntity(User domain) {
         if (domain == null) return null;
 
-        // Resolvemos el ID del rol de forma predictiva conforme a los inserts fijos de la DB
-        UUID targetRoleId = USER_ROLE_ID; // default
-        String roleName = domain.getRoleName();
-
-        if (roleName != null && roleName.equalsIgnoreCase("ADMIN")) {
-            targetRoleId = ADMIN_ROLE_ID;
-        }
-
+        // Construimos el RoleEntity usando el ID que viene del dominio
         RoleEntity roleEntity = RoleEntity.builder()
-                .id(targetRoleId) // 🟢 Asigna el ID exacto que PostgreSQL espera para la relación
-                .name(roleName != null ? roleName.toUpperCase() : "USER")
+                .id(domain.getRoleId())
                 .build();
 
         return UserEntity.builder()

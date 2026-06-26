@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -19,7 +18,12 @@ public class User {
     private String fullName;
     private Boolean isActive;
     private Integer failedLoginAttempts;
-    private String roleName;
+
+    // ESTE ES EL CAMPO QUE TE FALTA
+    private UUID roleId;
+
     private Instant createdAt;
     private Instant updatedAt;
+
+
 }
