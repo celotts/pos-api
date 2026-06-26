@@ -1,6 +1,6 @@
 package com.posapi.domain.exception;
 
-// Excepción para errores de lógica interna que nunca deberían ocurrir.
+// Exception for internal logic errors that should never occur.
 public class InvariantException extends RuntimeException {
     public InvariantException(String message) {
         super(message);

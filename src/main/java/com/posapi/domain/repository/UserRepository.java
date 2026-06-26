@@ -11,8 +11,11 @@ public interface UserRepository {
     Optional<User> findById(UUID id);
     Optional<User> findByEmail(String email);
     List<User> findAll();
-    void delete(User user);
+    // More efficient to delete by ID, avoids a SELECT before DELETE.
+    void deleteById(UUID id);
 
+    boolean existsByEmail(String email);
+    boolean existsById(UUID id);
 
-    boolean existsByRoleName(String adminRoleName);
+    boolean existsByRoleName(String roleName);
 }

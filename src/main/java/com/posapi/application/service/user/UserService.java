@@ -3,15 +3,18 @@ package com.posapi.application.service.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.exception.ConfigurationException;
+import com.posapi.domain.exception.DuplicateResourceException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,6 +22,7 @@ import java.util.UUID;
 @Service
 @Validated
 @RequiredArgsConstructor
+@Slf4j
 public class UserService implements UserManagementPort {
 
     private static final String DEFAULT_ROLE_NAME = "USER";
@@ -30,18 +34,24 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public User createUser(User user) {
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("An account with this email already exists: " + user.getEmail()); // NOSONAR
+        log.info("<<<<< INICIANDO CREATE_USER v2 - ESTE ES EL CÓDIGO MÁS RECIENTE >>>>>"); // <-- AÑADE ESTA LÍNEA
+
+        log.debug("Attempting to create a new user with email: {}", user.getEmail());
+        // More efficient: uses a COUNT query instead of fetching the whole entity.
+        if (userRepository.existsByEmail(user.getEmail())) {
+            log.warn("User creation failed: email {} already exists.", user.getEmail());
+            throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
         }
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         Role defaultRole = roleRepository.findByName(DEFAULT_ROLE_NAME)
-                .orElseThrow(() -> new IllegalStateException("El rol por defecto '" + DEFAULT_ROLE_NAME + "' no se encuentra."));
+                .orElseThrow(() -> new ConfigurationException("Default role '" + DEFAULT_ROLE_NAME + "' not found in database."));
 
         // Delegate creation logic to the domain model's static factory method
         User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), defaultRole);
 
+        log.info("Successfully created new user with ID: {}", userToSave.getId());
         return userRepository.save(userToSave);
     }
 
@@ -85,10 +95,13 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public boolean deleteUser(UUID id) {
-        return userRepository.findById(id).map(user -> {
-            userRepository.delete(user);
+        // More efficient: check for existence before deleting, avoids fetching the whole entity.
+        if (userRepository.existsById(id)) {
+            log.warn("Deleting user with ID: {}", id);
+            userRepository.deleteById(id);
             return true;
-        }).orElse(false);
+        }
+        return false;
     }
 
     // --- Private Helper Methods for Update Logic ---
@@ -96,7 +109,7 @@ public class UserService implements UserManagementPort {
     private void validateEmailOnUpdate(User existingUser, User partialUpdate) {
         if (partialUpdate.getEmail() != null && !partialUpdate.getEmail().equalsIgnoreCase(existingUser.getEmail())) {
             userRepository.findByEmail(partialUpdate.getEmail()).ifPresent(u -> {
-                throw new IllegalArgumentException("The email " + u.getEmail() + " is already taken.");
+                throw new DuplicateResourceException("The email " + u.getEmail() + " is already taken.");
             });
         }
     }
@@ -104,7 +117,7 @@ public class UserService implements UserManagementPort {
     private UUID validateRoleOnUpdate(User existingUser, User partialUpdate) {
         if (partialUpdate.getRoleId() != null && !partialUpdate.getRoleId().equals(existingUser.getRoleId())) {
             roleRepository.findById(partialUpdate.getRoleId())
-                    .orElseThrow(() -> new IllegalArgumentException("El rol con ID " + partialUpdate.getRoleId() + " no existe."));
+                    .orElseThrow(() -> new ResourceNotFoundException("Role with ID " + partialUpdate.getRoleId() + " does not exist."));
             return partialUpdate.getRoleId();
         }
         return existingUser.getRoleId();

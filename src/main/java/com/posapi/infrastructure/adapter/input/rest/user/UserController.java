@@ -107,19 +107,8 @@ public class UserController {
     }
 
     private ResponseEntity<UserResponse> createUserWorkflow(UserRequest userRequest, String roleName, boolean isActive) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new IllegalStateException("Rol no encontrado: " + roleName));
-
-        User user = User.builder()
-                .email(userRequest.getEmail())
-                .password(userRequest.getPassword())
-                .fullName(userRequest.getFullName())
-                .isActive(isActive)
-                .roleId(role.getId())
-                .failedLoginAttempts(0)
-                .build();
-
-        User createdUser = userManagementPort.createUser(user);
+        User userToCreate = userRestMapper.toDomain(userRequest, roleName, isActive);
+        User createdUser = userManagementPort.createUser(userToCreate);
         return new ResponseEntity<>(userRestMapper.toResponse(createdUser), HttpStatus.CREATED);
     }
 }
