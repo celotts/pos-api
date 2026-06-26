@@ -5,9 +5,10 @@ import com.posapi.domain.model.role.Role;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,27 +17,17 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/roles")
+@RequiredArgsConstructor
 public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
 
-    public RoleController(RoleManagementPort roleManagementPort) {
-        this.roleManagementPort = roleManagementPort;
-    }
-
     @PostMapping
-    public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest roleRequest) {
-        Role roleTemplate = Role.builder()
-                .name(roleRequest.getName())
-                .build();
-        Role createdRole = roleManagementPort.createRole(roleTemplate);
-        return ResponseEntity.status(HttpStatus.CREATED).body(RoleResponse.fromDomain(createdRole));
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
-        Role role = roleManagementPort.getRoleById(id);
-        return ResponseEntity.ok(RoleResponse.fromDomain(role));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
+        Role roleToCreate = Role.builder().name(request.name()).build();
+        Role createdRole = roleManagementPort.createRole(roleToCreate);
+        return new ResponseEntity<>(RoleResponse.fromDomain(createdRole), HttpStatus.CREATED);
     }
 
     @GetMapping
@@ -47,21 +38,29 @@ public class RoleController {
         return ResponseEntity.ok(roles);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
+        return roleManagementPort.getRoleById(id)
+                .map(RoleResponse::fromDomain)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<RoleResponse> updateRole(
-            @PathVariable UUID id,
-            @Valid @RequestBody RoleRequest roleRequest) {
-        Role role = Role.builder()
-                .id(id)
-                .name(roleRequest.getName())
-                .build();
-        Role updatedRole = roleManagementPort.updateRole(id, role);
-        return ResponseEntity.ok(RoleResponse.fromDomain(updatedRole));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
+        Role roleToUpdate = Role.builder().name(request.name()).build();
+        return roleManagementPort.updateRole(id, roleToUpdate)
+                .map(RoleResponse::fromDomain)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteRole(@PathVariable @NotNull UUID id) {
-        roleManagementPort.deleteRole(id);
-        return ResponseEntity.noContent().build();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
+        return roleManagementPort.deleteRole(id)
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.notFound().build();
     }
 }

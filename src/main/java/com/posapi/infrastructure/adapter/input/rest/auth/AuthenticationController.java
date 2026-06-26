@@ -1,7 +1,6 @@
-package com.posapi.interfaces.rest.auth;
+package com.posapi.infrastructure.adapter.input.rest.auth;
 
 import com.posapi.application.service.auth.AuthenticationService;
-// Usamos el paquete de infraestructura original donde residen tus DTOs de entrada
 import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
 import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginResponse;
 import jakarta.validation.Valid;

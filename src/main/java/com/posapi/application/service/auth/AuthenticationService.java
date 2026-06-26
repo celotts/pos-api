@@ -2,53 +2,44 @@ package com.posapi.application.service.auth;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.UserRepository;
+import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
+import com.posapi.infrastructure.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
 public class AuthenticationService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserRepository userRepository;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    private static final int MAX_FAILED_ATTEMPTS = 3;
+    public String login(LoginRequest loginRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.email(),
+                            loginRequest.password()
+                    )
+            );
 
-    public String login(String email, String password) {
-        // Autentica con Spring Security. Si las credenciales son malas, lanza una excepción.
-        authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(email, password)
-        );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Si la autenticación es exitosa, procedemos
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("Usuario no encontrado después de una autenticación exitosa."));
+            User user = userRepository.findByEmail(loginRequest.email())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found after successful authentication for email: " + loginRequest.email()));
 
-        // Reiniciar contador de intentos fallidos si fue exitoso
-        if (user.getFailedLoginAttempts() > 0) {
-            resetFailedAttempts(user);
+            return jwtTokenProvider.generateToken(user);
+
+        } catch (BadCredentialsException e) {
+            // Aquí podrías incrementar el contador de intentos fallidos si quisieras
+            throw new BadCredentialsException("Invalid credentials for user: " + loginRequest.email());
         }
-
-        return jwtService.generateToken(user);
-    }
-
-    private void resetFailedAttempts(User user) {
-        User updatedUser = User.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .fullName(user.getFullName())
-                .isActive(user.getIsActive())
-                .roleId(user.getRoleId())
-                .failedLoginAttempts(0) // Reiniciamos
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
-        userRepository.save(updatedUser);
     }
 }
