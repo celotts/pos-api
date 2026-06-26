@@ -1,9 +1,10 @@
 package com.posapi.infrastructure.adapter.output.persistence.adapter.role;
 
-import com.posapi.application.port.secondary.RoleOutputPort;
 import com.posapi.domain.model.role.Role;
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
+import com.posapi.domain.repository.RoleRepository;
+import com.posapi.infrastructure.adapter.output.persistence.mapper.role.RolePersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.role.RoleJpaRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,33 +13,28 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
-public class RolePersistenceAdapter implements RoleOutputPort {
+@RequiredArgsConstructor
+public class RolePersistenceAdapter implements RoleRepository {
 
     private final RoleJpaRepository roleJpaRepository;
-
-    public RolePersistenceAdapter(RoleJpaRepository roleJpaRepository) {
-        this.roleJpaRepository = roleJpaRepository;
-    }
+    private final RolePersistenceMapper roleMapper;
 
     @Override
     public Role save(Role role) {
-        RoleEntity entity = RoleEntity.builder()
-                .id(role.getId())
-                .name(role.getName())
-                .build();
-        RoleEntity savedEntity = roleJpaRepository.save(entity);
-        return mapToDomain(savedEntity);
+        var entity = roleMapper.toEntity(role);
+        var savedEntity = roleJpaRepository.save(entity);
+        return roleMapper.toDomain(savedEntity);
     }
 
     @Override
     public Optional<Role> findById(UUID id) {
-        return roleJpaRepository.findById(id).map(this::mapToDomain);
+        return roleJpaRepository.findById(id).map(roleMapper::toDomain);
     }
 
     @Override
     public List<Role> findAll() {
         return roleJpaRepository.findAll().stream()
-                .map(this::mapToDomain)
+                .map(roleMapper::toDomain)
                 .collect(Collectors.toList());
     }
 
@@ -52,10 +48,8 @@ public class RolePersistenceAdapter implements RoleOutputPort {
         return roleJpaRepository.existsByName(name);
     }
 
-    private Role mapToDomain(RoleEntity entity) {
-        return Role.builder()
-                .id(entity.getId())
-                .name(entity.getName())
-                .build();
+    @Override
+    public Optional<Role> findByName(String name) {
+        return roleJpaRepository.findByName(name).map(roleMapper::toDomain);
     }
 }

@@ -39,6 +39,10 @@ services:
       # Inyectamos las variables limpias; tu application.yml se encargará de mapearlas a la ruta correcta
       JWT_SECRET: ${JWT_SECRET:-dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-3600000}
+
+      # Credenciales para el usuario administrador inicial (sobrescribe los defaults de application.yml)
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@posapi.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-SuperSecretPassword123!}
     depends_on:
       db:
         condition: service_healthy

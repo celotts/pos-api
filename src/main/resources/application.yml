@@ -1,74 +1,59 @@
 server:
   port: ${SERVER_PORT:8080}
 
-# 🟢 Nodo RAÍZ independiente exigido por tu clase JwtService
-application:
-  security:
-    jwt:
-      secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
-      expiration: ${JWT_EXPIRATION:3600000}
-
-app:
-  roles:
-    ADMIN: "ADMIN"
-    USER: "USER"
-  user:
-    default:
-      role-id: ${app.roles.USER}
-      active: true
-    admin-creation:
-      role-id: ${app.roles.ADMIN}
-      active: true
-
+# ===================================================================
+# CONFIGURACIÓN DE LA APLICACIÓN
+# ===================================================================
 spring:
   application:
     name: pos-api
+  # --- Datasource Configuration ---
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pos_db}
     username: ${SPRING_DATASOURCE_USERNAME:product}
     password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
+  # --- JPA/Hibernate Configuration ---
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      # 'validate' es más seguro que 'update'. Comprueba que el esquema de la BD coincida con las entidades.
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  # --- RabbitMQ Configuration (si se usa) ---
   rabbitmq:
     host: ${SPRING_RABBITMQ_HOST:localhost}
     port: ${SPRING_RABBITMQ_PORT:5672}
     username: ${SPRING_RABBITMQ_USERNAME:guest}
     password: ${SPRING_RABBITMQ_PASSWORD:guest}
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
-  cloud:
-    gateway:
-      routes:
-        - id: rate_limit_route
-          uri: lb://pos-api
-          predicates:
-            - Path=/api/v1/users/register
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 3
-                redis-rate-limiter.burstCapacity: 5
 
+# ===================================================================
+# CONFIGURACIÓN DE SEGURIDAD PERSONALIZADA
+# ===================================================================
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+      expiration: ${JWT_EXPIRATION:3600000} # 1 hora
+
+# ===================================================================
+# CONFIGURACIÓN DEL USUARIO ADMINISTRADOR INICIAL (BOOTSTRAP)
+# ===================================================================
+app:
+  bootstrap:
+    admin:
+      email: ${ADMIN_EMAIL:admin@posapi.com}
+      password: ${ADMIN_PASSWORD:SuperSecretPassword123!}
+
+# ===================================================================
+# LOGGING
+# ===================================================================
 logging:
   level:
     com.posapi: DEBUG
-    com.celotts: DEBUG
-    org:
-      springframework:
-        web: DEBUG
-      hibernate:
-        SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

@@ -21,7 +21,6 @@ import java.util.UUID;
 public class UserEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "role_id", nullable = false, insertable = false, updatable = false)

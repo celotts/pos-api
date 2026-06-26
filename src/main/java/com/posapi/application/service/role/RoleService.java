@@ -1,39 +1,39 @@
 package com.posapi.application.service.role;
 
 import com.posapi.application.port.role.RoleManagementPort;
-import com.posapi.application.port.secondary.RoleOutputPort;
+import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.model.role.Role;
+import com.posapi.domain.exception.ResourceNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class RoleService implements RoleManagementPort {
 
-    private final RoleOutputPort roleOutputPort;
 
-    public RoleService(RoleOutputPort roleOutputPort) {
-        this.roleOutputPort = roleOutputPort;
-    }
+    private final RoleRepository roleRepository;
 
     @Override
     public Role createRole(Role role) {
-        if (roleOutputPort.existsByName(role.getName())) {
+        if (roleRepository.existsByName(role.getName())) {
             throw new IllegalArgumentException("Role name already exists");
         }
-        return roleOutputPort.save(role);
+        return roleRepository.save(role);
     }
 
     @Override
     public Role getRoleById(UUID id) {
-        return roleOutputPort.findById(id)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+        return roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Role not found with ID: " + id));
     }
 
     @Override
     public List<Role> getAllRoles() {
-        return roleOutputPort.findAll();
+        return roleRepository.findAll();
     }
 
     @Override
@@ -43,14 +43,14 @@ public class RoleService implements RoleManagementPort {
                 .id(existingRole.getId())
                 .name(role.getName())
                 .build();
-        return roleOutputPort.save(updatedRole);
+        return roleRepository.save(updatedRole);
     }
 
     @Override
     public void deleteRole(UUID id) {
-        if (roleOutputPort.findById(id).isEmpty()) {
-            throw new RuntimeException("Role not found");
+        if (roleRepository.findById(id).isEmpty()) {
+            throw new ResourceNotFoundException("Role not found with ID: " + id);
         }
-        roleOutputPort.deleteById(id);
+        roleRepository.deleteById(id);
     }
 }

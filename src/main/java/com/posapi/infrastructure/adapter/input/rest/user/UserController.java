@@ -3,9 +3,10 @@ package com.posapi.infrastructure.adapter.input.rest.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.rol.RoleRepository; // Necesario
+import com.posapi.domain.repository.RoleRepository;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
+import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor; // Usar RequiredArgsConstructor para simplificar
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +24,8 @@ import java.util.UUID;
 public class UserController {
 
     private final UserManagementPort userManagementPort;
-    private final RoleRepository roleRepository; // Inyectado para buscar nombres de roles
+    private final RoleRepository roleRepository; // Kept for creation/update logic
+    private final UserRestMapper userRestMapper; // 👈 Inject the new Mapper
 
     @Value("${app.roles.USER:USER}")
     private String defaultUserRole;
@@ -51,7 +53,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         return userManagementPort.getUserById(id)
-                .map(this::mapToResponse) // Usamos método auxiliar
+                .map(userRestMapper::toResponse) // Use the mapper
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -59,7 +61,7 @@ public class UserController {
     @GetMapping("/email/{email}")
     public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
         return userManagementPort.getUserByEmail(email)
-                .map(this::mapToResponse)
+                .map(userRestMapper::toResponse) // Use the mapper
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -67,7 +69,7 @@ public class UserController {
     @GetMapping
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = userManagementPort.getAllUsers().stream()
-                .map(this::mapToResponse)
+                .map(userRestMapper::toResponse) // Use the mapper
                 .toList();
         return ResponseEntity.ok(users);
     }
@@ -92,7 +94,7 @@ public class UserController {
                 .build();
 
         return userManagementPort.updateUser(id, userTemplate)
-                .map(this::mapToResponse)
+                .map(userRestMapper::toResponse) // Use the mapper
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -118,14 +120,6 @@ public class UserController {
                 .build();
 
         User createdUser = userManagementPort.createUser(user);
-        return new ResponseEntity<>(mapToResponse(createdUser), HttpStatus.CREATED);
-    }
-
-    // Método auxiliar para obtener el nombre del rol y mapear a DTO
-    private UserResponse mapToResponse(User user) {
-        String roleName = roleRepository.findById(user.getRoleId())
-                .map(Role::getName)
-                .orElse("UNKNOWN");
-        return UserResponse.fromUser(user, roleName);
+        return new ResponseEntity<>(userRestMapper.toResponse(createdUser), HttpStatus.CREATED);
     }
 }
