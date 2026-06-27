@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional; // Import necesario
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
     List<ProductEntity> findByProductNameAndCategoryName(@Param("name") String name, @Param("categoryName") String categoryName);
 
     @Modifying
+    @Transactional // Esto detiene la "interpretación" automática de Spring
     @Query("UPDATE ProductEntity p SET p.deletedAt = CURRENT_TIMESTAMP WHERE p.id = :id")
     void softDeleteById(@Param("id") UUID id);
 }

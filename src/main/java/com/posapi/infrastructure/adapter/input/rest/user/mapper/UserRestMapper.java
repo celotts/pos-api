@@ -19,15 +19,7 @@ public class UserRestMapper {
                 .map(Role::getName)
                 .orElse("UNKNOWN");
 
-        return UserResponse.builder()
-                .id(user.getId()) // Aseguramos que el ID se mapee
-                .email(user.getEmail())
-                .fullName(user.getFullName())
-                .roleName(roleName)
-                .isActive(user.getIsActive())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .build();
+        return UserResponse.fromUser(user, roleName);
     }
 
     public User toDomain(UserRequest request) {
@@ -35,6 +27,8 @@ public class UserRestMapper {
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullName(request.getFullName())
+                .roleName(request.getRoleName())
+                .isActive(request.getIsActive())
                 .build();
     }
 }

@@ -47,6 +47,7 @@ public class UserEntity {
     @JoinColumn(name = "role_id")
     private RoleEntity role;
 
+
     @CreationTimestamp // 🟢 Limpio, usando el import de arriba
     @Column(name = "created_at", updatable = false, nullable = false)
     private Instant createdAt;

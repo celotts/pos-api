@@ -2,11 +2,14 @@ package com.posapi.infrastructure.adapter.input.rest.user.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
 @Builder
@@ -25,8 +28,12 @@ public class UserRequest {
     @NotBlank(message = "El nombre completo es obligatorio")
     private String fullName;
 
-    // Campos opcionales para control avanzado o actualizaciones (pueden ser nulos en el registro básico)
-    private Boolean isActive;
-    private Integer failedLoginAttempts;
+    @NotBlank(message = "El nombre del rol es obligatorio")
     private String roleName;
+
+    @NotNull(message = "El estado de activación (isActive) es obligatorio")
+    private Boolean isActive;
+
+    // Este campo no debe ser parte del request, se maneja internamente
+    // private Integer failedLoginAttempts;
 }

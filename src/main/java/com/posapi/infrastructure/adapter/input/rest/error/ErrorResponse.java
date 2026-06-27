@@ -1,18 +1,22 @@
 package com.posapi.infrastructure.adapter.input.rest.error;
 
-import lombok.AllArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.List;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@RequiredArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
-    private Instant timestamp;
-    private int status;
-    private String error;
-    private String message;
-    private String path;
+    private final Instant timestamp;
+    private final int status;
+    private final String error;
+    private final String message;
+    private final String path;
+    private List<ValidationError> validationErrors;
 }

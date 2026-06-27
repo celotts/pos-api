@@ -34,10 +34,7 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public User createUser(User user) {
-        log.info("<<<<< INICIANDO CREATE_USER v2 - ESTE ES EL CÓDIGO MÁS RECIENTE >>>>>"); // <-- AÑADE ESTA LÍNEA
-
         log.debug("Attempting to create a new user with email: {}", user.getEmail());
-        // More efficient: uses a COUNT query instead of fetching the whole entity.
         if (userRepository.existsByEmail(user.getEmail())) {
             log.warn("User creation failed: email {} already exists.", user.getEmail());
             throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
@@ -45,11 +42,10 @@ public class UserService implements UserManagementPort {
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
-        Role defaultRole = roleRepository.findByName(DEFAULT_ROLE_NAME)
-                .orElseThrow(() -> new ConfigurationException("Default role '" + DEFAULT_ROLE_NAME + "' not found in database."));
+        Role role = roleRepository.findByName(user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME)
+                .orElseThrow(() -> new ResourceNotFoundException("Role '" + (user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME) + "' not found."));
 
-        // Delegate creation logic to the domain model's static factory method
-        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), defaultRole);
+        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role);
 
         log.info("Successfully created new user with ID: {}", userToSave.getId());
         return userRepository.save(userToSave);
@@ -77,17 +73,10 @@ public class UserService implements UserManagementPort {
     @Transactional
     public Optional<User> updateUser(UUID id, User updatedUser) {
         return userRepository.findById(id).map(existingUser -> {
-
-            // 1. 🛡️ Perform validations
             validateEmailOnUpdate(existingUser, updatedUser);
             UUID finalRoleId = validateRoleOnUpdate(existingUser, updatedUser);
-
-            // 2. 🛡️ Prepare derived data
             String finalPassword = preparePasswordOnUpdate(existingUser, updatedUser);
-
-            // 3. 🛡️ Delegate update logic to the domain object
             User userToUpdate = existingUser.updateWith(updatedUser, finalPassword, finalRoleId);
-
             return userRepository.save(userToUpdate);
         });
     }
@@ -95,7 +84,6 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public boolean deleteUser(UUID id) {
-        // More efficient: check for existence before deleting, avoids fetching the whole entity.
         if (userRepository.existsById(id)) {
             log.warn("Deleting user with ID: {}", id);
             userRepository.deleteById(id);
@@ -103,8 +91,6 @@ public class UserService implements UserManagementPort {
         }
         return false;
     }
-
-    // --- Private Helper Methods for Update Logic ---
 
     private void validateEmailOnUpdate(User existingUser, User partialUpdate) {
         if (partialUpdate.getEmail() != null && !partialUpdate.getEmail().equalsIgnoreCase(existingUser.getEmail())) {

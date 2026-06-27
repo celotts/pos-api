@@ -7,10 +7,8 @@ import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,12 +21,6 @@ public class UserController {
 
     private final UserManagementPort userManagementPort;
     private final UserRestMapper userRestMapper;
-
-    @Value("${app.roles.USER:USER}")
-    private String defaultUserRole;
-
-    @Value("${app.user.default.active:true}")
-    private boolean defaultUserActiveStatus;
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest) {

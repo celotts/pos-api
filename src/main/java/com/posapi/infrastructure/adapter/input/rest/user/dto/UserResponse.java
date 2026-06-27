@@ -14,10 +14,11 @@ public class UserResponse {
     private String email;
     private String fullName;
     private boolean isActive;
-    private UUID roleId; // 👈 CAMBIO: Campo añadido para el ID del rol
+    private UUID roleId;
     private String roleName;
     private Instant createdAt;
     private Instant updatedAt;
+    private boolean isDeleted; // Campo añadido
 
     public static UserResponse fromUser(User user, String roleName) {
         return UserResponse.builder()
@@ -25,10 +26,11 @@ public class UserResponse {
                 .email(user.getEmail())
                 .fullName(user.getFullName())
                 .isActive(user.getIsActive())
-                .roleId(user.getRoleId()) // 👈 CAMBIO: Mapear el ID del rol
+                .roleId(user.getRoleId())
                 .roleName(roleName)
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
+                .isDeleted(user.getDeletedAt() != null) // Mapear el estado de eliminación
                 .build();
     }
 }
