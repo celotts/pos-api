@@ -2,8 +2,8 @@ package com.posapi.infrastructure.security;
 
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.rol.RoleRepository;
-import com.posapi.domain.repository.user.UserRepository;
+import com.posapi.domain.repository.RoleRepository;
+import com.posapi.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,7 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.User.UserBuilder;
 
 @Service("customUserDetailsService")
-@RequiredArgsConstructor // Elimina la necesidad de escribir el constructor
+@RequiredArgsConstructor
+// Elimina la necesidad de escribir el constructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UserRepository userRepository;

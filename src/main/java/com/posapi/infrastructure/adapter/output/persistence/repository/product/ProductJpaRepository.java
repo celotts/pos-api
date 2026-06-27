@@ -16,4 +16,6 @@ public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID>
 
     @Query("SELECT p FROM ProductEntity p WHERE p.name = :name AND p.category.name = :categoryName")
     List<ProductEntity> findByProductNameAndCategoryName(@Param("name") String name, @Param("categoryName") String categoryName);
+
+    void softDeleteById(UUID id);
 }

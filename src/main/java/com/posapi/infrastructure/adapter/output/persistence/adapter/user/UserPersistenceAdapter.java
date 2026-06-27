@@ -22,6 +22,16 @@ public class UserPersistenceAdapter implements UserRepository {
     private final UserPersistenceMapper userMapper;
 
     @Override
+    public boolean existsByUsername(String username) {
+        return false;
+    }
+
+    @Override
+    public Optional<User> findByUsername(String username) {
+        return Optional.empty();
+    }
+
+    @Override
     public User save(User user) {
         log.debug("Saving user with email: {}", user.getEmail());
         var entity = userMapper.toEntity(user);
@@ -72,5 +82,10 @@ public class UserPersistenceAdapter implements UserRepository {
     public boolean existsByRoleName(String roleName) {
         log.debug("Checking for existence of user by role name: {}", roleName);
         return userJpaRepository.existsByRoleName(roleName);
+    }
+
+    @Override
+    public void delete(User user) {
+
     }
 }

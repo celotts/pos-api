@@ -1,7 +1,8 @@
 package com.posapi.application.service.auth;
 
+import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.rol.RoleRepository; // Importamos el repositorio
+import com.posapi.domain.repository.RoleRepository;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -29,7 +30,7 @@ public class JwtService {
     public String generateToken(User user) {
         // Recuperamos el nombre del rol usando el roleId del dominio
         String roleName = roleRepository.findById(user.getRoleId())
-                .map(role -> role.getName()) // Asumiendo que Role tiene getName()
+                .map(Role::getName) // Asumiendo que Role tiene getName()
                 .orElse("USER"); // Fallback por seguridad
 
         Map<String, Object> claims = new HashMap<>();

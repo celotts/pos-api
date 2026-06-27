@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.security;
 
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.user.UserRepository;
+import com.posapi.domain.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

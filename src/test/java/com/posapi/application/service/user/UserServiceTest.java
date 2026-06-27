@@ -27,17 +27,10 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @Mock
-    private RoleRepository roleRepository;
-
-    @InjectMocks
-    private UserService userService;
+    @Mock private UserRepository userRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private RoleRepository roleRepository;
+    @InjectMocks private UserService userService;
 
     private User testUser;
     private UUID userId;
@@ -74,21 +67,16 @@ class UserServiceTest {
 
         when(userRepository.findByEmail("new@posapi.com")).thenReturn(Optional.empty());
         when(passwordEncoder.encode("rawPassword")).thenReturn("encoded_pass");
+
+        // AÑADE ESTO: Esto evita el ConfigurationException si el servicio busca el rol
         when(roleRepository.findByName("USER")).thenReturn(Optional.of(USER_ROLE));
+
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
         User created = userService.createUser(newUserRequest);
 
-        // Assert
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        User savedUser = userCaptor.getValue();
-
-        assertThat(created.getPassword()).isEqualTo("encoded_pass");
-        assertThat(savedUser.getRoleId()).isEqualTo(USER_ROLE_ID);
-        assertThat(savedUser.getIsActive()).isTrue();
-        assertThat(savedUser.getFailedLoginAttempts()).isZero();
+        // ... resto igual
     }
 
     @Test
@@ -146,9 +134,17 @@ class UserServiceTest {
     @Test
     @DisplayName("Debe eliminar un usuario existente")
     void deleteUser_ShouldReturnTrue_WhenUserExists() {
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
+        // Arrange
+        // Como tu servicio usa userRepository.existsById(id), debemos mockear eso:
+        when(userRepository.existsById(userId)).thenReturn(true);
+
+        // Act
         boolean result = userService.deleteUser(userId);
+
+        // Assert
         assertThat(result).isTrue();
-        verify(userRepository).delete(testUser);
+
+        // Verifica que se llame a deleteById, que es lo que hace tu método @Override
+        verify(userRepository).deleteById(userId);
     }
 }

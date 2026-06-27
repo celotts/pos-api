@@ -2,7 +2,6 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.product;
 
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.repository.product.ProductRepository;
-import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.product.ProductMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.product.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -48,8 +47,8 @@ public class ProductPersistenceAdapter implements ProductRepository {
 
     @Override
     public void deleteById(UUID id) {
-        log.warn("Deleting product by ID: {}", id);
-        productJpaRepository.deleteById(id);
+        log.warn("Soft-deleting product by ID: {}", id);
+        productJpaRepository.softDeleteById(id);
     }
 
     @Override
@@ -60,6 +59,9 @@ public class ProductPersistenceAdapter implements ProductRepository {
 
     @Override
     public List<Product> findByProductNameAndCategory(String name, String category) {
-        return List.of();
+        return productJpaRepository.findByProductNameAndCategoryName(name, category)
+                .stream()
+                .map(productMapper::toDomain)
+                .toList();
     }
 }

@@ -45,7 +45,7 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(BigDecimal.valueOf(100.0))
+                .currentStock(100)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -57,7 +57,7 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(BigDecimal.valueOf(100.0))
+                .currentStock(100)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -117,7 +117,7 @@ class ProductServiceTest {
         updatedDetails.setDescription("Description 1 Updated");
         updatedDetails.setPurchasePrice(BigDecimal.valueOf(12.0));
         updatedDetails.setSalePrice(BigDecimal.valueOf(17.0));
-        updatedDetails.setCurrentStock(BigDecimal.valueOf(105.0));
+        updatedDetails.setCurrentStock(105);
 
         when(productRepository.findById(id)).thenReturn(Optional.of(product1));
         when(productRepository.save(any(Product.class))).thenReturn(updatedDetails); // Mock the save operation

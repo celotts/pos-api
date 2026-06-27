@@ -23,6 +23,7 @@ spring:
 # JWT Security Configuration (Required for Integration Tests)
 jwt:
   secret: ${JWT_SECRET:clavesecretadebackendedeseguridadsuperlargade64bytes12345}
+  expiration: 86400000
 
 # Logging
 logging:
