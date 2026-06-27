@@ -20,7 +20,7 @@ public class Product {
     private String description;
     private BigDecimal purchasePrice;
     private BigDecimal salePrice;
-    private Integer currentStock;
+    private BigDecimal currentStock;
     private UUID taxId;
     private UUID supplierId;
     private Instant createdAt;

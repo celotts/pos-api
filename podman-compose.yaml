@@ -8,13 +8,12 @@ services:
       POSTGRES_PASSWORD: product123
       POSTGRES_HOST_AUTH_METHOD: md5
     volumes:
-      - db_data:/var/lib/postgresql/data
+      #- db_data:/var/lib/postgresql/data // Esto es para que exista persistencia
       - ./src/main/resources/db/migration/:/docker-entrypoint-initdb.d/
     ports:
       - "5432:5432"
     networks:
       - pos-network
-    # 🟢 Corregido para que el parser de podman-compose no truene en Python
     healthcheck:
       test: "pg_isready -U product -d pos_db"
       interval: 10s
@@ -28,7 +27,6 @@ services:
       - "9090:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      # 🛠️ Apuntamos a 'pos_db' que es el container_name real de tu servicio db
       SPRING_DATASOURCE_URL: jdbc:postgresql://pos_db:5432/pos_db
       SPRING_DATASOURCE_USERNAME: product
       SPRING_DATASOURCE_PASSWORD: product123
@@ -48,7 +46,7 @@ services:
 
 networks:
   pos-network:
-    driver: bridge
+   # driver: bridge  // Esto es para que exista persistencia
 
 volumes:
   db_data:

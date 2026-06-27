@@ -15,25 +15,26 @@ public class UserRestMapper {
     private final RoleRepository roleRepository;
 
     public UserResponse toResponse(User user) {
-        // The logic of finding the role name is now centralized here.
         String roleName = roleRepository.findById(user.getRoleId())
                 .map(Role::getName)
-                .orElse("UNKNOWN"); // Default value if role is not found
+                .orElse("UNKNOWN");
 
-        return UserResponse.fromUser(user, roleName);
+        return UserResponse.builder()
+                .id(user.getId()) // Aseguramos que el ID se mapee
+                .email(user.getEmail())
+                .fullName(user.getFullName())
+                .roleName(roleName)
+                .isActive(user.getIsActive())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 
-    public User toDomain(UserRequest request, String roleName, boolean isActive) {
-        Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new IllegalStateException("Role not found: " + roleName));
-
+    public User toDomain(UserRequest request) {
         return User.builder()
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullName(request.getFullName())
-                .isActive(isActive)
-                .roleId(role.getId())
-                .failedLoginAttempts(0)
                 .build();
     }
 }

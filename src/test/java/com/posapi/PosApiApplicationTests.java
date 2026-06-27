@@ -6,10 +6,13 @@ import com.posapi.infrastructure.security.JwtAuthenticationEntryPoint;
 import com.posapi.infrastructure.security.JwtRequestFilter;
 import com.posapi.infrastructure.security.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -26,23 +29,42 @@ import org.springframework.test.context.TestPropertySource;
 @ActiveProfiles("test")
 class PosApiApplicationTests {
 
-    @MockBean
-    private BootstrapService bootstrapService; // Desactivamos el BootstrapService
+    @TestConfiguration
+    static class TestConfig {
 
-    @MockBean(name = "customJwtRequestFilter")
-    private JwtRequestFilter jwtRequestFilter;
+        @Bean
+        @Primary
+        public BootstrapService bootstrapService() {
+            return Mockito.mock(BootstrapService.class);
+        }
 
-    @MockBean(name = "customJwtAuthenticationEntryPoint")
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+        @Bean
+        @Primary
+        public JwtRequestFilter jwtRequestFilter() {
+            return Mockito.mock(JwtRequestFilter.class);
+        }
 
-    @MockBean(name = "customUserDetailsService")
-    private UserDetailsServiceImpl userDetailsService;
+        @Bean
+        @Primary
+        public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+            return Mockito.mock(JwtAuthenticationEntryPoint.class);
+        }
 
-    @MockBean
-    private PasswordEncoder passwordEncoder;
+        @Bean
+        @Primary
+        public UserDetailsServiceImpl userDetailsService() {
+            return Mockito.mock(UserDetailsServiceImpl.class);
+        }
+
+        @Bean
+        @Primary
+        public PasswordEncoder passwordEncoder() {
+            return Mockito.mock(PasswordEncoder.class);
+        }
+    }
 
     @Test
     void contextLoads() {
-        // El test pasará ahora que el contexto carga correctamente
+        // The test will now pass as the context loads correctly
     }
 }

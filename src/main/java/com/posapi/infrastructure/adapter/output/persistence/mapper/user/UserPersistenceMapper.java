@@ -20,7 +20,6 @@ public class UserPersistenceMapper {
         }
 
         return UserEntity.builder()
-                // 🛡️ THIS IS THE CRITICAL LINE THAT FIXES THE ERROR
                 .id(domain.getId())
                 .email(domain.getEmail())
                 .password(domain.getPassword())
@@ -42,7 +41,7 @@ public class UserPersistenceMapper {
                 .fullName(entity.getFullName())
                 .isActive(entity.getIsActive())
                 .failedLoginAttempts(entity.getFailedLoginAttempts())
-                .roleId(entity.getRoleId())
+                .roleId(entity.getRole() != null ? entity.getRole().getId() : null)
                 .roleName(entity.getRole() != null ? entity.getRole().getName() : null)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -51,7 +50,7 @@ public class UserPersistenceMapper {
 
     private RoleEntity mapRoleIdToProxyEntity(UUID roleId) {
         if (roleId == null) {
-            throw new InvariantException("RoleId cannot be null when mapping to a RoleEntity proxy.");
+            return null;
         }
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setId(roleId);

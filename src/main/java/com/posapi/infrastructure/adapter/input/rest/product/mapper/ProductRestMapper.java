@@ -19,7 +19,8 @@ public class ProductRestMapper {
                 .description(request.getDescription())
                 .purchasePrice(request.getPurchasePrice())
                 .salePrice(request.getSalePrice())
-                .currentStock(request.getCurrentStock() != null ? request.getCurrentStock().intValue() : 0)
+                // 🛡️ World-Class: Avoid converting to int to prevent data loss. Default to BigDecimal.ZERO.
+                .currentStock(request.getCurrentStock() != null ? request.getCurrentStock() : BigDecimal.ZERO)
                 .taxId(request.getTaxId())
                 .supplierId(request.getSupplierId())
                 .build();
@@ -35,7 +36,8 @@ public class ProductRestMapper {
                 .description(product.getDescription())
                 .purchasePrice(product.getPurchasePrice())
                 .salePrice(product.getSalePrice())
-                .currentStock(BigDecimal.valueOf(product.getCurrentStock()))
+                // 🛡️ FIX: Remove redundant and incorrect call to BigDecimal.valueOf().
+                .currentStock(product.getCurrentStock())
                 .taxId(product.getTaxId())
                 .supplierId(product.getSupplierId())
                 .createdAt(product.getCreatedAt())

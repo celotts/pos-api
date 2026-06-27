@@ -93,7 +93,6 @@ class UserServiceTest {
         // Arrange
         User existingUser = User.builder().email("test@posapi.com").build();
         when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
-        // No es necesario mockear roleRepository aquí si la verificación de email es primero
 
         // Act & Assert
         assertThrows(DuplicateResourceException.class, () -> {
@@ -146,7 +145,6 @@ class UserServiceTest {
     void deleteUser_ShouldReturnTrue_WhenUserExists() {
         // Arrange
         when(userRepository.existsById(userId)).thenReturn(true);
-        // No es necesario el doNothing() para métodos void
 
         // Act
         boolean result = userService.deleteUser(userId);

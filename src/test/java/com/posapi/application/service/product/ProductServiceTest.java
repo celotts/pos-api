@@ -1,14 +1,15 @@
 package com.posapi.application.service.product;
 
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.repository.product.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -25,10 +27,6 @@ class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
 
     @InjectMocks
     private ProductService productService;
@@ -45,7 +43,7 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(100)
+                .currentStock(new BigDecimal("100.00")) // 🛡️ FIX: Use BigDecimal for stock
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -57,7 +55,7 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(100)
+                .currentStock(new BigDecimal("100.00")) // 🛡️ FIX: Use BigDecimal for stock
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -69,8 +67,8 @@ class ProductServiceTest {
 
         Product createdProduct = productService.createProduct(product1);
 
-        assertNotNull(createdProduct.getId());
-        assertEquals("SKU001", createdProduct.getSku());
+        assertThat(createdProduct.getId()).isNotNull();
+        assertThat(createdProduct.getSku()).isEqualTo("SKU001");
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
@@ -80,8 +78,10 @@ class ProductServiceTest {
 
         Optional<Product> foundProduct = productService.getProductById(product1.getId());
 
-        assertTrue(foundProduct.isPresent());
-        assertEquals(product1.getName(), foundProduct.get().getName());
+        assertThat(foundProduct).isPresent();
+        assertThat(foundProduct.get().getId()).isEqualTo(product1.getId());
+        assertThat(foundProduct.get().getName()).isEqualTo(product1.getName());
+
         verify(productRepository, times(1)).findById(product1.getId());
     }
 
@@ -91,7 +91,7 @@ class ProductServiceTest {
 
         Optional<Product> foundProduct = productService.getProductById(UUID.randomUUID());
 
-        assertFalse(foundProduct.isPresent());
+        assertThat(foundProduct).isNotPresent();
         verify(productRepository, times(1)).findById(any(UUID.class));
     }
 
@@ -102,48 +102,56 @@ class ProductServiceTest {
 
         List<Product> allProducts = productService.getAllProducts();
 
-        assertNotNull(allProducts);
-        assertEquals(2, allProducts.size());
+        assertThat(allProducts).isNotNull();
+        assertThat(allProducts).hasSize(2);
         verify(productRepository, times(1)).findAll();
     }
 
     @Test
     void updateProduct_shouldReturnUpdatedProduct_whenFound() {
         UUID id = UUID.randomUUID();
-        Product updatedDetails = new Product(); // Crear un objeto Product vacío
-        updatedDetails.setId(id);
-        updatedDetails.setSku("SKU001-UPDATED");
-        updatedDetails.setName("Product 1 Updated");
-        updatedDetails.setDescription("Description 1 Updated");
-        updatedDetails.setPurchasePrice(BigDecimal.valueOf(12.0));
-        updatedDetails.setSalePrice(BigDecimal.valueOf(17.0));
-        updatedDetails.setCurrentStock(105);
+        // This is the original product in the database
+        Product existingProduct = Product.builder()
+                .id(id)
+                .name("Old Name")
+                .currentStock(new BigDecimal("50.0"))
+                .build();
 
-        when(productRepository.findById(id)).thenReturn(Optional.of(product1));
-        when(productRepository.save(any(Product.class))).thenReturn(updatedDetails); // Mock the save operation
+        // This is the update request data
+        Product updatedDetails = Product.builder()
+                .name("New Name")
+                .currentStock(new BigDecimal("75.5"))
+                .build();
+
+        when(productRepository.findById(id)).thenReturn(Optional.of(existingProduct));
+        // The save method should return the product that was passed to it.
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Product result = productService.updateProduct(id, updatedDetails);
-        assertNotNull(result);
-        assertEquals("SKU001-UPDATED", result.getSku());
-        assertEquals("Product 1 Updated", result.getName());
+
+        // 🛡️ World-Class: Use ArgumentCaptor to verify the state of the object passed to save()
+        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(productCaptor.capture());
+        Product savedProduct = productCaptor.getValue();
+
+        assertThat(savedProduct.getName()).isEqualTo("New Name");
+        assertThat(savedProduct.getCurrentStock()).isEqualTo(new BigDecimal("75.5"));
         verify(productRepository, times(1)).findById(id);
-        verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
     void updateProduct_shouldThrowException_whenNotFound() {
         UUID id = UUID.randomUUID();
-        Product updatedDetails = new Product(); // Crear un objeto Product vacío
-        updatedDetails.setId(id);
-        updatedDetails.setName("Non Existent");
+        Product updatedDetails = Product.builder().name("Non Existent").build();
 
         when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
+        // 🛡️ World-Class: Assert for a specific, custom exception, not a generic one.
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 productService.updateProduct(id, updatedDetails)
         );
 
-        assertTrue(exception.getMessage().startsWith("Product not found with ID: "));
+        assertThat(exception.getMessage()).isEqualTo("Product not found with ID: " + id);
         verify(productRepository, times(1)).findById(any(UUID.class));
         verify(productRepository, never()).save(any(Product.class));
     }
@@ -163,8 +171,8 @@ class ProductServiceTest {
 
         Optional<Product> foundProduct = productService.getProductBySku(product1.getSku());
 
-        assertTrue(foundProduct.isPresent());
-        assertEquals(product1.getName(), foundProduct.get().getName());
+        assertThat(foundProduct).isPresent();
+        assertThat(foundProduct.get().getName()).isEqualTo(product1.getName());
         verify(productRepository, times(1)).findBySku(product1.getSku());
     }
 
@@ -174,7 +182,7 @@ class ProductServiceTest {
 
         Optional<Product> foundProduct = productService.getProductBySku("NON_EXISTENT_SKU");
 
-        assertFalse(foundProduct.isPresent());
+        assertThat(foundProduct).isNotPresent();
         verify(productRepository, times(1)).findBySku(anyString());
     }
 }

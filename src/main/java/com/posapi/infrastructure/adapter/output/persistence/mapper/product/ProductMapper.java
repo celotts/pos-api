@@ -18,8 +18,8 @@ public class ProductMapper {
                 .description(domain.getDescription())
                 .purchasePrice(domain.getPurchasePrice())
                 .salePrice(domain.getSalePrice())
-                // Convertimos Integer (dominio) a BigDecimal (entidad)
-                .currentStock(domain.getCurrentStock() != null ? BigDecimal.valueOf(domain.getCurrentStock()) : BigDecimal.ZERO)
+                // 🛡️ FIX: Pass BigDecimal directly. Avoid redundant and incorrect valueOf() call.
+                .currentStock(domain.getCurrentStock())
                 .taxId(domain.getTaxId())
                 .supplierId(domain.getSupplierId())
                 .createdAt(domain.getCreatedAt())
@@ -40,8 +40,8 @@ public class ProductMapper {
                 .description(entity.getDescription())
                 .purchasePrice(entity.getPurchasePrice())
                 .salePrice(entity.getSalePrice())
-                // Convertimos BigDecimal (entidad) a Integer (dominio)
-                .currentStock(entity.getCurrentStock() != null ? entity.getCurrentStock().intValue() : 0)
+                // 🛡️ FIX: Pass BigDecimal directly. Avoid converting to int to prevent data loss.
+                .currentStock(entity.getCurrentStock())
                 .taxId(entity.getTaxId())
                 .supplierId(entity.getSupplierId())
                 .createdAt(entity.getCreatedAt())
