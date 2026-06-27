@@ -1,49 +1,70 @@
 package com.posapi;
 
-import com.posapi.domain.repository.user.UserRepository;
-import com.posapi.infrastructure.adapter.output.persistence.user.UserRepositoryAdapter;
+import com.posapi.application.service.bootstrap.BootstrapService;
+import com.posapi.infrastructure.adapter.output.persistence.adapter.user.UserPersistenceAdapter;
 import com.posapi.infrastructure.security.JwtAuthenticationEntryPoint;
 import com.posapi.infrastructure.security.JwtRequestFilter;
 import com.posapi.infrastructure.security.UserDetailsServiceImpl;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-// Excluimos el adaptador para que no intente conectar a la base de datos real
 @ComponentScan(excludeFilters = @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
-        UserRepositoryAdapter.class }))
+        UserPersistenceAdapter.class }))
 @TestPropertySource(properties = {
         "jwt.secret=clavesecretadebackendedeseguridadsuperlargade64bytes12345",
-        "jwt.expiration=86400000"
+        "jwt.expiration=86400000",
+        "app.bootstrap.admin.email=admin@test.com",
+        "app.bootstrap.admin.password=adminpassword"
 })
 @ActiveProfiles("test")
 class PosApiApplicationTests {
 
-    // --- MOCKS NECESARIOS ---
+    @TestConfiguration
+    static class TestConfig {
 
-    // @MockitoBean
-    // private UserRepository userRepository;
+        @Bean
+        @Primary
+        public BootstrapService bootstrapService() {
+            return Mockito.mock(BootstrapService.class);
+        }
 
-    @MockitoBean(name = "customJwtRequestFilter")
-    private JwtRequestFilter jwtRequestFilter;
+        @Bean
+        @Primary
+        public JwtRequestFilter jwtRequestFilter() {
+            return Mockito.mock(JwtRequestFilter.class);
+        }
 
-    @MockitoBean(name = "customJwtAuthenticationEntryPoint")
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+        @Bean
+        @Primary
+        public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+            return Mockito.mock(JwtAuthenticationEntryPoint.class);
+        }
 
-    @MockitoBean(name = "customUserDetailsService")
-    private UserDetailsServiceImpl userDetailsService;
+        @Bean
+        @Primary
+        public UserDetailsServiceImpl userDetailsService() {
+            return Mockito.mock(UserDetailsServiceImpl.class);
+        }
 
-    @MockitoBean
-    private PasswordEncoder passwordEncoder;
+        @Bean
+        @Primary
+        public PasswordEncoder passwordEncoder() {
+            return Mockito.mock(PasswordEncoder.class);
+        }
+    }
 
     @Test
     void contextLoads() {
-        // El test pasará porque ya no falta ningún bean en el contexto
+        // The test will now pass as the context loads correctly
     }
 }

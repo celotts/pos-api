@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.aspect;
 
+import com.posapi.application.service.audit.AuditLogService;
 import com.posapi.domain.model.AuditLog;
-import com.posapi.application.service.AuditLogService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;

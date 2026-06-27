@@ -1,30 +1,32 @@
 package com.posapi.domain.model;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Entity
-@Table(name = "audit_logs")
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor // Necesario para 'new AuditLog()'
+@AllArgsConstructor
 public class AuditLog {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String username;
+    private UUID id;
+    private String tableName;
+    private UUID recordId;
     private String action;
+    private String oldValue;
+    private String newValue;
+    private String ipAddress;
+    private String userAgent;
+    private Instant createdAt;
+    private UUID userId;
+    private UUID roleId;
+
+    // Agrega estos campos para que tu AuditAspect funcione:
+    private String username;
     private String method;
     private String status;
-    
-    @Column(columnDefinition = "TEXT")
     private String errorMessage;
-
-    @Column(columnDefinition = "TEXT")
     private String payload;
-
-    private String ipAddress;
     private LocalDateTime timestamp;
 }

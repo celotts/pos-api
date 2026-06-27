@@ -6,22 +6,30 @@ import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.posapi.infrastructure.security.UserSecurity;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Configuration
-@EnableJpaAuditing(auditorAwareRef = "auditorProvider")
+@EnableJpaAuditing(auditorAwareRef = "auditorAware")
 public class AuditConfig {
 
     @Bean
-    @SuppressWarnings("null")
-    public AuditorAware<String> auditorProvider() {
+    public AuditorAware<UUID> auditorAware() {
         return () -> {
-            return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication())
+            // 🛡️ World-Class Practice: Return the User's UUID for type-safe auditing relationships.
+            return Optional.ofNullable(SecurityContextHolder.getContext())
+                    .map(Authentication.class::cast)
                     .filter(Authentication::isAuthenticated)
-                    .filter(auth -> !"anonymousUser".equals(auth.getPrincipal()))
-                    .map(Authentication::getName)
-                    .or(() -> Optional.of("SYSTEM"));
+                    .map(Authentication::getPrincipal)
+                    .map(principal -> {
+                        if (principal instanceof UserSecurity userSecurity) {
+                            return userSecurity.getId();
+                        }
+                        // Handle system processes or anonymous users
+                        return null;
+                    });
         };
     }
 }

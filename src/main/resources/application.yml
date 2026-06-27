@@ -1,57 +1,62 @@
-# Server Port
 server:
   port: ${SERVER_PORT:8080}
 
-# Datasource Configuration (for local IDE execution)
+# ===================================================================
+# CONFIGURACIÓN DE LA APLICACIÓN
+# ===================================================================
 spring:
   application:
     name: pos-api
+  # --- Datasource Configuration ---
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pos_db}
-    username: ${SPRING_DATASOURCE_USERNAME:pos_user}
-    password: ${SPRING_DATASOURCE_PASSWORD:pos_password}
+    username: ${SPRING_DATASOURCE_USERNAME:product}
+    password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
+  # --- JPA/Hibernate Configuration ---
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    # Se eliminó 'database-platform' para evitar advertencias de deprecación
     hibernate:
-      ddl-auto: none
-    # 'none' because we are managing the schema with SQL scripts (V1, V2)
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-  cloud:
-    gateway:
-      routes:
-        - id: rate_limit_route
-          uri: lb://pos-api
-          predicates:
-            - Path=/api/v1/users/register
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 3
-                redis-rate-limiter.burstCapacity: 5
+  # --- RabbitMQ Configuration ---
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
-# JWT Security Configuration (Required for Integration Tests)
-jwt:
-  # 🛡️ SECURITY ADVISORY: 
-  # - En producción, sobreescribir JWT_SECRET mediante variables de entorno.
-  # - Se requiere una clave Base64 de al menos 256 bits (32 bytes).
-  # - Comando para generar: openssl rand -base64 32
-  secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
-  # Duración en milisegundos
-  expiration: ${JWT_EXPIRATION:3600000}
+# ===================================================================
+# CONFIGURACIÓN DE SEGURIDAD PERSONALIZADA
+# ===================================================================
+application:
+  security:
+    jwt:
+      secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+      expiration: ${JWT_EXPIRATION:3600000}
 
-# Logging
+# ===================================================================
+# CONFIGURACIÓN DE APP (Configuración requerida por componentes internos)
+# ===================================================================
+app:
+  jwt:
+    # Estas propiedades resuelven los errores de inyección encontrados
+    secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+    expiration-in-ms: ${JWT_EXPIRATION:3600000}
+  bootstrap:
+    admin:
+      email: ${ADMIN_EMAIL:admin@posapi.com}
+      password: ${ADMIN_PASSWORD:SuperSecretPassword123!}
+
+# ===================================================================
+# LOGGING
+# ===================================================================
 logging:
   level:
-    org:
-      springframework:
-        web: DEBUG
-      hibernate:
-        SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
+    com.posapi: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE

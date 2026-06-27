@@ -1,6 +1,6 @@
-// Cambia esto en la primera línea:
 package com.posapi.infrastructure.adapter.output.persistence.entity.product;
 
+import com.posapi.infrastructure.adapter.output.persistence.entity.category.CategoryEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,6 +31,10 @@ public class ProductEntity {
     private String name;
 
     private String description;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private CategoryEntity category;
 
     @Column(name = "purchase_price", nullable = false)
     private BigDecimal purchasePrice;

@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(onlyExplicitlyIncluded = true)
@@ -20,14 +20,8 @@ public class RoleEntity {
     @ToString.Include
     private UUID id;
 
-    @Column(name = "name", unique = true, nullable = false, length = 50)
+    @Column(name = "name", unique = true, nullable = false, length = 50, updatable = false)
     @ToString.Include
     private String name;
 
-    @PrePersist
-    public void prePersist() {
-        if (this.id == null) {
-            this.id = UUID.randomUUID();
-        }
-    }
 }

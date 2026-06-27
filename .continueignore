@@ -4,7 +4,11 @@ target/
 .idea/
 bin/
 out/
+node_modules/
 *.class
 *.jar
 *.war
+*.log
+.git/
+.vscode/
 .podman/

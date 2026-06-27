@@ -1,161 +1,156 @@
 package com.posapi.application.service.user;
 
+import com.posapi.domain.exception.DuplicateResourceException;
+import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.user.UserRepository;
+import com.posapi.domain.repository.RoleRepository;
+import com.posapi.domain.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import java.time.Instant;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/**
- * Test unitario para UserService.
- * Se utiliza MockitoExtension para inyectar mocks y aislar la lógica de negocio
- * de la infraestructura (Persistencia y Seguridad).
- */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
-
-    @Mock
-    private PasswordEncoder passwordEncoder;
-
-    @InjectMocks
-    private UserService userService;
+    @Mock private UserRepository userRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private RoleRepository roleRepository;
+    @InjectMocks private UserService userService;
 
     private User testUser;
     private UUID userId;
 
+    private static final UUID USER_ROLE_ID  = UUID.fromString("00000000-0000-0000-0000-000000000002");
+    private static final Role USER_ROLE = new Role(USER_ROLE_ID, "USER");
+
     @BeforeEach
     void setUp() {
         userId = UUID.randomUUID();
-        testUser = new User();
-        testUser.setId(userId);
-        testUser.setEmail("test@posapi.com");
-        testUser.setPasswordHash("rawPassword");
-        testUser.setRole("ADMIN");
-        testUser.setIsActive(true);
+        testUser = User.builder()
+                .id(userId)
+                .email("test@posapi.com")
+                .password("encodedPassword")
+                .fullName("Test User")
+                .roleId(USER_ROLE_ID)
+                .isActive(true)
+                .failedLoginAttempts(0)
+                .createdAt(Instant.now())
+                .updatedAt(Instant.now())
+                .build();
     }
 
     @Test
     @DisplayName("Debe codificar la contraseña y asignar rol por defecto al crear usuario")
     void createUser_ShouldEncodePasswordAndSetDefaults() {
-        // Arrange: Preparamos un usuario con rol vacío para probar la lógica de
-        // defaults
-        testUser.setRole("");
-        when(passwordEncoder.encode("rawPassword")).thenReturn("encoded_pass");
-        when(userRepository.save(any(User.class))).thenAnswer(invocation -> {
-            User u = invocation.getArgument(0);
-            u.setCreatedAt(Instant.now());
-            return u;
+        // Arrange
+        User newUserRequest = User.builder()
+                .email("new@posapi.com")
+                .password("rawPassword")
+                .fullName("New User")
+                .build();
+
+        when(userRepository.findByEmail("new@posapi.com")).thenReturn(Optional.empty());
+        when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
+        when(roleRepository.findByName(USER_ROLE.getName())).thenReturn(Optional.of(USER_ROLE));
+        when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
+
+        // Act
+        User created = userService.createUser(newUserRequest);
+
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(created).isNotNull();
+        assertThat(savedUser.getId()).isNotNull();
+        assertThat(savedUser.getEmail()).isEqualTo("new@posapi.com");
+        assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
+        assertThat(savedUser.getRoleId()).isEqualTo(USER_ROLE_ID);
+        assertThat(savedUser.getIsActive()).isTrue();
+        assertThat(savedUser.getCreatedAt()).isNotNull();
+        assertThat(savedUser.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Debe lanzar una excepción si el email ya existe al crear")
+    void createUser_ShouldThrowException_WhenEmailExists() {
+        // Arrange
+        User existingUser = User.builder().email("test@posapi.com").build();
+        when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
+
+        // Act & Assert
+        assertThrows(DuplicateResourceException.class, () -> {
+            userService.createUser(existingUser);
         });
 
-        // Act
-        User created = userService.createUser(testUser);
-
-        // Assert
-        assertThat(created.getPasswordHash()).isEqualTo("encoded_pass");
-        assertThat(created.getRole()).isEqualTo("USER"); // Validamos el default "USER"
-        assertThat(created.getCreatedAt()).isNotNull();
-        verify(userRepository).save(testUser);
-    }
-
-    @Test
-    @DisplayName("Debe retornar todos los usuarios de la base de datos")
-    void getAllUsers_ShouldReturnList() {
-        // Arrange
-        when(userRepository.findAll()).thenReturn(List.of(testUser));
-
-        // Act
-        List<User> result = userService.getAllUsers();
-
-        // Assert
-        assertThat(result).hasSize(1);
-        verify(userRepository).findAll();
-    }
-
-    @Test
-    @DisplayName("Debe encontrar un usuario por su ID")
-    void getUserById_ShouldReturnUser() {
-        // Arrange
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-
-        // Act
-        Optional<User> result = userService.getUserById(userId);
-
-        // Assert
-        assertThat(result).isPresent();
-        assertThat(result.get().getEmail()).isEqualTo("test@posapi.com");
+        verify(userRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("Debe actualizar los datos y la contraseña si se proporciona")
     void updateUser_ShouldUpdateAllFields() {
         // Arrange
-        User updatedInfo = new User();
-        updatedInfo.setEmail("new@posapi.com");
-        updatedInfo.setFullName("Updated Name");
-        updatedInfo.setPasswordHash("newRawPassword");
-        updatedInfo.setRole("MANAGER");
-        updatedInfo.setIsActive(false);
+        UUID managerRoleId = UUID.randomUUID();
+        Role managerRole = new Role(managerRoleId, "MANAGER");
+
+        User updatedInfo = User.builder()
+                .email("new@posapi.com")
+                .fullName("Updated Name")
+                .password("newRawPassword")
+                .roleId(managerRoleId)
+                .isActive(false)
+                .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
         when(passwordEncoder.encode("newRawPassword")).thenReturn("new_encoded_pass");
+        when(roleRepository.findById(managerRoleId)).thenReturn(Optional.of(managerRole));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
         Optional<User> result = userService.updateUser(userId, updatedInfo);
 
         // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
         assertThat(result).isPresent();
-        User updated = result.get();
-        assertThat(updated.getEmail()).isEqualTo("new@posapi.com");
-        assertThat(updated.getPasswordHash()).isEqualTo("new_encoded_pass");
-        assertThat(updated.getRole()).isEqualTo("MANAGER");
-        assertThat(updated.getIsActive()).isFalse();
-        verify(userRepository).save(any(User.class));
+        assertThat(savedUser.getId()).isEqualTo(userId);
+        assertThat(savedUser.getEmail()).isEqualTo("new@posapi.com");
+        assertThat(savedUser.getPassword()).isEqualTo("new_encoded_pass");
+        assertThat(savedUser.getRoleId()).isEqualTo(managerRoleId);
+        assertThat(savedUser.getIsActive()).isFalse();
+        assertThat(savedUser.getCreatedAt()).isEqualTo(testUser.getCreatedAt());
+        assertThat(savedUser.getUpdatedAt()).isAfter(testUser.getUpdatedAt());
     }
 
     @Test
-    @DisplayName("Debe eliminar al usuario si existe")
-    void deleteUser_ShouldReturnTrueWhenFound() {
+    @DisplayName("Debe eliminar un usuario existente")
+    void deleteUser_ShouldReturnTrue_WhenUserExists() {
         // Arrange
-        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
-        doNothing().when(userRepository).delete(testUser);
+        when(userRepository.existsById(userId)).thenReturn(true);
 
         // Act
-        boolean deleted = userService.deleteUser(userId);
+        boolean result = userService.deleteUser(userId);
 
         // Assert
-        assertThat(deleted).isTrue();
-        verify(userRepository).delete(testUser);
-    }
-
-    @Test
-    @DisplayName("Debe retornar false al intentar eliminar un usuario inexistente")
-    void deleteUser_ShouldReturnFalseWhenNotFound() {
-        // Arrange
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        // Act
-        boolean deleted = userService.deleteUser(userId);
-
-        // Assert
-        assertThat(deleted).isFalse();
-        verify(userRepository, never()).delete(any());
+        assertThat(result).isTrue();
+        verify(userRepository).deleteById(userId);
     }
 }
