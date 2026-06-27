@@ -1,5 +1,6 @@
 package com.posapi.application.service.user;
 
+import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.RoleRepository;
@@ -13,9 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import java.time.Instant;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -35,7 +35,6 @@ class UserServiceTest {
     private User testUser;
     private UUID userId;
 
-    // IDs constantes para las pruebas
     private static final UUID USER_ROLE_ID  = UUID.fromString("00000000-0000-0000-0000-000000000002");
     private static final Role USER_ROLE = new Role(USER_ROLE_ID, "USER");
 
@@ -45,7 +44,7 @@ class UserServiceTest {
         testUser = User.builder()
                 .id(userId)
                 .email("test@posapi.com")
-                .password("encodedPassword") // El usuario existente ya tiene la pass codificada
+                .password("encodedPassword")
                 .fullName("Test User")
                 .roleId(USER_ROLE_ID)
                 .isActive(true)
@@ -66,28 +65,39 @@ class UserServiceTest {
                 .build();
 
         when(userRepository.findByEmail("new@posapi.com")).thenReturn(Optional.empty());
-        when(passwordEncoder.encode("rawPassword")).thenReturn("encoded_pass");
-
-        // AÑADE ESTO: Esto evita el ConfigurationException si el servicio busca el rol
-        when(roleRepository.findByName("USER")).thenReturn(Optional.of(USER_ROLE));
-
+        when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
+        when(roleRepository.findByName(USER_ROLE.getName())).thenReturn(Optional.of(USER_ROLE));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
         User created = userService.createUser(newUserRequest);
 
-        // ... resto igual
+        // Assert
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+
+        assertThat(created).isNotNull();
+        assertThat(savedUser.getId()).isNotNull();
+        assertThat(savedUser.getEmail()).isEqualTo("new@posapi.com");
+        assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
+        assertThat(savedUser.getRoleId()).isEqualTo(USER_ROLE_ID);
+        assertThat(savedUser.getIsActive()).isTrue();
+        assertThat(savedUser.getCreatedAt()).isNotNull();
+        assertThat(savedUser.getUpdatedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("Debe lanzar una excepción si el email ya existe al crear")
     void createUser_ShouldThrowException_WhenEmailExists() {
         // Arrange
-        when(userRepository.findByEmail(testUser.getEmail())).thenReturn(Optional.of(testUser));
+        User existingUser = User.builder().email("test@posapi.com").build();
+        when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
+        // No es necesario mockear roleRepository aquí si la verificación de email es primero
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            userService.createUser(testUser);
+        assertThrows(DuplicateResourceException.class, () -> {
+            userService.createUser(existingUser);
         });
 
         verify(userRepository, never()).save(any());
@@ -127,24 +137,22 @@ class UserServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("new_encoded_pass");
         assertThat(savedUser.getRoleId()).isEqualTo(managerRoleId);
         assertThat(savedUser.getIsActive()).isFalse();
-        assertThat(savedUser.getCreatedAt()).isEqualTo(testUser.getCreatedAt()); // No debe cambiar
-        assertThat(savedUser.getUpdatedAt()).isNotNull().isNotEqualTo(testUser.getUpdatedAt()); // Debe actualizarse
+        assertThat(savedUser.getCreatedAt()).isEqualTo(testUser.getCreatedAt());
+        assertThat(savedUser.getUpdatedAt()).isAfter(testUser.getUpdatedAt());
     }
 
     @Test
     @DisplayName("Debe eliminar un usuario existente")
     void deleteUser_ShouldReturnTrue_WhenUserExists() {
         // Arrange
-        // Como tu servicio usa userRepository.existsById(id), debemos mockear eso:
         when(userRepository.existsById(userId)).thenReturn(true);
+        // No es necesario el doNothing() para métodos void
 
         // Act
         boolean result = userService.deleteUser(userId);
 
         // Assert
         assertThat(result).isTrue();
-
-        // Verifica que se llame a deleteById, que es lo que hace tu método @Override
         verify(userRepository).deleteById(userId);
     }
 }

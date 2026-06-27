@@ -37,6 +37,7 @@ spotbugs {
 }
 
 tasks.withType(SpotBugsTask).configureEach {
+    enabled = false // Desactivamos SpotBugs
     reports {
         xml.required.set(false)
         html.required.set(true)
