@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Entity
-@Table(name = "roles") // 👈 Asegúrate de que coincida con el nombre de tu tabla en el init.sql
+@Table(name = "roles")
 @Data
 @Builder
 @NoArgsConstructor
@@ -21,7 +21,7 @@ import java.util.UUID;
 public class Role {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID) // 👈 Cambiado a UUID para hacer match con el tipo de dato
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     private String name;

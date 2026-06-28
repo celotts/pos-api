@@ -9,7 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional; // Importar la anotación
 
 import java.util.UUID;
 
@@ -19,8 +21,9 @@ import java.util.UUID;
 public class BootstrapService implements CommandLineRunner {
 
     private final UserRepository userRepository;
-    private final UserManagementPort userManagementPort; // 🛡️ World-Class: Delegate to the use case port
+    private final UserManagementPort userManagementPort;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${app.bootstrap.admin.email}")
     private String adminEmail;
@@ -35,11 +38,12 @@ public class BootstrapService implements CommandLineRunner {
     private String userRoleName;
 
     @Override
+    @Transactional // 🛡️ CORRECCIÓN: Asegurar que toda la operación se ejecute en una sola transacción
     public void run(String... args) {
         log.info("Starting data bootstrap process...");
         createRoleIfNotFound(adminRoleName);
         createRoleIfNotFound(userRoleName);
-        createAdminUserIfNotFound();
+        createOrUpdateAdminUser();
         log.info("Data bootstrap process finished.");
     }
 
@@ -54,26 +58,30 @@ public class BootstrapService implements CommandLineRunner {
         log.info("Role '{}' created successfully.", roleName);
     }
 
-    private void createAdminUserIfNotFound() {
-        if (userRepository.existsByEmail(adminEmail)) {
-            log.info("Admin user with email '{}' already exists. Skipping creation.", adminEmail);
-            return;
-        }
-        log.info("Admin user not found. Creating admin user with email '{}'...", adminEmail);
-
+    private void createOrUpdateAdminUser() {
         Role adminRole = roleRepository.findByName(adminRoleName)
                 .orElseThrow(() -> new IllegalStateException("Critical: ADMIN role not found after bootstrap attempt."));
 
-        // 🛡️ World-Class: Delegate creation to the responsible service, don't replicate logic here.
-        User adminTemplate = User.builder()
-                .email(adminEmail)
-                .password(adminPassword) // Pass raw password; the service will encode it.
-                .fullName("Default Administrator")
-                .isActive(true)
-                .roleId(adminRole.getId())
-                .build();
-
-        userManagementPort.createUser(adminTemplate);
-        log.info("Admin user created successfully.");
+        userRepository.findByEmail(adminEmail)
+                .map(existingUser -> {
+                    log.info("Admin user found. Ensuring password is up to date.");
+                    if (!passwordEncoder.matches(adminPassword, existingUser.getPassword())) {
+                        existingUser.setPassword(passwordEncoder.encode(adminPassword));
+                        userRepository.save(existingUser);
+                    }
+                    return existingUser;
+                })
+                .orElseGet(() -> {
+                    log.info("Admin user not found. Creating admin user with email '{}'...", adminEmail);
+                    User adminTemplate = User.builder()
+                            .email(adminEmail)
+                            .password(adminPassword)
+                            .fullName("Default Administrator")
+                            .isActive(true)
+                            .roleId(adminRole.getId())
+                            .build();
+                    return userManagementPort.createUser(adminTemplate);
+                });
+        log.info("Admin user is configured correctly.");
     }
 }

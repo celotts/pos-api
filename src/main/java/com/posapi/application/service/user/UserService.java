@@ -3,7 +3,6 @@ package com.posapi.application.service.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.exception.ConfigurationException;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.repository.RoleRepository;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -24,8 +24,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 public class UserService implements UserManagementPort {
-
-    private static final String DEFAULT_ROLE_NAME = "USER";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -40,15 +38,16 @@ public class UserService implements UserManagementPort {
             throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
         }
 
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        Role role = roleRepository.findById(user.getRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Role with ID '" + user.getRoleId() + "' not found."));
 
-        Role role = roleRepository.findByName(user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME)
-                .orElseThrow(() -> new ResourceNotFoundException("Role '" + (user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME) + "' not found."));
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role);
 
-        log.info("Successfully created new user with ID: {}", userToSave.getId());
-        return userRepository.save(userToSave);
+        User savedUser = userRepository.save(userToSave);
+        log.info("Successfully created new user with ID: {}", savedUser.getId());
+        return savedUser;
     }
 
     @Override
@@ -71,12 +70,14 @@ public class UserService implements UserManagementPort {
 
     @Override
     @Transactional
-    public Optional<User> updateUser(UUID id, User updatedUser) {
+    public Optional<User> updateUser(UUID id, User userWithUpdates) {
         return userRepository.findById(id).map(existingUser -> {
-            validateEmailOnUpdate(existingUser, updatedUser);
-            UUID finalRoleId = validateRoleOnUpdate(existingUser, updatedUser);
-            String finalPassword = preparePasswordOnUpdate(existingUser, updatedUser);
-            User userToUpdate = existingUser.updateWith(updatedUser, finalPassword, finalRoleId);
+            validateEmailOnUpdate(existingUser, userWithUpdates);
+            UUID finalRoleId = validateRoleOnUpdate(existingUser, userWithUpdates);
+            String finalPassword = preparePasswordOnUpdate(existingUser, userWithUpdates);
+
+            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRoleId);
+            
             return userRepository.save(userToUpdate);
         });
     }
@@ -84,12 +85,12 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public boolean deleteUser(UUID id) {
-        if (userRepository.existsById(id)) {
-            log.warn("Deleting user with ID: {}", id);
-            userRepository.deleteById(id);
+        return userRepository.findById(id).map(user -> {
+            log.warn("Soft-deleting user with ID: {}", id);
+            user.setDeletedAt(Instant.now());
+            userRepository.save(user);
             return true;
-        }
-        return false;
+        }).orElse(false);
     }
 
     private void validateEmailOnUpdate(User existingUser, User partialUpdate) {

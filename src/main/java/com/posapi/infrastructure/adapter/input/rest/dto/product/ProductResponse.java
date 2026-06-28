@@ -1,7 +1,8 @@
-package com.posapi.infrastructure.adapter.input.rest.product.dto;
+package com.posapi.infrastructure.adapter.input.rest.dto.product;
 
 import lombok.Builder;
 import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;

@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.adapter.input.rest.auth.dto;
+package com.posapi.infrastructure.adapter.input.rest.dto.auth; // Paquete corregido
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

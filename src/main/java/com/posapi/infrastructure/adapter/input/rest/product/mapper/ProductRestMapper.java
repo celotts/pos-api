@@ -1,8 +1,9 @@
 package com.posapi.infrastructure.adapter.input.rest.product.mapper;
 
 import com.posapi.domain.model.product.Product;
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse;
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse; // Import corregido
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -10,7 +11,7 @@ import java.math.BigDecimal;
 @Component
 public class ProductRestMapper {
 
-    public Product toDomain(ProductRequest request) {
+    public Product toDomain(@Valid ProductRequest request) {
         if (request == null) return null;
 
         return Product.builder()
@@ -19,7 +20,6 @@ public class ProductRestMapper {
                 .description(request.getDescription())
                 .purchasePrice(request.getPurchasePrice())
                 .salePrice(request.getSalePrice())
-                // 🛡️ World-Class: Avoid converting to int to prevent data loss. Default to BigDecimal.ZERO.
                 .currentStock(request.getCurrentStock() != null ? request.getCurrentStock() : BigDecimal.ZERO)
                 .taxId(request.getTaxId())
                 .supplierId(request.getSupplierId())
@@ -36,7 +36,6 @@ public class ProductRestMapper {
                 .description(product.getDescription())
                 .purchasePrice(product.getPurchasePrice())
                 .salePrice(product.getSalePrice())
-                // 🛡️ FIX: Remove redundant and incorrect call to BigDecimal.valueOf().
                 .currentStock(product.getCurrentStock())
                 .taxId(product.getTaxId())
                 .supplierId(product.getSupplierId())

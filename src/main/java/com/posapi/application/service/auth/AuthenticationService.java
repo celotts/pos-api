@@ -2,15 +2,17 @@ package com.posapi.application.service.auth;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.UserRepository;
-import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
-import com.posapi.infrastructure.security.JwtTokenProvider;
+import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest;
+import com.posapi.infrastructure.security.JwtUtil; // Import corregido
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,10 +20,10 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
-    private final UserRepository userRepository;
-    private final JwtTokenProvider jwtTokenProvider;
+    private final UserDetailsService userDetailsService; // Usar UserDetailsService para obtener UserDetails
+    private final JwtUtil jwtUtil; // Usar JwtUtil
 
-    public String login(LoginRequest loginRequest) {
+    public String login(@Valid LoginRequest loginRequest) {
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -32,13 +34,13 @@ public class AuthenticationService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            User user = userRepository.findByEmail(loginRequest.email())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found after successful authentication for email: " + loginRequest.email()));
+            // Después de una autenticación exitosa, obtenemos los UserDetails
+            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.email());
 
-            return jwtTokenProvider.generateToken(user);
+            // Generamos el token a partir de los UserDetails
+            return jwtUtil.generateToken(userDetails);
 
         } catch (BadCredentialsException e) {
-            // Aquí podrías incrementar el contador de intentos fallidos si quisieras
             throw new BadCredentialsException("Invalid credentials for user: " + loginRequest.email());
         }
     }

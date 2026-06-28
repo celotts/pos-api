@@ -6,6 +6,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.JwtException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -15,29 +16,28 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.nio.charset.StandardCharsets;
 
-@Component("customJwtUtil")
+@Component("jwtUtil")
 public class JwtUtil {
 
-    @Value("${jwt.secret}")
+    @Value("${app.jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration; // en milisegundos
+    @Value("${app.jwt.expiration-in-ms}")
+    private long expiration;
 
     public long getExpirationTime() {
         return expiration;
     }
 
-    // Generar token para un usuario
+    // 🛡️ CORRECCIÓN: Añadir los roles a los claims del token
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
-    }
-
-    // Generar token con claims adicionales
-    public String generateToken(Map<String, Object> claims, UserDetails userDetails) {
+        claims.put("roles", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toList()));
         return createToken(claims, userDetails.getUsername());
     }
 
@@ -45,14 +45,13 @@ public class JwtUtil {
         return Jwts.builder()
                 .claims(claims)
                 .subject(subject)
-                .id(UUID.randomUUID().toString()) // 🛡️ JTI único para mayor seguridad
+                .id(UUID.randomUUID().toString())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSignKey())
                 .compact();
     }
 
-    // Validar token
     public Boolean validateToken(String token, UserDetails userDetails) {
         try {
             final String username = extractUsername(token);
@@ -62,23 +61,19 @@ public class JwtUtil {
         }
     }
 
-    // Extraer nombre de usuario del token
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // Extraer fecha de expiración del token
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    // Extraer un claim específico del token
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
     }
 
-    // Extraer todos los claims del token
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignKey())
@@ -87,18 +82,15 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    // Verificar si el token ha expirado
     private Boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
 
-    // Obtener la clave de firma
-    private SecretKey getSignKey() { // 🔥 Cambiado de Key a SecretKey (Requerido por la nueva API)
+    private SecretKey getSignKey() {
         byte[] keyBytes;
         try {
             keyBytes = Decoders.BASE64.decode(secret);
         } catch (IllegalArgumentException e) {
-            // si la propiedad no está en Base64, usar bytes UTF-8 directamente
             keyBytes = secret.getBytes(StandardCharsets.UTF_8);
         }
         return Keys.hmacShaKeyFor(keyBytes);

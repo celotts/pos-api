@@ -15,7 +15,6 @@ spring:
     driver-class-name: org.postgresql.Driver
   # --- JPA/Hibernate Configuration ---
   jpa:
-    # Se eliminó 'database-platform' para evitar advertencias de deprecación
     hibernate:
       ddl-auto: update
     show-sql: true
@@ -30,22 +29,12 @@ spring:
     password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
 # ===================================================================
-# CONFIGURACIÓN DE SEGURIDAD PERSONALIZADA
-# ===================================================================
-application:
-  security:
-    jwt:
-      secret-key: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
-      expiration: ${JWT_EXPIRATION:3600000}
-
-# ===================================================================
 # CONFIGURACIÓN DE APP (Configuración requerida por componentes internos)
 # ===================================================================
 app:
   jwt:
-    # Estas propiedades resuelven los errores de inyección encontrados
     secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
-    expiration-in-ms: ${JWT_EXPIRATION:3600000}
+    expiration-in-ms: ${JWT_EXPIRATION:3600000} # 1 hora
   bootstrap:
     admin:
       email: ${ADMIN_EMAIL:admin@posapi.com}

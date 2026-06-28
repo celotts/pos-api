@@ -59,7 +59,7 @@ repositories {
 
 dependencies {
     // 1. BOM de Testcontainers (Este sí se descarga sin problemas)
-    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.20.4")
 
     // 2. Entidades y Persistencia (Versiones auto-gestionadas por Spring Boot 3.4.2)
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'

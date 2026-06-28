@@ -2,8 +2,8 @@ package com.posapi.infrastructure.adapter.input.rest.role;
 
 import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.model.role.Role;
-import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
-import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
+import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleRequest; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleResponse; // Import corregido
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

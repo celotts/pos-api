@@ -3,8 +3,8 @@ package com.posapi.infrastructure.adapter.input.rest.user.mapper;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.RoleRepository;
-import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
-import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
+import com.posapi.infrastructure.adapter.input.rest.dto.user.UserRequest; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.dto.user.UserResponse; // Import corregido
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +27,7 @@ public class UserRestMapper {
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullName(request.getFullName())
-                .roleName(request.getRoleName())
+                .roleId(request.getRoleId())
                 .isActive(request.getIsActive())
                 .build();
     }

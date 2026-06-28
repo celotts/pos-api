@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.adapter.input.rest.role.dto;
+package com.posapi.infrastructure.adapter.input.rest.dto.role;
 
 import com.posapi.domain.model.role.Role;
 
