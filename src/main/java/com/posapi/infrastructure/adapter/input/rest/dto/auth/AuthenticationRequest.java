@@ -1,4 +1,2 @@
-package com.posapi.infrastructure.adapter.input.rest.dto.auth;
-
-public record AuthenticationRequest(String email, String password) {
-}
+// This file is obsolete and has been replaced by LoginRequest.java
+// It is intentionally left blank to be deleted.

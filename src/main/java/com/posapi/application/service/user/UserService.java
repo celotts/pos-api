@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,7 +45,6 @@ public class UserService implements UserManagementPort {
 
         User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role);
 
-        // Devolvemos el resultado de la operación de guardado, que contiene las fechas
         User savedUser = userRepository.save(userToSave);
         log.info("Successfully created new user with ID: {}", savedUser.getId());
         return savedUser;
@@ -70,12 +70,14 @@ public class UserService implements UserManagementPort {
 
     @Override
     @Transactional
-    public Optional<User> updateUser(UUID id, User updatedUser) {
+    public Optional<User> updateUser(UUID id, User userWithUpdates) {
         return userRepository.findById(id).map(existingUser -> {
-            validateEmailOnUpdate(existingUser, updatedUser);
-            UUID finalRoleId = validateRoleOnUpdate(existingUser, updatedUser);
-            String finalPassword = preparePasswordOnUpdate(existingUser, updatedUser);
-            User userToUpdate = existingUser.updateWith(updatedUser, finalPassword, finalRoleId);
+            validateEmailOnUpdate(existingUser, userWithUpdates);
+            UUID finalRoleId = validateRoleOnUpdate(existingUser, userWithUpdates);
+            String finalPassword = preparePasswordOnUpdate(existingUser, userWithUpdates);
+
+            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRoleId);
+            
             return userRepository.save(userToUpdate);
         });
     }
@@ -83,12 +85,12 @@ public class UserService implements UserManagementPort {
     @Override
     @Transactional
     public boolean deleteUser(UUID id) {
-        if (userRepository.existsById(id)) {
-            log.warn("Deleting user with ID: {}", id);
-            userRepository.deleteById(id);
+        return userRepository.findById(id).map(user -> {
+            log.warn("Soft-deleting user with ID: {}", id);
+            user.setDeletedAt(Instant.now());
+            userRepository.save(user);
             return true;
-        }
-        return false;
+        }).orElse(false);
     }
 
     private void validateEmailOnUpdate(User existingUser, User partialUpdate) {

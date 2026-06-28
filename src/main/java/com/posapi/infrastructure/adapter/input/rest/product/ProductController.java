@@ -2,11 +2,12 @@ package com.posapi.infrastructure.adapter.input.rest.product;
 
 import com.posapi.application.service.product.ProductService; // Actualizado
 import com.posapi.domain.model.product.Product; // Actualizado
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest; // Actualizado
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse; // Actualizado
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest;
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse;
 import com.posapi.infrastructure.adapter.input.rest.product.mapper.ProductRestMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable UUID id) {
+    public HttpEntity<ProductResponse> getProductById(@PathVariable UUID id) {
         return productService.getProductById(id)
                 .map(productMapper::toResponse)
                 .map(ResponseEntity::ok)
