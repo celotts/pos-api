@@ -3,7 +3,6 @@ package com.posapi.application.service.user;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.exception.ConfigurationException;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.repository.RoleRepository;
@@ -25,8 +24,6 @@ import java.util.UUID;
 @Slf4j
 public class UserService implements UserManagementPort {
 
-    private static final String DEFAULT_ROLE_NAME = "USER";
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
@@ -40,15 +37,17 @@ public class UserService implements UserManagementPort {
             throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
         }
 
-        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        Role role = roleRepository.findById(user.getRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException("Role with ID '" + user.getRoleId() + "' not found."));
 
-        Role role = roleRepository.findByName(user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME)
-                .orElseThrow(() -> new ResourceNotFoundException("Role '" + (user.getRoleName() != null ? user.getRoleName() : DEFAULT_ROLE_NAME) + "' not found."));
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
 
         User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role);
 
-        log.info("Successfully created new user with ID: {}", userToSave.getId());
-        return userRepository.save(userToSave);
+        // Devolvemos el resultado de la operación de guardado, que contiene las fechas
+        User savedUser = userRepository.save(userToSave);
+        log.info("Successfully created new user with ID: {}", savedUser.getId());
+        return savedUser;
     }
 
     @Override

@@ -28,12 +28,9 @@ public class UserRequest {
     @NotBlank(message = "El nombre completo es obligatorio")
     private String fullName;
 
-    @NotBlank(message = "El nombre del rol es obligatorio")
-    private String roleName;
+    @NotNull(message = "El ID del rol (roleId) es obligatorio")
+    private UUID roleId; // Cambiado de roleName a roleId
 
     @NotNull(message = "El estado de activación (isActive) es obligatorio")
     private Boolean isActive;
-
-    // Este campo no debe ser parte del request, se maneja internamente
-    // private Integer failedLoginAttempts;
 }

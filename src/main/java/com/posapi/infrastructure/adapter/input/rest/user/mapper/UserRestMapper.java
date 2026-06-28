@@ -27,7 +27,7 @@ public class UserRestMapper {
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .fullName(request.getFullName())
-                .roleName(request.getRoleName())
+                .roleId(request.getRoleId()) // Usamos el roleId del request
                 .isActive(request.getIsActive())
                 .build();
     }
