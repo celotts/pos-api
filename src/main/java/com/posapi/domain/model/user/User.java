@@ -24,10 +24,10 @@ public class User {
     private String roleName;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant deletedAt; // Campo añadido
+    private Instant deletedAt;
 
+    // 🛡️ CORRECCIÓN: Dejar que la capa de persistencia maneje los timestamps
     public static User createNew(String email, String encodedPassword, String fullName, Role defaultRole) {
-        Instant now = Instant.now();
         return User.builder()
                 .id(UUID.randomUUID())
                 .email(email)
@@ -36,12 +36,12 @@ public class User {
                 .isActive(true)
                 .failedLoginAttempts(0)
                 .roleId(defaultRole.getId())
-                .createdAt(now)
-                .updatedAt(now)
-                .deletedAt(null) // explícitamente nulo al crear
+                .deletedAt(null)
+                // createdAt y updatedAt serán establecidos por JPA
                 .build();
     }
 
+    // 🛡️ CORRECCIÓN: Dejar que la capa de persistencia maneje el updatedAt
     public User updateWith(User updateData, String newEncodedPassword, UUID newRoleId) {
         return User.builder()
                 .id(this.id)
@@ -51,9 +51,9 @@ public class User {
                 .isActive(updateData.getIsActive() != null ? updateData.getIsActive() : this.isActive)
                 .roleId(newRoleId != null ? newRoleId : this.roleId)
                 .failedLoginAttempts(this.failedLoginAttempts)
-                .createdAt(this.createdAt)
-                .updatedAt(Instant.now())
-                .deletedAt(this.deletedAt) // mantener el estado de eliminación
+                .createdAt(this.createdAt) // Mantener el original
+                .deletedAt(this.deletedAt)
+                // updatedAt será establecido por JPA
                 .build();
     }
 }

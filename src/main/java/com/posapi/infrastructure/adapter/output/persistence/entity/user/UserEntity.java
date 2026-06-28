@@ -19,14 +19,11 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@SQLRestriction("deleted_at IS NULL") // World-Class Practice: Automatically filter soft-deleted records
+@SQLRestriction("deleted_at IS NULL")
 public class UserEntity {
 
     @Id
     private UUID id;
-
-    @Column(name = "role_id", nullable = false, insertable = false, updatable = false)
-    private UUID roleId;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -47,13 +44,12 @@ public class UserEntity {
     @JoinColumn(name = "role_id")
     private RoleEntity role;
 
-
-    @CreationTimestamp // 🟢 Limpio, usando el import de arriba
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false) // 🛡️ updatable = false es clave
     private Instant createdAt;
 
-    @UpdateTimestamp // 🟢 Limpio, usando el import de arriba
-    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
+    @Column(name = "updated_at", insertable = false) // 🛡️ insertable = false para que sea null al crear
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
