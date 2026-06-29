@@ -43,7 +43,7 @@ public class UserService implements UserManagementPort {
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
-        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role);
+        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive());
 
         User savedUser = userRepository.save(userToSave);
         log.info("Successfully created new user with ID: {}", savedUser.getId());
