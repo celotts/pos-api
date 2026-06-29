@@ -1,50 +1,19 @@
-services:
-  db:
-    image: postgres:15-alpine
-    container_name: pos_db
-    env_file: .env
-    environment:
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./src/main/resources/db/migration/:/docker-entrypoint-initdb.d/
-    ports:
-      - "5432:5432"
-    networks:
-      - pos-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+# ===================================================================
+# CONFIGURACIÓN DE SPRING BOOT PARA EL PERFIL 'DOCKER'
+# ===================================================================
+# Estas propiedades sobrescriben las de 'application.yml' cuando
+# la aplicación se ejecuta dentro de un contenedor Docker.
 
-  app:
-    build: .
-    env_file: .env
-    container_name: pos_api_app
-    ports:
-      - "${APP_PORT}:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:postgresql://pos_db:5432/${POSTGRES_DB}
-      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
-      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      # 🟢 AGREGADO: Esto sobrescribe el 'validate' y permite que Hibernate cree la columna faltante
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - pos-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "5"
-
-networks:
-  pos-network:
-    driver: bridge
-
-volumes:
-  db_data: # Definido correctamente aquí al final
+spring:
+  datasource:
+    # Dentro de la red de Docker, nos conectamos al servicio 'db' en lugar de 'localhost'.
+    url: jdbc:postgresql://db:5432/${POSTGRES_DB:pos_db}
+    username: ${POSTGRES_USER:product}
+    password: ${POSTGRES_PASSWORD:product123}
+  jpa:
+    hibernate:
+      # En el entorno de Docker, es seguro que Hibernate actualice el esquema.
+      ddl-auto: update
+  rabbitmq:
+    # Dentro de la red de Docker, nos conectamos al servicio 'rabbitmq' (si lo tuvieras).
+    host: rabbitmq
