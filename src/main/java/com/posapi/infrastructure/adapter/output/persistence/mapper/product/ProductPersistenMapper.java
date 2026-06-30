@@ -3,10 +3,9 @@ package com.posapi.infrastructure.adapter.output.persistence.mapper.product;
 import com.posapi.domain.model.product.Product;
 import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import org.springframework.stereotype.Component;
-import java.math.BigDecimal;
 
 @Component
-public class ProductMapper {
+public class ProductPersistenMapper {
 
     public ProductEntity toEntity(Product domain) {
         if (domain == null) return null;

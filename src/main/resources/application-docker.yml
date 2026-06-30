@@ -6,14 +6,14 @@
 
 spring:
   datasource:
-    # Dentro de la red de Docker, nos conectamos al servicio 'db' en lugar de 'localhost'.
-    url: jdbc:postgresql://db:5432/${POSTGRES_DB:pos_db}
+    # Dentro de la red de Docker, nos conectamos al servicio 'pos_db' en lugar de 'localhost'.
+    url: jdbc:postgresql://pos_db:5432/${POSTGRES_DB:pos_db}
     username: ${POSTGRES_USER:product}
     password: ${POSTGRES_PASSWORD:product123}
   jpa:
     hibernate:
-      # En el entorno de Docker, es seguro que Hibernate actualice el esquema.
-      ddl-auto: update
+      # En el entorno de Docker, Flyway maneja el esquema, por lo que Hibernate solo debe validar.
+      ddl-auto: validate
   rabbitmq:
     # Dentro de la red de Docker, nos conectamos al servicio 'rabbitmq' (si lo tuvieras).
     host: rabbitmq

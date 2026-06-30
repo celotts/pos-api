@@ -1,6 +1,7 @@
 package com.posapi.application.service.product;
 
 import com.posapi.application.port.product.ProductManagementPort; // Importar la interfaz
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.repository.product.ProductRepository;
 import jakarta.validation.constraints.NotNull; // Importar NotNull
@@ -57,7 +58,7 @@ public class ProductService implements ProductManagementPort { // Implementa la 
             existingProduct.setUpdatedAt(Instant.now());
             // No actualizamos created_at, created_by_user_id, etc.
             return productRepository.save(existingProduct);
-        }).orElseThrow(() -> new RuntimeException("Product not found with ID: " + id)); // Manejo de error básico
+        }).orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id)); // Manejo de error básico
     }
 
     @Override

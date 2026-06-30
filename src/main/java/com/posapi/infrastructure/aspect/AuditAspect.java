@@ -17,6 +17,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -47,7 +48,7 @@ public class AuditAspect {
                     .map(com.posapi.domain.model.user.User::getId)
                     .orElse(null);
 
-            UUID recordId = getRecordId(result);
+            UUID recordId = getRecordId(joinPoint, result);
             String newValue = convertToJson(result);
 
             HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -72,14 +73,27 @@ public class AuditAspect {
         }
     }
 
-    private UUID getRecordId(Object result) {
-        if (result instanceof Optional) {
-            result = ((Optional<?>) result).orElse(null);
-        }
-        if (result == null) return null;
+    private UUID getRecordId(JoinPoint joinPoint, Object result) {
+        // First, try to find a UUID in the method arguments
+        return Arrays.stream(joinPoint.getArgs())
+                .filter(UUID.class::isInstance)
+                .map(UUID.class::cast)
+                .findFirst()
+                .orElseGet(() -> {
+                    // If not in args, try to get it from the result (for create operations)
+                    if (result instanceof Optional) {
+                        Object unwrapped = ((Optional<?>) result).orElse(null);
+                        return getFromObject(unwrapped);
+                    }
+                    return getFromObject(result);
+                });
+    }
+
+    private UUID getFromObject(Object obj) {
+        if (obj == null) return null;
         try {
-            Method getIdMethod = result.getClass().getMethod("getId");
-            return (UUID) getIdMethod.invoke(result);
+            Method getIdMethod = obj.getClass().getMethod("getId");
+            return (UUID) getIdMethod.invoke(obj);
         } catch (Exception e) {
             return null;
         }

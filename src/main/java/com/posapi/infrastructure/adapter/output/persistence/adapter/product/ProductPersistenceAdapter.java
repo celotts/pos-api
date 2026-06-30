@@ -2,7 +2,7 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.product;
 
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.repository.product.ProductRepository;
-import com.posapi.infrastructure.adapter.output.persistence.mapper.product.ProductMapper;
+import com.posapi.infrastructure.adapter.output.persistence.mapper.product.ProductPersistenMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.product.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 public class ProductPersistenceAdapter implements ProductRepository {
 
     private final ProductJpaRepository productJpaRepository;
-    private final ProductMapper productMapper;
+    private final ProductPersistenMapper productMapper;
 
     @Override
     public Product save(Product product) {

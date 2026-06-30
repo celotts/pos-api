@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -32,21 +34,23 @@ public class AuditLogEntity {
     private UUID recordId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "action", nullable = false)
     private AuditAction action;
 
-    @Type(JsonType.class)
-    @Column(name = "old_value", columnDefinition = "jsonb")
+    @Lob
+    @Column(name = "old_value", columnDefinition = "TEXT")
     private String oldValue;
 
-    @Type(JsonType.class)
-    @Column(name = "new_value", columnDefinition = "jsonb")
+    @Lob
+    @Column(name = "new_value", columnDefinition = "TEXT")
     private String newValue;
 
     @Column(name = "ip_address")
     private String ipAddress;
 
-    @Column(name = "user_agent")
+    @Lob
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
     @CreationTimestamp

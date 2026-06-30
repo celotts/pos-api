@@ -4,8 +4,8 @@ import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.audit.AuditAction;
 import com.posapi.domain.model.role.Role;
-import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.repository.role.RoleRepository;
 import com.posapi.infrastructure.aspect.Auditable;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class RoleService implements RoleManagementPort {
 
+    private static final UUID SYSTEM_USER_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
     private final RoleRepository roleRepository;
     private final SecurityContextHelper securityContextHelper;
     private final UserRepository userRepository;
@@ -32,16 +34,18 @@ public class RoleService implements RoleManagementPort {
         if (roleRepository.existsByName(role.getName())) {
             throw new DuplicateResourceException("Role with name '" + role.getName() + "' already exists.");
         }
+        
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
                 .map(com.posapi.domain.model.user.User::getId)
-                .orElse(null);
+                .orElse(SYSTEM_USER_ID); // Usar un ID de sistema si no hay usuario
 
         Role roleToSave = Role.builder()
                 .id(UUID.randomUUID())
                 .name(role.getName())
-                .createdBy(currentUserId)
+                .createdBy(currentUserId) // Asignar el usuario
                 .build();
+        
         return roleRepository.save(roleToSave);
     }
 
@@ -64,14 +68,14 @@ public class RoleService implements RoleManagementPort {
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
                 .map(com.posapi.domain.model.user.User::getId)
-                .orElse(null);
+                .orElse(SYSTEM_USER_ID);
 
         return roleRepository.findById(id).map(existingRole -> {
             Role updatedRole = Role.builder()
                     .id(existingRole.getId())
                     .name(role.getName())
-                    .createdAt(existingRole.getCreatedAt())
-                    .createdBy(existingRole.getCreatedBy())
+                    .createdAt(existingRole.getCreatedAt()) // Mantener el original
+                    .createdBy(existingRole.getCreatedBy()) // Mantener el original
                     .updatedBy(currentUserId)
                     .build();
             return roleRepository.save(updatedRole);
@@ -85,11 +89,12 @@ public class RoleService implements RoleManagementPort {
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
                 .map(com.posapi.domain.model.user.User::getId)
-                .orElse(null);
+                .orElse(SYSTEM_USER_ID);
 
         return roleRepository.findById(id).map(roleToDelete -> {
             roleToDelete.setDeletedAt(Instant.now());
             roleToDelete.setDeletedBy(currentUserId);
+            roleToDelete.setUpdatedBy(currentUserId);
             roleRepository.save(roleToDelete);
             return true;
         }).orElse(false);

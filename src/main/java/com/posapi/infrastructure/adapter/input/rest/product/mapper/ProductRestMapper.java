@@ -29,22 +29,6 @@ public class ProductRestMapper {
     public ProductResponse toResponse(Product product) {
         if (product == null) return null;
 
-        return ProductResponse.builder()
-                .id(product.getId())
-                .sku(product.getSku())
-                .name(product.getName())
-                .description(product.getDescription())
-                .purchasePrice(product.getPurchasePrice())
-                .salePrice(product.getSalePrice())
-                .currentStock(product.getCurrentStock())
-                .taxId(product.getTaxId())
-                .supplierId(product.getSupplierId())
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
-                .deletedAt(product.getDeletedAt())
-                .createdBy(product.getCreatedBy()) // CORREGIDO
-                .updatedBy(product.getUpdatedBy()) // CORREGIDO
-                .deletedBy(product.getDeletedBy()) // CORREGIDO
-                .build();
+        return ProductResponse.fromDomain(product);
     }
 }

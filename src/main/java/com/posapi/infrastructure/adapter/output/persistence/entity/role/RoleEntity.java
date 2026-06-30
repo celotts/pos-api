@@ -28,16 +28,17 @@ public class RoleEntity {
     @ToString.Include
     private String name;
 
-    // 🛡️ Timestamps ahora manejados por el trigger de la BD
-    @Column(name = "created_at", updatable = false)
+    // 🕒 El Trigger de Postgres maneja el tiempo. Java solo lo lee.
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
+    // 👤 IDs de los Usuarios Operativos (Enviados desde Java mediante el JWT)
     @Column(name = "created_by")
     private UUID createdBy;
 
@@ -46,4 +47,14 @@ public class RoleEntity {
 
     @Column(name = "deleted_by")
     private UUID deletedBy;
+
+    // 🛡️ IDs de los Roles de Auditoría (Calculados 100% de forma automática por el Trigger)
+    @Column(name = "created_by_role_id", insertable = false, updatable = false)
+    private UUID createdByRoleId;
+
+    @Column(name = "updated_by_role_id", insertable = false, updatable = false)
+    private UUID updatedByRoleId;
+
+    @Column(name = "deleted_by_role_id", insertable = false, updatable = false)
+    private UUID deletedByRoleId;
 }
