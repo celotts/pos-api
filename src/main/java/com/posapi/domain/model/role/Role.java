@@ -1,28 +1,34 @@
 package com.posapi.domain.model.role;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "roles")
 @Data
-@Builder
+@Builder(toBuilder = true) // Habilitamos toBuilder para mutaciones limpias en controladores/casos de uso
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
     private String name;
+
+    // 🕒 Marcas de tiempo de Auditoría
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant deletedAt;
+
+    // 👤 IDs de Usuarios Operativos
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
+
+    // 🛡️ IDs de Roles de Auditoría (Calculados por el Trigger de Postgres)
+    private UUID createdByRoleId;
+    private UUID updatedByRoleId;
+    private UUID deletedByRoleId;
 }

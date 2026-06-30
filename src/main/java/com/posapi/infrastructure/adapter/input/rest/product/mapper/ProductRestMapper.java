@@ -1,8 +1,8 @@
 package com.posapi.infrastructure.adapter.input.rest.product.mapper;
 
 import com.posapi.domain.model.product.Product;
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest; // Import corregido
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest;
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
@@ -29,22 +29,6 @@ public class ProductRestMapper {
     public ProductResponse toResponse(Product product) {
         if (product == null) return null;
 
-        return ProductResponse.builder()
-                .id(product.getId())
-                .sku(product.getSku())
-                .name(product.getName())
-                .description(product.getDescription())
-                .purchasePrice(product.getPurchasePrice())
-                .salePrice(product.getSalePrice())
-                .currentStock(product.getCurrentStock())
-                .taxId(product.getTaxId())
-                .supplierId(product.getSupplierId())
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
-                .deletedAt(product.getDeletedAt())
-                .createdByUserId(product.getCreatedByUserId())
-                .updatedByUserId(product.getUpdatedByUserId())
-                .deletedByUserId(product.getDeletedByUserId())
-                .build();
+        return ProductResponse.fromDomain(product);
     }
 }

@@ -1,14 +1,19 @@
 package com.posapi.application.service.user;
 
 import com.posapi.application.port.user.UserManagementPort;
+import com.posapi.domain.model.audit.AuditAction;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
-import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.repository.role.RoleRepository;
+import com.posapi.infrastructure.aspect.Auditable;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,9 +33,11 @@ public class UserService implements UserManagementPort {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional
+    @Auditable(action = AuditAction.INSERT, tableName = "users")
     public User createUser(User user) {
         log.debug("Attempting to create a new user with email: {}", user.getEmail());
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -43,7 +50,12 @@ public class UserService implements UserManagementPort {
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
-        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive());
+        UUID currentUserId = securityContextHelper.getCurrentUsername()
+                .flatMap(userRepository::findByEmail)
+                .map(User::getId)
+                .orElse(null);
+
+        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
 
         User savedUser = userRepository.save(userToSave);
         log.info("Successfully created new user with ID: {}", savedUser.getId());
@@ -69,14 +81,26 @@ public class UserService implements UserManagementPort {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
+    }
+
+    @Override
     @Transactional
+    @Auditable(action = AuditAction.UPDATE, tableName = "users")
     public Optional<User> updateUser(UUID id, User userWithUpdates) {
+        UUID currentUserId = securityContextHelper.getCurrentUsername()
+                .flatMap(userRepository::findByEmail)
+                .map(User::getId)
+                .orElse(null);
+
         return userRepository.findById(id).map(existingUser -> {
             validateEmailOnUpdate(existingUser, userWithUpdates);
             UUID finalRoleId = validateRoleOnUpdate(existingUser, userWithUpdates);
             String finalPassword = preparePasswordOnUpdate(existingUser, userWithUpdates);
 
-            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRoleId);
+            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRoleId, currentUserId);
             
             return userRepository.save(userToUpdate);
         });
@@ -84,10 +108,17 @@ public class UserService implements UserManagementPort {
 
     @Override
     @Transactional
+    @Auditable(action = AuditAction.DELETE, tableName = "users")
     public boolean deleteUser(UUID id) {
+        UUID currentUserId = securityContextHelper.getCurrentUsername()
+                .flatMap(userRepository::findByEmail)
+                .map(User::getId)
+                .orElse(null);
+
         return userRepository.findById(id).map(user -> {
             log.warn("Soft-deleting user with ID: {}", id);
             user.setDeletedAt(Instant.now());
+            user.setDeletedBy(currentUserId);
             userRepository.save(user);
             return true;
         }).orElse(false);

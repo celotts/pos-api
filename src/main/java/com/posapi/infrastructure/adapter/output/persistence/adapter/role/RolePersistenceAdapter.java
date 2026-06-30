@@ -1,7 +1,8 @@
 package com.posapi.infrastructure.adapter.output.persistence.adapter.role;
 
 import com.posapi.domain.model.role.Role;
-import com.posapi.domain.repository.RoleRepository;
+import com.posapi.domain.repository.role.RoleRepository;
+import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.role.RolePersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.role.RoleJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,8 +22,14 @@ public class RolePersistenceAdapter implements RoleRepository {
 
     @Override
     public Role save(Role role) {
-        var entity = roleMapper.toEntity(role);
-        var savedEntity = roleJpaRepository.save(entity);
+        // 1. El mapper ya se encarga de estructurar la entidad e inyectar el UUID si venía nulo
+        RoleEntity roleEntity = roleMapper.toEntity(role);
+
+        // 2. ⚡ OBLIGATORIO: Forzamos el flush inmediato para activar el TRIGGER de Postgres
+        // Antes de que el método retorne, la base de datos ya habrá calculado los campos de auditoría
+        RoleEntity savedEntity = roleJpaRepository.saveAndFlush(roleEntity);
+
+        // 3. Devolvemos al dominio con todos los campos calculados (_role_id) listos
         return roleMapper.toDomain(savedEntity);
     }
 
@@ -39,13 +46,13 @@ public class RolePersistenceAdapter implements RoleRepository {
     }
 
     @Override
-    public void deleteById(UUID id) {
-        roleJpaRepository.deleteById(id);
+    public boolean existsByName(String name) {
+        return roleJpaRepository.existsByName(name);
     }
 
     @Override
-    public boolean existsByName(String name) {
-        return roleJpaRepository.existsByName(name);
+    public void deleteById(UUID id) {
+        roleJpaRepository.deleteById(id);
     }
 
     @Override

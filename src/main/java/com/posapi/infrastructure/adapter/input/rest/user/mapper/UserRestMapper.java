@@ -2,7 +2,7 @@ package com.posapi.infrastructure.adapter.input.rest.user.mapper;
 
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.RoleRepository;
+import com.posapi.domain.repository.role.RoleRepository;
 import com.posapi.infrastructure.adapter.input.rest.dto.user.UserRequest; // Import corregido
 import com.posapi.infrastructure.adapter.input.rest.dto.user.UserResponse; // Import corregido
 import lombok.RequiredArgsConstructor;

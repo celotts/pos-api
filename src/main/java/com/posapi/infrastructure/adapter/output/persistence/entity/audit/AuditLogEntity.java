@@ -1,17 +1,30 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.audit;
 
+import com.posapi.domain.model.audit.AuditAction;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
+
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "audit_logs")
-@Getter @Setter @Builder
-@NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuditLogEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "table_name", nullable = false)
@@ -20,29 +33,30 @@ public class AuditLogEntity {
     @Column(name = "record_id", nullable = false)
     private UUID recordId;
 
-    @Column(nullable = false)
-    private String action;
+    @Enumerated(EnumType.STRING)
+    @JdbcTypeCode(SqlTypes.NAMED_ENUM)
+    @Column(name = "action", nullable = false)
+    private AuditAction action;
 
-    // Usamos String. En Postgres, si envías un String con formato JSON
-    // a una columna tipo JSONB, Hibernate lo gestionará automáticamente.
-    @Column(name = "old_value", columnDefinition = "jsonb")
+    @Lob
+    @Column(name = "old_value", columnDefinition = "TEXT")
     private String oldValue;
 
-    @Column(name = "new_value", columnDefinition = "jsonb")
+    @Lob
+    @Column(name = "new_value", columnDefinition = "TEXT")
     private String newValue;
 
     @Column(name = "ip_address")
     private String ipAddress;
 
-    @Column(name = "user_agent")
+    @Lob
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "user_id")
     private UUID userId;
-
-    @Column(name = "role_id")
-    private UUID roleId;
 }

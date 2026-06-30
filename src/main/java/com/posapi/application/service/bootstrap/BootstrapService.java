@@ -3,15 +3,15 @@ package com.posapi.application.service.bootstrap;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.repository.role.RoleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional; // Importar la anotación
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -38,7 +38,7 @@ public class BootstrapService implements CommandLineRunner {
     private String userRoleName;
 
     @Override
-    @Transactional // 🛡️ CORRECCIÓN: Asegurar que toda la operación se ejecute en una sola transacción
+    @Transactional
     public void run(String... args) {
         log.info("Starting data bootstrap process...");
         createRoleIfNotFound(adminRoleName);
@@ -64,9 +64,18 @@ public class BootstrapService implements CommandLineRunner {
 
         userRepository.findByEmail(adminEmail)
                 .map(existingUser -> {
-                    log.info("Admin user found. Ensuring password is up to date.");
+                    log.info("Admin user found. Ensuring password and role are up to date.");
+                    boolean needsUpdate = false;
                     if (!passwordEncoder.matches(adminPassword, existingUser.getPassword())) {
                         existingUser.setPassword(passwordEncoder.encode(adminPassword));
+                        needsUpdate = true;
+                    }
+                    if (!adminRole.getId().equals(existingUser.getRoleId())) {
+                        existingUser.setRoleId(adminRole.getId());
+                        existingUser.setRoleName(adminRole.getName());
+                        needsUpdate = true;
+                    }
+                    if (needsUpdate) {
                         userRepository.save(existingUser);
                     }
                     return existingUser;
@@ -75,10 +84,11 @@ public class BootstrapService implements CommandLineRunner {
                     log.info("Admin user not found. Creating admin user with email '{}'...", adminEmail);
                     User adminTemplate = User.builder()
                             .email(adminEmail)
-                            .password(adminPassword)
+                            .password(adminPassword) // La contraseña se hashea en el servicio
                             .fullName("Default Administrator")
                             .isActive(true)
                             .roleId(adminRole.getId())
+                            .roleName(adminRole.getName()) // 🛡️ SOLUCIÓN: Añadir el nombre del rol
                             .build();
                     return userManagementPort.createUser(adminTemplate);
                 });
