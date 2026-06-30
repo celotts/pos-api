@@ -1,17 +1,28 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.audit;
 
+import com.posapi.domain.model.audit.AuditAction;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
+
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "audit_logs")
-@Getter @Setter @Builder
-@NoArgsConstructor @AllArgsConstructor
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuditLogEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "table_name", nullable = false)
@@ -20,14 +31,15 @@ public class AuditLogEntity {
     @Column(name = "record_id", nullable = false)
     private UUID recordId;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String action;
+    private AuditAction action;
 
-    // Usamos String. En Postgres, si envías un String con formato JSON
-    // a una columna tipo JSONB, Hibernate lo gestionará automáticamente.
+    @Type(JsonType.class)
     @Column(name = "old_value", columnDefinition = "jsonb")
     private String oldValue;
 
+    @Type(JsonType.class)
     @Column(name = "new_value", columnDefinition = "jsonb")
     private String newValue;
 
@@ -37,12 +49,10 @@ public class AuditLogEntity {
     @Column(name = "user_agent")
     private String userAgent;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @Column(name = "user_id")
     private UUID userId;
-
-    @Column(name = "role_id")
-    private UUID roleId;
 }

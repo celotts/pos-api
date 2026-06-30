@@ -11,6 +11,9 @@ public class RolePersistenceMapper {
         return RoleEntity.builder()
                 .id(domain.getId())
                 .name(domain.getName())
+                .createdBy(domain.getCreatedBy())
+                .updatedBy(domain.getUpdatedBy())
+                .deletedBy(domain.getDeletedBy())
                 .build();
     }
 
@@ -18,6 +21,12 @@ public class RolePersistenceMapper {
         return Role.builder()
                 .id(entity.getId())
                 .name(entity.getName())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .deletedAt(entity.getDeletedAt())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .deletedBy(entity.getDeletedBy())
                 .build();
     }
 }

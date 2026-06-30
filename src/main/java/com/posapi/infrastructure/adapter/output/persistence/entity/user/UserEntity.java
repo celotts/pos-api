@@ -44,14 +44,24 @@ public class UserEntity {
     @JoinColumn(name = "role_id")
     private RoleEntity role;
 
+    // 🛡️ La App es responsable de los timestamps para esta entidad
     @CreationTimestamp
-    @Column(name = "created_at", updatable = false, nullable = false) // 🛡️ updatable = false es clave
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "updated_at", insertable = false) // 🛡️ insertable = false para que sea null al crear
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "created_by")
+    private UUID createdBy;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
 }

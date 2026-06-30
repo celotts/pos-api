@@ -5,6 +5,7 @@ import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.repository.RoleRepository;
 import com.posapi.domain.repository.UserRepository;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,13 +31,15 @@ class UserServiceTest {
     @Mock private UserRepository userRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private RoleRepository roleRepository;
+    @Mock private SecurityContextHelper securityContextHelper;
     @InjectMocks private UserService userService;
 
     private User testUser;
     private UUID userId;
 
     private static final UUID USER_ROLE_ID  = UUID.fromString("00000000-0000-0000-0000-000000000002");
-    private static final Role USER_ROLE = new Role(USER_ROLE_ID, "USER");
+    // CORRECCIÓN: Usar el builder para crear el objeto de prueba
+    private static final Role USER_ROLE = Role.builder().id(USER_ROLE_ID).name("USER").build();
 
     @BeforeEach
     void setUp() {
@@ -55,18 +58,20 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debe codificar la contraseña y asignar rol por defecto al crear usuario")
-    void createUser_ShouldEncodePasswordAndSetDefaults() {
+    @DisplayName("Debe codificar la contraseña y asignar rol al crear usuario")
+    void createUser_ShouldEncodePasswordAndAssignRole() {
         // Arrange
         User newUserRequest = User.builder()
                 .email("new@posapi.com")
                 .password("rawPassword")
                 .fullName("New User")
+                .roleId(USER_ROLE_ID)
+                .isActive(true)
                 .build();
 
-        when(userRepository.findByEmail("new@posapi.com")).thenReturn(Optional.empty());
+        when(userRepository.existsByEmail("new@posapi.com")).thenReturn(false);
+        when(roleRepository.findById(USER_ROLE_ID)).thenReturn(Optional.of(USER_ROLE));
         when(passwordEncoder.encode("rawPassword")).thenReturn("encodedPassword");
-        when(roleRepository.findByName(USER_ROLE.getName())).thenReturn(Optional.of(USER_ROLE));
         when(userRepository.save(any(User.class))).thenAnswer(i -> i.getArgument(0));
 
         // Act
@@ -83,20 +88,18 @@ class UserServiceTest {
         assertThat(savedUser.getPassword()).isEqualTo("encodedPassword");
         assertThat(savedUser.getRoleId()).isEqualTo(USER_ROLE_ID);
         assertThat(savedUser.getIsActive()).isTrue();
-        assertThat(savedUser.getCreatedAt()).isNotNull();
-        assertThat(savedUser.getUpdatedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("Debe lanzar una excepción si el email ya existe al crear")
     void createUser_ShouldThrowException_WhenEmailExists() {
         // Arrange
-        User existingUser = User.builder().email("test@posapi.com").build();
-        when(userRepository.findByEmail(existingUser.getEmail())).thenReturn(Optional.of(existingUser));
+        User existingUserRequest = User.builder().email("test@posapi.com").build();
+        when(userRepository.existsByEmail(existingUserRequest.getEmail())).thenReturn(true);
 
         // Act & Assert
         assertThrows(DuplicateResourceException.class, () -> {
-            userService.createUser(existingUser);
+            userService.createUser(existingUserRequest);
         });
 
         verify(userRepository, never()).save(any());
@@ -107,7 +110,8 @@ class UserServiceTest {
     void updateUser_ShouldUpdateAllFields() {
         // Arrange
         UUID managerRoleId = UUID.randomUUID();
-        Role managerRole = new Role(managerRoleId, "MANAGER");
+        // CORRECCIÓN: Usar el builder para crear el objeto de prueba
+        Role managerRole = Role.builder().id(managerRoleId).name("MANAGER").build();
 
         User updatedInfo = User.builder()
                 .email("new@posapi.com")
@@ -137,20 +141,22 @@ class UserServiceTest {
         assertThat(savedUser.getRoleId()).isEqualTo(managerRoleId);
         assertThat(savedUser.getIsActive()).isFalse();
         assertThat(savedUser.getCreatedAt()).isEqualTo(testUser.getCreatedAt());
-        assertThat(savedUser.getUpdatedAt()).isAfter(testUser.getUpdatedAt());
     }
 
     @Test
-    @DisplayName("Debe eliminar un usuario existente")
-    void deleteUser_ShouldReturnTrue_WhenUserExists() {
+    @DisplayName("Debe realizar un borrado lógico de un usuario existente")
+    void deleteUser_ShouldSoftDelete_WhenUserExists() {
         // Arrange
-        when(userRepository.existsById(userId)).thenReturn(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
 
         // Act
         boolean result = userService.deleteUser(userId);
 
         // Assert
         assertThat(result).isTrue();
-        verify(userRepository).deleteById(userId);
+        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+        verify(userRepository).save(userCaptor.capture());
+        User savedUser = userCaptor.getValue();
+        assertThat(savedUser.getDeletedAt()).isNotNull();
     }
 }

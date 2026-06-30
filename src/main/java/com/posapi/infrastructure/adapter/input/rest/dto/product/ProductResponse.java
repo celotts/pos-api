@@ -24,8 +24,8 @@ public class ProductResponse {
     private Instant updatedAt;
     private Instant deletedAt;
 
-    // Cambia estos tres de Long a UUID para alinearlos con tu dominio:
-    private UUID createdByUserId;
-    private UUID updatedByUserId;
-    private UUID deletedByUserId;
+    // --- Campos de Auditoría Estandarizados ---
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
 }

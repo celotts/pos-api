@@ -1,35 +1,42 @@
 package com.posapi.infrastructure.adapter.output.persistence.mapper.audit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.posapi.domain.model.AuditLog;
+import com.posapi.domain.model.audit.AuditLog;
 import com.posapi.infrastructure.adapter.output.persistence.entity.audit.AuditLogEntity;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
-@RequiredArgsConstructor // Esto inyecta el ObjectMapper automáticamente
 public class AuditLogMapper {
 
-    private final ObjectMapper objectMapper;
-
     public AuditLogEntity toEntity(AuditLog domain) {
-        try {
-            return AuditLogEntity.builder()
-                    .id(domain.getId())
-                    .tableName(domain.getTableName())
-                    .recordId(domain.getRecordId())
-                    .action(domain.getAction())
-                    // Aquí hacemos la magia de convertir el objeto a String JSON
-                    .oldValue(domain.getOldValue() != null ? objectMapper.writeValueAsString(domain.getOldValue()) : null)
-                    .newValue(domain.getNewValue() != null ? objectMapper.writeValueAsString(domain.getNewValue()) : null)
-                    .ipAddress(domain.getIpAddress())
-                    .userAgent(domain.getUserAgent())
-                    .createdAt(domain.getCreatedAt())
-                    .userId(domain.getUserId())
-                    .roleId(domain.getRoleId())
-                    .build();
-        } catch (Exception e) {
-            throw new RuntimeException("Error convirtiendo objeto a JSON para auditoría", e);
-        }
+        if (domain == null) return null;
+
+        return AuditLogEntity.builder()
+                .id(domain.getId())
+                .tableName(domain.getTableName())
+                .recordId(domain.getRecordId())
+                .action(domain.getAction()) // Ahora los tipos coinciden (enum)
+                .oldValue(domain.getOldValue())
+                .newValue(domain.getNewValue())
+                .ipAddress(domain.getIpAddress())
+                .userAgent(domain.getUserAgent())
+                .userId(domain.getUserId())
+                .build();
+    }
+
+    public AuditLog toDomain(AuditLogEntity entity) {
+        if (entity == null) return null;
+
+        return AuditLog.builder()
+                .id(entity.getId())
+                .tableName(entity.getTableName())
+                .recordId(entity.getRecordId())
+                .action(entity.getAction())
+                .oldValue(entity.getOldValue())
+                .newValue(entity.getNewValue())
+                .ipAddress(entity.getIpAddress())
+                .userAgent(entity.getUserAgent())
+                .createdAt(entity.getCreatedAt())
+                .userId(entity.getUserId())
+                .build();
     }
 }

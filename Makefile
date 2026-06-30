@@ -1,4 +1,4 @@
-.PHONY: all up down down-volumes build logs logs-app logs-db db-shell restart clean app-only status help test check ci run exec
+.PHONY: all up up-clean down down-volumes build logs logs-app logs-db db-shell restart clean app-only status help test check ci run exec
 
 test:
 	@echo "Running tests..."
@@ -19,7 +19,7 @@ run:
 # Variables
 BIN := podman
 COMPOSE_BIN := podman-compose
-COMPOSE_FILE := podman-compose.yaml
+COMPOSE_FILE := podman-compose.yml
 APP_NAME := pos-api
 DB_SERVICE := db
 APP_SERVICE := app
@@ -28,28 +28,30 @@ STATUS_REPORT_CMD = $(BIN) ps --filter "name=pos" --format "{{.Names}}|{{.Status
 
 all: up
 
-# Levanta los contenedores (construye la imagen de la app si es necesario)
+# Levanta los contenedores (conservando los datos si ya existen)
 up:
 	@START_TIME=$$(date +%s); \
 	echo "Levantando contenedores..."; \
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) up --build -d; \
 	if [ $$($(BIN) ps --filter "name=pos" --format "{{.Status}}" | grep -c "Up") -gt 0 ] && \
 	   [ $$($(BIN) ps --filter "name=pos" --format "{{.Status}}" | grep -cvE "Up|healthy") -eq 0 ]; then \
-		echo "\n🚀 Entorno levantado exitosamente\n"; \
+	   echo "\n🚀 Entorno levantado exitosamente\n"; \
 	else \
-		echo "\n⚠️  Algunos servicios presentan problemas\n"; \
+	   echo "\n⚠️  Algunos servicios presentan problemas\n"; \
 	fi; \
 	$(STATUS_REPORT_CMD); \
 	echo "Para ver los logs, usa 'make logs'\n"
 
+# NUEVO: Destruye datos previos y fuerza la carga limpia de los scripts SQL init
+up-clean: down-volumes up
+
 # Levanta solo la aplicación, asumiendo que el contenedor de la BD ya está corriendo.
-# Fallará si el contenedor de la BD no está ya corriendo.
 app-only:
 	@START_TIME=$$(date +%s); \
 	echo "Intentando levantar solo el servicio de la aplicación $(APP_SERVICE)..."; \
 	if ! $(COMPOSE_BIN) -f $(COMPOSE_FILE) ps -q $(DB_SERVICE) | grep -q .; then \
-		echo "Error: El contenedor de la base de datos ($(DB_SERVICE)) no está corriendo. Por favor, use 'make up' para iniciar todo el entorno."; \
-		exit 1; \
+	   echo "Error: El contenedor de la base de datos ($(DB_SERVICE)) no está corriendo. Por favor, use 'make up' para iniciar todo el entorno."; \
+	   exit 1; \
 	fi; \
 	echo "El contenedor de la base de datos ($(DB_SERVICE)) está corriendo. Iniciando la aplicación..."; \
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) up -d --no-deps $(APP_SERVICE); \
@@ -63,7 +65,6 @@ down:
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) down
 
 # Detiene y elimina los contenedores, la red y los volúmenes de datos
-# ¡CUIDADO! Esto borrará todos los datos de tu base de datos.
 down-volumes:
 	@echo "🔥 Deteniendo servicios y eliminando VOLÚMENES DE DATOS (esto es irreversible)..."
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) down -v
@@ -75,8 +76,7 @@ build:
 	@echo "Construyendo imagen de la aplicación $(APP_SERVICE)..."
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) build $(APP_SERVICE)
 
-# Muestra los logs de todos los servicios en tiempo real (puede fallar en remoto)
-# Nota: En Podman remoto, no se pueden seguir (-f) múltiples contenedores a la vez.
+# Muestra los logs de todos los servicios
 logs:
 	@echo "⚠️  Podman remoto no permite multiplexar logs de múltiples contenedores."
 	@echo "Mostrando snapshot de logs por servicio:\n"
@@ -106,18 +106,17 @@ restart:
 	@echo "Reiniciando el servicio de la aplicación $(APP_SERVICE)..."
 	$(COMPOSE_BIN) -f $(COMPOSE_FILE) restart $(APP_SERVICE)
 
-# Ejecuta un comando dentro del contenedor de la aplicación (ej. make exec cmd="ls -l")
-# Si no se proporciona cmd, abre una shell interactiva.
+# Ejecuta un comando dentro del contenedor de la aplicación
 exec:
 	@if [ -z "$(cmd)" ]; then \
-		echo "🛠️  Abriendo shell interactiva en $(APP_SERVICE)..."; \
-		$(COMPOSE_BIN) -f $(COMPOSE_FILE) exec $(APP_SERVICE) /bin/sh; \
+	   echo "🛠️  Abriendo shell interactiva en $(APP_SERVICE)..."; \
+	   $(COMPOSE_BIN) -f $(COMPOSE_FILE) exec $(APP_SERVICE) /bin/sh; \
 	else \
-		echo "🛠️  Ejecutando en $(APP_SERVICE): $(cmd)"; \
-		$(COMPOSE_BIN) -f $(COMPOSE_FILE) exec $(APP_SERVICE) $(cmd); \
+	   echo "🛠️  Ejecutando en $(APP_SERVICE): $(cmd)"; \
+	   $(COMPOSE_BIN) -f $(COMPOSE_FILE) exec $(APP_SERVICE) $(cmd); \
 	fi
 
-# Limpia los artefactos de construcción locales (ej. el JAR generado por Gradle)
+# Limpia los artefactos de construcción locales
 clean:
 	@echo "Limpiando artefactos de construcción locales..."
 	./gradlew clean
@@ -133,24 +132,21 @@ build-fast:
 status:
 	@echo "\n📊 Estado actual de los contenedores:"
 	@$(STATUS_REPORT_CMD)
+
 # Ayuda
 help:
 	@echo "Uso: make [comando]"
 	@echo ""
 	@echo "Comandos disponibles:"
-	@echo "  all           - Alias para 'up'. Levanta los contenedores en segundo plano."
-	@echo "  up            - Levanta los contenedores (construye la imagen de la app si es necesario) en segundo plano."
-	@echo "  app-only      - Levanta solo el servicio de la aplicación. Requiere que el contenedor de la BD esté ya corriendo."
+	@echo "  all           - Alias para 'up'."
+	@echo "  up            - Levanta contenedores preservando datos anteriores."
+	@echo "  up-clean      - 🔥 Limpia volúmenes viejos y levanta la base de datos ejecutando el script SQL desde cero."
 	@echo "  status        - Muestra el resumen de estado y puertos de los contenedores."
 	@echo "  down          - Detiene y elimina los contenedores y la red."
-	@echo "  down-volumes  - Detiene y elimina los contenedores, la red y los volúmenes de datos (¡BORRA LA BD!)."
+	@echo "  down-volumes  - Detiene y elimina contenedores y sus volúmenes asociados."
 	@echo "  build         - Construye solo la imagen de la aplicación."
-	@echo "  build-fast    - Compila el proyecto con Gradle omitiendo los tests (ahorra CPU/ventiladores)."
-	@echo "  logs          - Muestra los logs de todos los servicios en tiempo real (puede fallar en remoto)."
-	@echo "  logs-app      - Muestra los logs solo del servicio de la aplicación."
-	@echo "  logs-db       - Muestra los logs solo del servicio de la base de datos."
-	@echo "  restart       - Reinicia el servicio de la aplicación."
-	@echo "  exec cmd=\"<comando>\" - Ejecuta un comando dentro del contenedor de la aplicación (ej. make exec cmd=\"ls -l /app\")."
+	@echo "  build-fast    - Compila con Gradle omitiendo los tests."
+	@echo "  logs-app      - Muestra los logs de la aplicación."
+	@echo "  logs-db       - Muestra los logs de la base de datos."
 	@echo "  db-shell      - Abre una consola psql dentro del contenedor de la base de datos."
-	@echo "  clean         - Limpia los artefactos de construcción de Gradle localmente."
-	@echo "  help          - Muestra esta ayuda."
+	@echo "  clean         - Limpia los artefactos locales de Gradle."

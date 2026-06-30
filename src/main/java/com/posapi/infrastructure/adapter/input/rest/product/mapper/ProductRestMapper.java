@@ -1,8 +1,8 @@
 package com.posapi.infrastructure.adapter.input.rest.product.mapper;
 
 import com.posapi.domain.model.product.Product;
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest; // Import corregido
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest;
+import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
@@ -42,9 +42,9 @@ public class ProductRestMapper {
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .deletedAt(product.getDeletedAt())
-                .createdByUserId(product.getCreatedByUserId())
-                .updatedByUserId(product.getUpdatedByUserId())
-                .deletedByUserId(product.getDeletedByUserId())
+                .createdBy(product.getCreatedBy()) // CORREGIDO
+                .updatedBy(product.getUpdatedBy()) // CORREGIDO
+                .deletedBy(product.getDeletedBy()) // CORREGIDO
                 .build();
     }
 }

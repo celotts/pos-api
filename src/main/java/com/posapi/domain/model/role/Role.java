@@ -1,28 +1,27 @@
 package com.posapi.domain.model.role;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "roles")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
     private String name;
+
+    // --- Campos de Auditoría Estandarizados ---
+    private Instant createdAt;
+    private Instant updatedAt;
+    private Instant deletedAt;
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
 }

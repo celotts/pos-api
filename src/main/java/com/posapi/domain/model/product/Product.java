@@ -25,10 +25,10 @@ public class Product {
     private UUID supplierId;
     private Instant createdAt;
     private Instant updatedAt;
-
-    // Campos de auditoría agregados al dominio:
     private Instant deletedAt;
-    private UUID createdByUserId;
-    private UUID updatedByUserId;
-    private UUID deletedByUserId;
+
+    // --- Campos de Auditoría Estandarizados ---
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
 }

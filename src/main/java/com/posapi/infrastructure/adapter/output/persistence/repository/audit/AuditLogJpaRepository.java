@@ -4,6 +4,8 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.audit.AuditLo
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.UUID;
+
 @Repository
-public interface AuditLogJpaRepository extends JpaRepository<AuditLogEntity, Long> {
+public interface AuditLogJpaRepository extends JpaRepository<AuditLogEntity, UUID> {
 }

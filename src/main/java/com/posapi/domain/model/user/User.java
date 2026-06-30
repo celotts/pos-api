@@ -26,7 +26,12 @@ public class User {
     private Instant updatedAt;
     private Instant deletedAt;
 
-    public static User createNew(String email, String encodedPassword, String fullName, Role defaultRole, Boolean isActive) {
+    // --- Campos de Auditoría Estandarizados ---
+    private UUID createdBy;
+    private UUID updatedBy;
+    private UUID deletedBy;
+
+    public static User createNew(String email, String encodedPassword, String fullName, Role defaultRole, Boolean isActive, UUID createdBy) {
         return User.builder()
                 .id(UUID.randomUUID())
                 .email(email)
@@ -35,11 +40,11 @@ public class User {
                 .isActive(isActive)
                 .failedLoginAttempts(0)
                 .roleId(defaultRole.getId())
-                .deletedAt(null)
+                .createdBy(createdBy)
                 .build();
     }
 
-    public User updateWith(User updateData, String newEncodedPassword, UUID newRoleId) {
+    public User updateWith(User updateData, String newEncodedPassword, UUID newRoleId, UUID updatedBy) {
         return User.builder()
                 .id(this.id)
                 .email(updateData.getEmail() != null ? updateData.getEmail() : this.email)
@@ -49,6 +54,8 @@ public class User {
                 .roleId(newRoleId != null ? newRoleId : this.roleId)
                 .failedLoginAttempts(this.failedLoginAttempts)
                 .createdAt(this.createdAt)
+                .createdBy(this.createdBy)
+                .updatedBy(updatedBy)
                 .deletedAt(this.deletedAt)
                 .build();
     }

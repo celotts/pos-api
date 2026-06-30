@@ -27,7 +27,11 @@ public class UserPersistenceMapper {
                 .isActive(domain.getIsActive())
                 .failedLoginAttempts(domain.getFailedLoginAttempts())
                 .role(mapRoleIdToProxyEntity(domain.getRoleId()))
-                .createdAt(domain.getCreatedAt()) // 🛡️ CORRECCIÓN: Preservar el createdAt en las actualizaciones
+                .createdAt(domain.getCreatedAt())
+                .createdBy(domain.getCreatedBy())
+                .updatedBy(domain.getUpdatedBy())
+                .deletedBy(domain.getDeletedBy())
+                .deletedAt(domain.getDeletedAt())
                 .build();
     }
 
@@ -47,6 +51,9 @@ public class UserPersistenceMapper {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .deletedAt(entity.getDeletedAt())
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .deletedBy(entity.getDeletedBy())
                 .build();
     }
 
