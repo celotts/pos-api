@@ -20,7 +20,6 @@ public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
     private final UserDetailsService userDetailsService;
-    private final UserRepository userRepository; // Añadido para futuras mejoras si es necesario
     private final JwtUtil jwtUtil;
 
     public String login(@Valid LoginRequest loginRequest) {
@@ -34,12 +33,15 @@ public class AuthenticationService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.email());
+            // 🛡️ World-Class: Get UserDetails directly from the successful authentication object.
+            // This avoids a redundant database call.
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
             return jwtUtil.generateToken(userDetails);
 
         } catch (BadCredentialsException e) {
-            throw new BadCredentialsException("Invalid credentials for user: " + loginRequest.email());
+            // 🛡️ World-Class: Avoid logging or exposing which part (user/password) was wrong.
+            throw new BadCredentialsException("Invalid username or password");
         }
     }
 }
