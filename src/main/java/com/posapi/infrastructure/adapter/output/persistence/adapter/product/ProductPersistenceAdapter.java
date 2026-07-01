@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.adapter.product;
 
 import com.posapi.domain.model.product.Product;
-import com.posapi.domain.repository.product.ProductRepository;
+import com.posapi.domain.port.output.ProductRepository;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.product.ProductPersistenMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.product.ProductJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,6 @@ public class ProductPersistenceAdapter implements ProductRepository {
         log.info("Successfully saved product with ID: {}", savedEntity.getId());
         return productMapper.toDomain(savedEntity);
     }
-
 
     @Override
     public Optional<Product> findById(UUID id) {

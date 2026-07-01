@@ -3,7 +3,7 @@ package com.posapi.infrastructure.adapter.input.rest.role;
 import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleResponse;
 import jakarta.validation.Valid;

@@ -1,6 +1,7 @@
-package com.posapi.domain.repository.product;
+package com.posapi.domain.port.output;
 
 import com.posapi.domain.model.product.Product;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -11,7 +12,5 @@ public interface ProductRepository {
     List<Product> findAll();
     void deleteById(UUID id);
     Optional<Product> findBySku(String sku);
-
-    // Método abstracto, sin anotación de JPA
     List<Product> findByProductNameAndCategory(String name, String category);
 }

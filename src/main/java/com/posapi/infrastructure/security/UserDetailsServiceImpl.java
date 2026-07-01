@@ -2,8 +2,8 @@ package com.posapi.infrastructure.security;
 
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.UserRepository;
-import com.posapi.domain.repository.role.RoleRepository;
+import com.posapi.domain.port.output.RoleRepository;
+import com.posapi.domain.port.output.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

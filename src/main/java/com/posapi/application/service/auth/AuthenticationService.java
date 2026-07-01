@@ -1,9 +1,8 @@
 package com.posapi.application.service.auth;
 
-import com.posapi.domain.model.user.User;
-import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest;
-import com.posapi.infrastructure.security.JwtUtil; // Import corregido
+import com.posapi.infrastructure.security.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,8 +19,9 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService; // Usar UserDetailsService para obtener UserDetails
-    private final JwtUtil jwtUtil; // Usar JwtUtil
+    private final UserDetailsService userDetailsService;
+    private final UserRepository userRepository; // Añadido para futuras mejoras si es necesario
+    private final JwtUtil jwtUtil;
 
     public String login(@Valid LoginRequest loginRequest) {
         try {
@@ -34,10 +34,8 @@ public class AuthenticationService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // Después de una autenticación exitosa, obtenemos los UserDetails
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.email());
 
-            // Generamos el token a partir de los UserDetails
             return jwtUtil.generateToken(userDetails);
 
         } catch (BadCredentialsException e) {

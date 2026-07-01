@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.adapter.audit;
 
-import com.posapi.domain.model.audit.AuditLog; // Import corregido
-import com.posapi.domain.repository.audit.AuditLogRepository;
+import com.posapi.domain.model.audit.AuditLog;
+import com.posapi.domain.port.output.AuditLogRepository;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.audit.AuditLogPersistenMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.audit.AuditLogJpaRepository;
 import lombok.RequiredArgsConstructor;
