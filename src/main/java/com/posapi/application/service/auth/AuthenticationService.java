@@ -1,6 +1,5 @@
 package com.posapi.application.service.auth;
 
-import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest;
 import com.posapi.infrastructure.security.JwtUtil;
 import jakarta.validation.Valid;

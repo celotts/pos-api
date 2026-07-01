@@ -2,7 +2,7 @@ package com.posapi.application.service.product;
 
 import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
-import com.posapi.domain.repository.product.ProductRepository;
+import com.posapi.domain.port.output.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
