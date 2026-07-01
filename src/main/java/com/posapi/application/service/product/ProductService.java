@@ -3,7 +3,7 @@ package com.posapi.application.service.product;
 import com.posapi.application.port.product.ProductManagementPort; // Importar la interfaz
 import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
-import com.posapi.domain.repository.product.ProductRepository;
+import com.posapi.domain.port.output.ProductRepository;
 import jakarta.validation.constraints.NotNull; // Importar NotNull
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;

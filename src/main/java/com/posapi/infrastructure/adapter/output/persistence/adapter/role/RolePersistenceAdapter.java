@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.adapter.role;
 
 import com.posapi.domain.model.role.Role;
-import com.posapi.domain.repository.role.RoleRepository;
+import com.posapi.domain.port.output.RoleRepository;
 import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.role.RolePersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.role.RoleJpaRepository;

@@ -1,7 +1,7 @@
 package com.posapi.application.service.audit;
 
-import com.posapi.domain.model.audit.AuditLog; // Import corregido
-import com.posapi.domain.repository.audit.AuditLogRepository;
+import com.posapi.domain.model.audit.AuditLog;
+import com.posapi.domain.port.output.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

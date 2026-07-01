@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.posapi.domain.repository.UserRepository;
+import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.output.persistence.entity.audit.AuditLogEntity;
 import com.posapi.infrastructure.adapter.output.persistence.repository.audit.AuditLogJpaRepository;
 import com.posapi.infrastructure.security.SecurityContextHelper;

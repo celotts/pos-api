@@ -1,4 +1,4 @@
-package com.posapi.domain.repository.role;
+package com.posapi.domain.port.output;
 
 import com.posapi.domain.model.role.Role;
 

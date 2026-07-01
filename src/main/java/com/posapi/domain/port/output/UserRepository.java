@@ -1,4 +1,4 @@
-package com.posapi.domain.repository;
+package com.posapi.domain.port.output;
 
 import com.posapi.domain.model.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
