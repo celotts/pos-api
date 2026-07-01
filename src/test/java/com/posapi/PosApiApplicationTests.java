@@ -55,12 +55,6 @@ class PosApiApplicationTests {
         public UserDetailsServiceImpl userDetailsService() {
             return Mockito.mock(UserDetailsServiceImpl.class);
         }
-
-        @Bean
-        @Primary
-        public PasswordEncoder passwordEncoder() {
-            return Mockito.mock(PasswordEncoder.class);
-        }
     }
 
     @Test
