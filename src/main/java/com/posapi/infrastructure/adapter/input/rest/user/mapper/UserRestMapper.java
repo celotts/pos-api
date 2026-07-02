@@ -28,7 +28,7 @@ public class UserRestMapper {
                 .password(request.getPassword())
                 .fullName(request.getFullName())
                 .roleId(request.getRoleId())
-                .isActive(request.isActive())
+                .isActive(request.getIsActive()) // 🛡️ SOLUCIÓN: Ahora usará el getter correcto
                 .build();
     }
 }

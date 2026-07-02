@@ -1,7 +1,7 @@
 package com.posapi.application.service.auth;
 
+import com.posapi.application.service.jwt.JwtService;
 import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest;
-import com.posapi.infrastructure.security.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -10,7 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,8 +17,7 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final AuthenticationManager authenticationManager;
-    private final UserDetailsService userDetailsService;
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
 
     public String login(@Valid LoginRequest loginRequest) {
         try {
@@ -32,14 +30,11 @@ public class AuthenticationService {
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-            // 🛡️ World-Class: Get UserDetails directly from the successful authentication object.
-            // This avoids a redundant database call.
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-            return jwtUtil.generateToken(userDetails);
+            return jwtService.generateToken(userDetails);
 
         } catch (BadCredentialsException e) {
-            // 🛡️ World-Class: Avoid logging or exposing which part (user/password) was wrong.
             throw new BadCredentialsException("Invalid username or password");
         }
     }

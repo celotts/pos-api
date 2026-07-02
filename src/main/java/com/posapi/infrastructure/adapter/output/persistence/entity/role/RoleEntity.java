@@ -28,7 +28,7 @@ public class RoleEntity {
     @ToString.Include
     private String name;
 
-    // 🕒 El Trigger de Postgres maneja el tiempo. Java solo lo lee.
+    // 🛡️ El Trigger de Postgres maneja el tiempo. Java solo lo lee.
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
@@ -38,17 +38,17 @@ public class RoleEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // 👤 IDs de los Usuarios Operativos (Enviados desde Java mediante el JWT)
-    @Column(name = "created_by")
+    // 🛡️ IDs de los Usuarios Operativos (Enviados desde Java)
+    @Column(name = "created_by_user_id")
     private UUID createdBy;
 
-    @Column(name = "updated_by")
+    @Column(name = "updated_by_user_id")
     private UUID updatedBy;
 
-    @Column(name = "deleted_by")
+    @Column(name = "deleted_by_user_id")
     private UUID deletedBy;
 
-    // 🛡️ IDs de los Roles de Auditoría (Calculados 100% de forma automática por el Trigger)
+    // 🛡️ IDs de los Roles de Auditoría (Calculados por el Trigger)
     @Column(name = "created_by_role_id", insertable = false, updatable = false)
     private UUID createdByRoleId;
 

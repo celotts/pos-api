@@ -12,5 +12,5 @@ public class UserRequest {
     private String password;
     private String fullName;
     private UUID roleId;
-    private boolean isActive;
+    private Boolean isActive; // 🛡️ SOLUCIÓN: Usar el objeto Boolean
 }
