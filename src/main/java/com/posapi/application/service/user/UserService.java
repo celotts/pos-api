@@ -46,7 +46,8 @@ public class UserService implements UserManagementPort {
         }
 
         Role role = roleRepository.findById(user.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role with ID '" + user.getRoleId() + "' not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role with ID '" + user.getRoleId() + "' not found."));
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
@@ -135,7 +136,8 @@ public class UserService implements UserManagementPort {
     private UUID validateRoleOnUpdate(User existingUser, User partialUpdate) {
         if (partialUpdate.getRoleId() != null && !partialUpdate.getRoleId().equals(existingUser.getRoleId())) {
             roleRepository.findById(partialUpdate.getRoleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Role with ID " + partialUpdate.getRoleId() + " does not exist."));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Role with ID " + partialUpdate.getRoleId() + " does not exist."));
             return partialUpdate.getRoleId();
         }
         return existingUser.getRoleId();

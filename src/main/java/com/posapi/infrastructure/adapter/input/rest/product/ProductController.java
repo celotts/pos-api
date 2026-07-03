@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.product;
 
-import com.posapi.application.service.product.ProductService; // Actualizado
-import com.posapi.domain.model.product.Product; // Actualizado
+import com.posapi.application.service.product.ProductService;
+import com.posapi.domain.model.product.Product;
 import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest;
 import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse;
 import com.posapi.infrastructure.adapter.input.rest.product.mapper.ProductRestMapper;
@@ -10,7 +10,14 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
