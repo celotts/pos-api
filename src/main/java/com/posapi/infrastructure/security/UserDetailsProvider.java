@@ -8,14 +8,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import org.springframework.security.core.userdetails.User.UserBuilder;
-
-@Service("customUserDetailsService")
+@Component("customUserDetailsService") // Usamos @Component y mantenemos el nombre del bean por compatibilidad
 @RequiredArgsConstructor
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsProvider implements UserDetailsService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -28,16 +26,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String roleName = getRoleName(user.getRoleId());
 
-        UserBuilder builder = org.springframework.security.core.userdetails.User.withUsername(user.getEmail());
-        builder.password(user.getPassword());
-        // 🛡️ CORRECCIÓN DEFINITIVA: Usar .roles() para que Spring añada el prefijo "ROLE_" automáticamente.
-        // Esto hará que sea compatible con hasRole('ADMIN').
-        builder.roles(roleName); 
-
-        return builder.build();
+        // Usamos el UserBuilder de Spring Security para crear el UserDetails
+        return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
+                .password(user.getPassword())
+                .roles(roleName) // Spring añade el prefijo "ROLE_" automáticamente
+                .build();
     }
 
     private String getRoleName(java.util.UUID roleId) {
+        // Si el rol no se encuentra, se asigna 'USER' por defecto como medida de seguridad.
         return roleRepository.findById(roleId)
                 .map(Role::getName)
                 .orElse("USER");

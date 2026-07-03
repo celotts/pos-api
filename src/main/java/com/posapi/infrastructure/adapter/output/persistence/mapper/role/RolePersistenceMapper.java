@@ -10,7 +10,9 @@ import java.util.UUID;
 public class RolePersistenceMapper {
 
     public RoleEntity toEntity(Role domain) {
-        if (domain == null) return null;
+        if (domain == null) {
+            return null;
+        }
 
         return RoleEntity.builder()
                 // Asegura un ID si el dominio no lo inicializó todavía
@@ -25,7 +27,9 @@ public class RolePersistenceMapper {
     }
 
     public Role toDomain(RoleEntity entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         return Role.builder()
                 .id(entity.getId())

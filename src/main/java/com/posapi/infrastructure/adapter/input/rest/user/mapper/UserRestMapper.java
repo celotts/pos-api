@@ -3,8 +3,8 @@ package com.posapi.infrastructure.adapter.input.rest.user.mapper;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.RoleRepository;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserRequest;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserResponse;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -24,11 +24,11 @@ public class UserRestMapper {
 
     public User toDomain(UserRequest request) {
         return User.builder()
-                .email(request.getEmail())
-                .password(request.getPassword())
-                .fullName(request.getFullName())
-                .roleId(request.getRoleId())
-                .isActive(request.getIsActive()) // 🛡️ SOLUCIÓN: Ahora usará el getter correcto
+                .email(request.email())
+                .password(request.password())
+                .fullName(request.fullName())
+                .roleId(request.roleId())
+                .isActive(request.isActive())
                 .build();
     }
 }

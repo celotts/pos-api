@@ -2,8 +2,8 @@ package com.posapi.infrastructure.adapter.input.rest.user;
 
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.user.User;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserRequest;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserResponse;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

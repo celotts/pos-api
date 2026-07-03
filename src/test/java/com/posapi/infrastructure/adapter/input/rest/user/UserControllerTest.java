@@ -3,12 +3,13 @@ package com.posapi.infrastructure.adapter.input.rest.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.domain.model.user.User;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserRequest;
-import com.posapi.infrastructure.adapter.input.rest.dto.user.UserResponse;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
+import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,8 +32,10 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @MockBean
     private UserManagementPort userManagementPort;
 
+    @MockBean
     private UserRestMapper userRestMapper;
 
     @Test

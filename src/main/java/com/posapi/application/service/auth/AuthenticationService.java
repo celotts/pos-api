@@ -1,7 +1,7 @@
 package com.posapi.application.service.auth;
 
 import com.posapi.application.service.jwt.JwtService;
-import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest;
+import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;

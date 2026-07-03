@@ -2,8 +2,8 @@ package com.posapi.infrastructure.adapter.input.rest.product;
 
 import com.posapi.application.service.product.ProductService;
 import com.posapi.domain.model.product.Product;
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductRequest;
-import com.posapi.infrastructure.adapter.input.rest.dto.product.ProductResponse;
+import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
+import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse;
 import com.posapi.infrastructure.adapter.input.rest.product.mapper.ProductRestMapper;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;

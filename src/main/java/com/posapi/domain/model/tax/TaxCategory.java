@@ -1,7 +1,16 @@
 package com.posapi.domain.model.tax;
 
-public enum TaxCategory {
-    IVA,
-    IEPS,
-    ISR
+import lombok.Builder;
+import lombok.Data;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
+@Data
+@Builder
+public class TaxCategory {
+    private UUID id;
+    private String name;
+    private BigDecimal percentage;
+    private String taxType; // Usamos String para el tipo en el dominio
 }

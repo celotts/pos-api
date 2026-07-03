@@ -1,8 +1,8 @@
 package com.posapi.infrastructure.adapter.input.rest.auth;
 
 import com.posapi.application.service.auth.AuthenticationService;
-import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginRequest; // Import corregido
-import com.posapi.infrastructure.adapter.input.rest.dto.auth.LoginResponse; // Import corregido
+import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
+import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
