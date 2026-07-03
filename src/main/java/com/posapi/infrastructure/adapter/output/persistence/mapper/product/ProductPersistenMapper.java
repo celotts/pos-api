@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 public class ProductPersistenMapper {
 
     public ProductEntity toEntity(Product domain) {
-        if (domain == null) return null;
+        if (domain == null) {
+            return null;
+        }
 
         return ProductEntity.builder()
                 .id(domain.getId())
@@ -20,17 +22,18 @@ public class ProductPersistenMapper {
                 .currentStock(domain.getCurrentStock())
                 .taxId(domain.getTaxId())
                 .supplierId(domain.getSupplierId())
-                .createdAt(domain.getCreatedAt())
-                .updatedAt(domain.getUpdatedAt())
+                // Omitimos createdAt y updatedAt para que Hibernate los gestione
                 .deletedAt(domain.getDeletedAt())
-                .createdBy(domain.getCreatedBy()) // CORREGIDO
-                .updatedBy(domain.getUpdatedBy()) // CORREGIDO
-                .deletedBy(domain.getDeletedBy()) // CORREGIDO
+                .createdBy(domain.getCreatedBy())
+                .updatedBy(domain.getUpdatedBy())
+                .deletedBy(domain.getDeletedBy())
                 .build();
     }
 
     public Product toDomain(ProductEntity entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         return Product.builder()
                 .id(entity.getId())
@@ -45,9 +48,9 @@ public class ProductPersistenMapper {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .deletedAt(entity.getDeletedAt())
-                .createdBy(entity.getCreatedBy()) // CORREGIDO
-                .updatedBy(entity.getUpdatedBy()) // CORREGIDO
-                .deletedBy(entity.getDeletedBy()) // CORREGIDO
+                .createdBy(entity.getCreatedBy())
+                .updatedBy(entity.getUpdatedBy())
+                .deletedBy(entity.getDeletedBy())
                 .build();
     }
 }

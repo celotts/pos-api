@@ -8,7 +8,6 @@ import jakarta.validation.constraints.NotNull; // Importar NotNull
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,8 +54,7 @@ public class ProductService implements ProductManagementPort { // Implementa la 
             existingProduct.setCurrentStock(updatedProduct.getCurrentStock());
             existingProduct.setTaxId(updatedProduct.getTaxId());
             existingProduct.setSupplierId(updatedProduct.getSupplierId());
-            existingProduct.setUpdatedAt(Instant.now());
-            // No actualizamos created_at, created_by_user_id, etc.
+            // Hibernate se encargará del updatedAt automáticamente
             return productRepository.save(existingProduct);
         }).orElseThrow(() -> new ResourceNotFoundException(
                 "Product not found with ID: " + id)); // Manejo de error básico
