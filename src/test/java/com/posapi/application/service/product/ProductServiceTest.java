@@ -6,8 +6,8 @@ import com.posapi.domain.port.output.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,8 +19,14 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -43,7 +49,7 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(new BigDecimal("100.00")) // 🛡️ FIX: Use BigDecimal for stock
+                .currentStock(new BigDecimal("100.00"))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
@@ -55,14 +61,14 @@ class ProductServiceTest {
                 .description("Description 1")
                 .purchasePrice(BigDecimal.valueOf(10.0))
                 .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(new BigDecimal("100.00")) // 🛡️ FIX: Use BigDecimal for stock
+                .currentStock(new BigDecimal("100.00"))
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();
     }
 
     @Test
-    void createProduct_shouldReturnCreatedProduct() {
+    void createProductShouldReturnCreatedProduct() {
         when(productRepository.save(any(Product.class))).thenReturn(product1);
 
         Product createdProduct = productService.createProduct(product1);
@@ -73,7 +79,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getProductById_shouldReturnProduct_whenFound() {
+    void getProductByIdShouldReturnProductWhenFound() {
         when(productRepository.findById(product1.getId())).thenReturn(Optional.of(product1));
 
         Optional<Product> foundProduct = productService.getProductById(product1.getId());
@@ -86,7 +92,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getProductById_shouldReturnEmpty_whenNotFound() {
+    void getProductByIdShouldReturnEmptyWhenNotFound() {
         when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
         Optional<Product> foundProduct = productService.getProductById(UUID.randomUUID());
@@ -96,7 +102,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getAllProducts_shouldReturnListOfProducts() {
+    void getAllProductsShouldReturnListOfProducts() {
         List<Product> products = Arrays.asList(product1, product2);
         when(productRepository.findAll()).thenReturn(products);
 
@@ -108,28 +114,24 @@ class ProductServiceTest {
     }
 
     @Test
-    void updateProduct_shouldReturnUpdatedProduct_whenFound() {
+    void updateProductShouldReturnUpdatedProductWhenFound() {
         UUID id = UUID.randomUUID();
-        // This is the original product in the database
         Product existingProduct = Product.builder()
                 .id(id)
                 .name("Old Name")
                 .currentStock(new BigDecimal("50.0"))
                 .build();
 
-        // This is the update request data
         Product updatedDetails = Product.builder()
                 .name("New Name")
                 .currentStock(new BigDecimal("75.5"))
                 .build();
 
         when(productRepository.findById(id)).thenReturn(Optional.of(existingProduct));
-        // The save method should return the product that was passed to it.
         when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Product result = productService.updateProduct(id, updatedDetails);
 
-        // 🛡️ World-Class: Use ArgumentCaptor to verify the state of the object passed to save()
         ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
         verify(productRepository).save(productCaptor.capture());
         Product savedProduct = productCaptor.getValue();
@@ -140,13 +142,12 @@ class ProductServiceTest {
     }
 
     @Test
-    void updateProduct_shouldThrowException_whenNotFound() {
+    void updateProductShouldThrowExceptionWhenNotFound() {
         UUID id = UUID.randomUUID();
         Product updatedDetails = Product.builder().name("Non Existent").build();
 
         when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
 
-        // 🛡️ World-Class: Assert for a specific, custom exception, not a generic one.
         ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
                 productService.updateProduct(id, updatedDetails)
         );
@@ -157,7 +158,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void deleteProduct_shouldCallRepositoryDelete() {
+    void deleteProductShouldCallRepositoryDelete() {
         doNothing().when(productRepository).deleteById(product1.getId());
 
         productService.deleteProduct(product1.getId());
@@ -166,7 +167,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getProductBySku_shouldReturnProduct_whenFound() {
+    void getProductBySkuShouldReturnProductWhenFound() {
         when(productRepository.findBySku(product1.getSku())).thenReturn(Optional.of(product1));
 
         Optional<Product> foundProduct = productService.getProductBySku(product1.getSku());
@@ -177,7 +178,7 @@ class ProductServiceTest {
     }
 
     @Test
-    void getProductBySku_shouldReturnEmpty_whenNotFound() {
+    void getProductBySkuShouldReturnEmptyWhenNotFound() {
         when(productRepository.findBySku(anyString())).thenReturn(Optional.empty());
 
         Optional<Product> foundProduct = productService.getProductBySku("NON_EXISTENT_SKU");

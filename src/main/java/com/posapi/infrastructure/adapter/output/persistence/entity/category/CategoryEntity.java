@@ -6,20 +6,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "categories")
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "categories")
 public class CategoryEntity {
 
     @Id
@@ -28,9 +28,10 @@ public class CategoryEntity {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @Column(name = "created_at", nullable = false)
+    @CreationTimestamp
+    @Column(updatable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
     private Instant updatedAt;
 }

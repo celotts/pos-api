@@ -58,7 +58,8 @@ public class ProductService implements ProductManagementPort { // Implementa la 
             existingProduct.setUpdatedAt(Instant.now());
             // No actualizamos created_at, created_by_user_id, etc.
             return productRepository.save(existingProduct);
-        }).orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + id)); // Manejo de error básico
+        }).orElseThrow(() -> new ResourceNotFoundException(
+                "Product not found with ID: " + id)); // Manejo de error básico
     }
 
     @Override

@@ -12,6 +12,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -19,8 +21,6 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -31,15 +31,13 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     private UserManagementPort userManagementPort;
-
 
     private UserRestMapper userRestMapper;
 
     @Test
     @WithMockUser
-    void registerUser_ShouldReturn201() throws Exception {
+    void registerUserShouldReturn201() throws Exception {
         UserRequest request = UserRequest.builder()
                 .email("test@example.com")
                 .password("password123")
@@ -56,18 +54,18 @@ class UserControllerTest {
         given(userManagementPort.createUser(any(User.class))).willReturn(createdUser);
         given(userRestMapper.toResponse(any(User.class))).willReturn(responseDto);
 
-        mockMvc.perform(post("/api/v1/users/register")
+        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/users/register")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(createdUser.getId().toString()))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+                .andExpect(MockMvcResultMatchers.status().isCreated())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(createdUser.getId().toString()))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@example.com"));
     }
 
     @Test
     @WithMockUser
-    void getUserById_ShouldReturn200_WhenUserExists() throws Exception {
+    void getUserByIdShouldReturn200WhenUserExists() throws Exception {
         UUID id = UUID.randomUUID();
         User foundUser = User.builder().id(id).build();
         UserResponse responseDto = UserResponse.builder().id(id).build();
@@ -75,8 +73,8 @@ class UserControllerTest {
         given(userManagementPort.getUserById(id)).willReturn(Optional.of(foundUser));
         given(userRestMapper.toResponse(foundUser)).willReturn(responseDto);
 
-        mockMvc.perform(get("/api/v1/users/{id}", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()));
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users/{id}", id))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(id.toString()));
     }
 }

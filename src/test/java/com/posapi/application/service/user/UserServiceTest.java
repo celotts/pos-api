@@ -23,7 +23,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -43,7 +45,6 @@ class UserServiceTest {
     private UUID userId;
 
     private static final UUID USER_ROLE_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
-    // CORRECCIÓN: Usar el builder para crear el objeto de prueba
     private static final Role USER_ROLE = Role.builder().id(USER_ROLE_ID).name("USER").build();
 
     @BeforeEach
@@ -63,9 +64,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debe codificar la contraseña y asignar rol al crear usuario")
-    @SuppressWarnings("null")
-    void createUser_ShouldEncodePasswordAndAssignRole() {
+    @DisplayName("Should encode password and assign role when creating user")
+    void createUserShouldEncodePasswordAndAssignRole() {
         // Arrange
         User newUserRequest = User.builder()
                 .email("new@posapi.com")
@@ -97,9 +97,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debe lanzar una excepción si el email ya existe al crear")
-    @SuppressWarnings("null")
-    void createUser_ShouldThrowException_WhenEmailExists() {
+    @DisplayName("Should throw exception when email exists on creation")
+    void createUserShouldThrowExceptionWhenEmailExists() {
         // Arrange
         User existingUserRequest = User.builder().email("test@posapi.com").build();
         when(userRepository.existsByEmail(existingUserRequest.getEmail())).thenReturn(true);
@@ -113,12 +112,10 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar los datos y la contraseña si se proporciona")
-    @SuppressWarnings("null")
-    void updateUser_ShouldUpdateAllFields() {
+    @DisplayName("Should update all fields and password if provided")
+    void updateUserShouldUpdateAllFields() {
         // Arrange
         UUID managerRoleId = UUID.randomUUID();
-        // CORRECCIÓN: Usar el builder para crear el objeto de prueba
         Role managerRole = Role.builder().id(managerRoleId).name("MANAGER").build();
 
         User updatedInfo = User.builder()
@@ -152,9 +149,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debe realizar un borrado lógico de un usuario existente")
-    @SuppressWarnings("null")
-    void deleteUser_ShouldSoftDelete_WhenUserExists() {
+    @DisplayName("Should soft delete an existing user")
+    void deleteUserShouldSoftDeleteWhenUserExists() {
         // Arrange
         when(userRepository.findById(userId)).thenReturn(Optional.of(testUser));
 

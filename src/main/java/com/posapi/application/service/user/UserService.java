@@ -42,7 +42,8 @@ public class UserService implements UserManagementPort {
         log.debug("Attempting to create a new user with email: {}", user.getEmail());
         if (userRepository.existsByEmail(user.getEmail())) {
             log.warn("User creation failed: email {} already exists.", user.getEmail());
-            throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
+            throw new DuplicateResourceException(
+                    "An account with this email already exists: " + user.getEmail());
         }
 
         Role role = roleRepository.findById(user.getRoleId())
@@ -56,7 +57,8 @@ public class UserService implements UserManagementPort {
                 .map(User::getId)
                 .orElse(null);
 
-        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
+        User userToSave = User.createNew(
+                user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
 
         User savedUser = userRepository.save(userToSave);
         log.info("Successfully created new user with ID: {}", savedUser.getId());

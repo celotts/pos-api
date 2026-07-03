@@ -2,6 +2,7 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.category;
 
 import com.posapi.domain.model.category.Category;
 import com.posapi.domain.port.output.CategoryRepository;
+import com.posapi.infrastructure.adapter.output.persistence.entity.category.CategoryEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.category.CategoryPersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.category.CategoryJpaRepository;
 import lombok.RequiredArgsConstructor;

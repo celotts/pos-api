@@ -47,7 +47,8 @@ public class CategoryService implements CategoryManagementPort {
                 .map(existingCategory -> {
                     if (category.getName() != null && !category.getName().equals(existingCategory.getName())) {
                         if (categoryRepository.existsByName(category.getName())) {
-                            throw new DuplicateResourceException("Category with name '" + category.getName() + "' already exists.");
+                            throw new DuplicateResourceException(
+                                    "Category with name '" + category.getName() + "' already exists.");
                         }
                         existingCategory.setName(category.getName());
                     }

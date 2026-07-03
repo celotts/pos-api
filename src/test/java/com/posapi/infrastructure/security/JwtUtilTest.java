@@ -10,7 +10,9 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JwtUtilTest {
 
@@ -33,7 +35,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void generateAndValidateToken_valid() {
+    void generateAndValidateTokenIsValid() {
         UserDetails user = new User("testuser", "pwd", Collections.emptyList());
         String token = jwtUtil.generateToken(user);
         assertNotNull(token);
@@ -41,7 +43,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void validateToken_expired() throws Exception {
+    void validateTokenIsExpired() throws Exception {
         setField(jwtUtil, "expiration", -1000L);
         UserDetails user = new User("user", "pwd", Collections.emptyList());
         String token = jwtUtil.generateToken(user);
@@ -49,7 +51,7 @@ public class JwtUtilTest {
     }
 
     @Test
-    void validateToken_tampered() {
+    void validateTokenIsTampered() {
         UserDetails user = new User("testuser", "pwd", Collections.emptyList());
         String token = jwtUtil.generateToken(user);
         String tampered = token + "a";
