@@ -25,6 +25,10 @@ public class CategoryService implements CategoryManagementPort {
             throw new DuplicateResourceException("Category with name '" + category.getName() + "' already exists.");
         }
         category.setId(UUID.randomUUID());
+        
+        // Guardamos la entidad y la devolvemos inmediatamente.
+        // El adaptador de persistencia se asegurará de que la entidad guardada se mapee de nuevo al dominio,
+        // trayendo consigo los valores generados por la base de datos como createdAt.
         return categoryRepository.save(category);
     }
 
@@ -52,6 +56,8 @@ public class CategoryService implements CategoryManagementPort {
                         }
                         existingCategory.setName(category.getName());
                     }
+                    // Al guardar, @UpdateTimestamp se activará y actualizará el updatedAt.
+                    // El adaptador devolverá el objeto de dominio con el timestamp actualizado.
                     return categoryRepository.save(existingCategory);
                 });
     }

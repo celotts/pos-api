@@ -7,9 +7,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -55,12 +53,9 @@ public class ProductEntity {
     @Column(name = "supplier_id")
     private UUID supplierId;
 
-    // 🛡️ La App vuelve a ser responsable de los timestamps
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
 
@@ -75,4 +70,15 @@ public class ProductEntity {
 
     @Column(name = "deleted_by")
     private UUID deletedBy;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = Instant.now();
+        // updatedAt se mantiene null al crear
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = Instant.now();
+    }
 }

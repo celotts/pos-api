@@ -39,7 +39,8 @@ public class RoleController {
     private final UserRepository userRepository;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
 
@@ -134,7 +135,8 @@ public class RoleController {
         String email = authentication.getName();
 
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User with email [" + email + "] does not exist in database. Access denied."));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User with email [" + email + "] does not exist in database. Access denied."));
     }
 
     private RoleResponse toResponse(Role role) {
