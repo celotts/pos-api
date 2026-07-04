@@ -23,4 +23,5 @@ public record UserRequest(
     UUID roleId,
 
     Boolean isActive
-) {}
+) {
+}

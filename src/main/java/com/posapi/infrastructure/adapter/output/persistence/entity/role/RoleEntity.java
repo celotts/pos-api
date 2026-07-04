@@ -4,7 +4,13 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
@@ -33,7 +39,6 @@ public class RoleEntity {
     @ToString.Include
     private String name;
 
-    // Usamos @Generated para que Hibernate sepa que la BD llena esto
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;

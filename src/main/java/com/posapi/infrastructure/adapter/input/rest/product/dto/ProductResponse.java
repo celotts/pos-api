@@ -19,4 +19,5 @@ public record ProductResponse(
     UUID supplierId,
     Instant createdAt,
     Instant updatedAt
-) {}
+) {
+}

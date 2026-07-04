@@ -10,4 +10,5 @@ public record LoginRequest(
 
     @NotBlank(message = "Password cannot be blank")
     String password
-) {}
+) {
+}

@@ -47,7 +47,6 @@ public class RoleController {
 
         Role roleToCreate = roleRestMapper.toDomain(request);
 
-        // ⚡ IMPORTANTE: Asegúrate de asignar el ID aquí si el dominio no lo hace automáticamente
         if (roleToCreate.getId() == null) {
             roleToCreate.setId(UUID.randomUUID());
         }
@@ -70,7 +69,6 @@ public class RoleController {
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // ACTUALIZADO POR: Pasamos el id al modelo para que lo procese el Trigger
         Role roleToUpdate = Role.builder()
                 .name(request.name())
                 .updatedBy(currentUser.getId())
@@ -87,14 +85,10 @@ public class RoleController {
     public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // BORRADO POR: Para borrado lógico, necesitamos mapear el ejecutor antes de eliminar
-        // Nota: Asegúrate de que tu puerto admita recibir el ejecutor o maneja la lógica de actualización en tu servicio de aplicación
         Role roleToDelete = Role.builder()
                 .deletedBy(currentUser.getId())
                 .build();
 
-        // Si tu firma de deleteRole en el Port solo acepta un UUID, considera cambiarla
-        // a 'deleteRole(UUID id, UUID deletedBy)' para que viaje hasta la entidad/base de datos.
         return roleManagementPort.deleteRole(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
@@ -130,10 +124,6 @@ public class RoleController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // =============================================================================
-    // MÉTODOS DE SOPORTE Y TRADUCCIÓN
-    // =============================================================================
-
     private User getCurrentAuthenticatedUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -149,15 +139,13 @@ public class RoleController {
     }
 
     private RoleResponse toResponse(Role role) {
-        String createdByName = role.getCreatedBy() != null ?
-                userRepository.findById(role.getCreatedBy())
-                        .map(User::getFullName)
-                        .orElse(null) : null;
+        String createdByName = (role.getCreatedBy() != null)
+                ? userRepository.findById(role.getCreatedBy()).map(User::getFullName).orElse(null)
+                : null;
 
-        String updatedByName = role.getUpdatedBy() != null ?
-                userRepository.findById(role.getUpdatedBy())
-                        .map(User::getFullName)
-                        .orElse(null) : null;
+        String updatedByName = (role.getUpdatedBy() != null)
+                ? userRepository.findById(role.getUpdatedBy()).map(User::getFullName).orElse(null)
+                : null;
 
         return RoleResponse.fromDomain(role, createdByName, updatedByName);
     }

@@ -1,6 +1,9 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.supplier;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -36,7 +39,6 @@ public class SupplierEntity {
     @Column(name = "contact_email")
     private String contactEmail;
 
-    // 🛡️ La App vuelve a ser responsable de los timestamps
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

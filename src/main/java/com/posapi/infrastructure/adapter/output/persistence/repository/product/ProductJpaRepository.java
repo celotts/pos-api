@@ -14,8 +14,10 @@ import java.util.UUID;
 public interface ProductJpaRepository extends JpaRepository<ProductEntity, UUID> {
     Optional<ProductEntity> findBySku(String sku);
 
-    @Query("SELECT p FROM ProductEntity p JOIN p.category c WHERE p.name LIKE %:name% AND c.name LIKE %:categoryName%")
-    List<ProductEntity> findByProductNameAndCategoryName(@Param("name") String name, @Param("categoryName") String categoryName);
+    @Query("SELECT p FROM ProductEntity p JOIN p.category c "
+           + "WHERE p.name LIKE %:name% AND c.name LIKE %:categoryName%")
+    List<ProductEntity> findByProductNameAndCategoryName(
+            @Param("name") String name, @Param("categoryName") String categoryName);
     
     // Asumiendo que tienes un método para borrado lógico
     default void softDeleteById(UUID id) {

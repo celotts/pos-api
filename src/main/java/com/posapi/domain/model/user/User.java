@@ -58,7 +58,9 @@ public class User {
     @Column(name = "deleted_by")
     private UUID deletedBy;
 
-    public static User createNew(String email, String encodedPassword, String fullName, Role defaultRole, Boolean isActive, UUID createdBy) {
+    public static User createNew(
+            String email, String encodedPassword, String fullName, Role defaultRole, Boolean isActive, UUID createdBy
+    ) {
         return User.builder()
                 .id(UUID.randomUUID())
                 .email(email)

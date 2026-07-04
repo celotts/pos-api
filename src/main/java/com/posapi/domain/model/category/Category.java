@@ -13,4 +13,6 @@ public class Category {
     private String name;
     private Instant createdAt;
     private Instant updatedAt;
+    private UUID createdBy;
+    private UUID updatedBy;
 }

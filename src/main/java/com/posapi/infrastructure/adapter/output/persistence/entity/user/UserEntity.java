@@ -1,7 +1,13 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.user;
 
 import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -44,7 +50,6 @@ public class UserEntity {
     @JoinColumn(name = "role_id")
     private RoleEntity role;
 
-    // 🛡️ La App es responsable de los timestamps para esta entidad
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

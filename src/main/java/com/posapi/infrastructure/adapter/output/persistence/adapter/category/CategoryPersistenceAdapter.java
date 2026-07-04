@@ -5,7 +5,6 @@ import com.posapi.domain.port.output.CategoryRepository;
 import com.posapi.infrastructure.adapter.output.persistence.entity.category.CategoryEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.category.CategoryPersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.category.CategoryJpaRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -20,19 +19,13 @@ public class CategoryPersistenceAdapter implements CategoryRepository {
 
     private final CategoryJpaRepository categoryJpaRepository;
     private final CategoryPersistenceMapper categoryMapper;
-    private final EntityManager entityManager;
 
     @Override
     public Category save(Category category) {
         CategoryEntity entity = categoryMapper.toEntity(category);
-        
-        // 1. Guardar y forzar la sincronización con la base de datos
-        CategoryEntity savedEntity = categoryJpaRepository.saveAndFlush(entity);
-        
-        // 2. Refrescar la entidad desde la base de datos para obtener los valores generados
-        entityManager.refresh(savedEntity);
-        
-        // 3. Mapear la entidad refrescada de vuelta al dominio
+        // Confiamos en que save() y las anotaciones de la entidad harán el trabajo.
+        // Spring Data JPA es lo suficientemente inteligente para hacer un INSERT o un UPDATE según corresponda.
+        CategoryEntity savedEntity = categoryJpaRepository.save(entity);
         return categoryMapper.toDomain(savedEntity);
     }
 
