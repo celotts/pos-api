@@ -63,3 +63,6 @@ logging:
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.orm.jdbc.bind: TRACE
+    # --- AGREGA ESTO ---
+    org.springframework.security: DEBUG
+    org.springframework.security.access: DEBUG

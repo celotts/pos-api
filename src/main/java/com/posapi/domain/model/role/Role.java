@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder(toBuilder = true) // Habilitamos toBuilder para mutaciones limpias en controladores/casos de uso
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Role {
@@ -17,8 +17,10 @@ public class Role {
     private UUID id;
     private String name;
 
-    // 🕒 Marcas de tiempo de Auditoría
-    private Instant createdAt;
+    // 🕒 Unificado a Instant. LocalDateTime ya no es necesario.
+    @Builder.Default
+    private Instant createdAt = Instant.now();
+
     private Instant updatedAt;
     private Instant deletedAt;
 
@@ -27,8 +29,13 @@ public class Role {
     private UUID updatedBy;
     private UUID deletedBy;
 
-    // 🛡️ IDs de Roles de Auditoría (Calculados por el Trigger de Postgres)
+    // 🛡️ IDs de Roles de Auditoría
     private UUID createdByRoleId;
     private UUID updatedByRoleId;
     private UUID deletedByRoleId;
+
+    public void markAsUpdated(UUID updatedBy) {
+        this.updatedAt = Instant.now();
+        this.updatedBy = updatedBy;
+    }
 }

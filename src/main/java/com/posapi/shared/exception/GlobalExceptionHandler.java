@@ -91,12 +91,13 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             Exception ex,
             WebRequest request) {
 
+        // Logueamos el stack trace completo
         log.error("Error interno no esperado", ex);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message("Error interno del servidor")
-                .detail("Ha ocurrido un error inesperado. Por favor, intente más tarde.")
+                .message("Error: " + ex.getMessage()) // <--- Cambiado para ver el error real
+                .detail(ex.getCause() != null ? ex.getCause().getMessage() : "Revisa los logs del servidor")
                 .timestamp(Instant.now())
                 .path(request.getDescription(false).replace("uri=", ""))
                 .build();

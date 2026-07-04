@@ -4,14 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -37,9 +33,12 @@ public class RoleEntity {
     @ToString.Include
     private String name;
 
+    // Usamos @Generated para que Hibernate sepa que la BD llena esto
+    @Generated(event = EventType.INSERT)
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
@@ -55,12 +54,15 @@ public class RoleEntity {
     @Column(name = "deleted_by_user_id")
     private UUID deletedBy;
 
+    @Generated(event = EventType.INSERT)
     @Column(name = "created_by_role_id", insertable = false, updatable = false)
     private UUID createdByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_by_role_id", insertable = false, updatable = false)
     private UUID updatedByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "deleted_by_role_id", insertable = false, updatable = false)
     private UUID deletedByRoleId;
 }

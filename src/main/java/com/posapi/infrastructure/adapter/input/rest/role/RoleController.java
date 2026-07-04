@@ -6,6 +6,7 @@ import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
+import com.posapi.infrastructure.adapter.input.rest.role.mapper.RoleRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,22 +38,30 @@ public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
     private final UserRepository userRepository;
+    private final RoleRestMapper roleRestMapper;
 
     @PostMapping
-    //@PreAuthorize("hasRole('ADMIN')")
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // CREADO POR: ID del usuario autenticado
-        Role roleToCreate = Role.builder()
-                .name(request.name())
-                .createdBy(currentUser.getId())
-                .build();
+        Role roleToCreate = roleRestMapper.toDomain(request);
+
+        // ⚡ IMPORTANTE: Asegúrate de asignar el ID aquí si el dominio no lo hace automáticamente
+        if (roleToCreate.getId() == null) {
+            roleToCreate.setId(UUID.randomUUID());
+        }
+
+        roleToCreate.setCreatedBy(currentUser.getId());
 
         Role createdRole = roleManagementPort.createRole(roleToCreate);
 
-        RoleResponse response = RoleResponse.fromDomain(createdRole, currentUser.getFullName(), null);
+        RoleResponse response = roleRestMapper.toResponse(
+                createdRole,
+                currentUser.getFullName(),
+                null
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 

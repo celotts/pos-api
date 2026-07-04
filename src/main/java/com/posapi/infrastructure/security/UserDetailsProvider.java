@@ -26,10 +26,10 @@ public class UserDetailsProvider implements UserDetailsService {
 
         String roleName = getRoleName(user.getRoleId());
 
-        // Usamos el UserBuilder de Spring Security para crear el UserDetails
         return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
                 .password(user.getPassword())
-                .roles(roleName) // Spring añade el prefijo "ROLE_" automáticamente
+                // .authorities(roleName) // <--- QUITA ESTA LÍNEA
+                .roles(roleName)         // <--- USA ESTA (Spring añadirá ROLE_ automáticamente)
                 .build();
     }
 
