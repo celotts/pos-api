@@ -17,3 +17,10 @@ spring:
   rabbitmq:
     # Dentro de la red de Docker, nos conectamos al servicio 'rabbitmq' (si lo tuvieras).
     host: rabbitmq
+
+logging:
+  level:
+    com.posapi: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.security.access: DEBUG
+    org.springframework.web: INFO

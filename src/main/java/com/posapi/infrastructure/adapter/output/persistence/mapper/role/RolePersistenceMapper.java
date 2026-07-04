@@ -10,13 +10,15 @@ import java.util.UUID;
 public class RolePersistenceMapper {
 
     public RoleEntity toEntity(Role domain) {
-        if (domain == null) return null;
+        if (domain == null) {
+            return null;
+        }
 
         return RoleEntity.builder()
-                // Asegura un ID si el dominio no lo inicializó todavía
                 .id(domain.getId() != null ? domain.getId() : UUID.randomUUID())
                 .name(domain.getName())
-                // 🕒 Omitimos deliberadamente createdAt y updatedAt para que actúe Postgres
+                .createdAt(domain.getCreatedAt())
+                .updatedAt(domain.getUpdatedAt())
                 .createdBy(domain.getCreatedBy())
                 .updatedBy(domain.getUpdatedBy())
                 .deletedAt(domain.getDeletedAt())
@@ -25,7 +27,9 @@ public class RolePersistenceMapper {
     }
 
     public Role toDomain(RoleEntity entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         return Role.builder()
                 .id(entity.getId())
@@ -36,7 +40,6 @@ public class RolePersistenceMapper {
                 .updatedBy(entity.getUpdatedBy())
                 .deletedAt(entity.getDeletedAt())
                 .deletedBy(entity.getDeletedBy())
-                // 🛡️ Sincronizados de forma limpia con tu POJO de dominio purificado
                 .createdByRoleId(entity.getCreatedByRoleId())
                 .updatedByRoleId(entity.getUpdatedByRoleId())
                 .deletedByRoleId(entity.getDeletedByRoleId())

@@ -4,8 +4,9 @@ import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleRequest;
-import com.posapi.infrastructure.adapter.input.rest.dto.role.RoleResponse;
+import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
+import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
+import com.posapi.infrastructure.adapter.input.rest.role.mapper.RoleRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,14 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
@@ -30,21 +38,29 @@ public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
     private final UserRepository userRepository;
+    private final RoleRestMapper roleRestMapper;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // CREADO POR: ID del usuario autenticado
-        Role roleToCreate = Role.builder()
-                .name(request.name())
-                .createdBy(currentUser.getId())
-                .build();
+        Role roleToCreate = roleRestMapper.toDomain(request);
+
+        if (roleToCreate.getId() == null) {
+            roleToCreate.setId(UUID.randomUUID());
+        }
+
+        roleToCreate.setCreatedBy(currentUser.getId());
 
         Role createdRole = roleManagementPort.createRole(roleToCreate);
 
-        RoleResponse response = RoleResponse.fromDomain(createdRole, currentUser.getFullName(), null);
+        RoleResponse response = roleRestMapper.toResponse(
+                createdRole,
+                currentUser.getFullName(),
+                null
+        );
+
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -53,7 +69,6 @@ public class RoleController {
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // ACTUALIZADO POR: Pasamos el id al modelo para que lo procese el Trigger
         Role roleToUpdate = Role.builder()
                 .name(request.name())
                 .updatedBy(currentUser.getId())
@@ -70,14 +85,10 @@ public class RoleController {
     public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
         User currentUser = getCurrentAuthenticatedUser();
 
-        // BORRADO POR: Para borrado lógico, necesitamos mapear el ejecutor antes de eliminar
-        // Nota: Asegúrate de que tu puerto admita recibir el ejecutor o maneja la lógica de actualización en tu servicio de aplicación
         Role roleToDelete = Role.builder()
                 .deletedBy(currentUser.getId())
                 .build();
 
-        // Si tu firma de deleteRole en el Port solo acepta un UUID, considera cambiarla
-        // a 'deleteRole(UUID id, UUID deletedBy)' para que viaje hasta la entidad/base de datos.
         return roleManagementPort.deleteRole(id)
                 ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
@@ -113,10 +124,6 @@ public class RoleController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // =============================================================================
-    // MÉTODOS DE SOPORTE Y TRADUCCIÓN
-    // =============================================================================
-
     private User getCurrentAuthenticatedUser() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -127,19 +134,18 @@ public class RoleController {
         String email = authentication.getName();
 
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User with email [" + email + "] does not exist in database. Access denied."));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User with email [" + email + "] does not exist in database. Access denied."));
     }
 
     private RoleResponse toResponse(Role role) {
-        String createdByName = role.getCreatedBy() != null ?
-                userRepository.findById(role.getCreatedBy())
-                        .map(User::getFullName)
-                        .orElse(null) : null;
+        String createdByName = (role.getCreatedBy() != null)
+                ? userRepository.findById(role.getCreatedBy()).map(User::getFullName).orElse(null)
+                : null;
 
-        String updatedByName = role.getUpdatedBy() != null ?
-                userRepository.findById(role.getUpdatedBy())
-                        .map(User::getFullName)
-                        .orElse(null) : null;
+        String updatedByName = (role.getUpdatedBy() != null)
+                ? userRepository.findById(role.getUpdatedBy()).map(User::getFullName).orElse(null)
+                : null;
 
         return RoleResponse.fromDomain(role, createdByName, updatedByName);
     }

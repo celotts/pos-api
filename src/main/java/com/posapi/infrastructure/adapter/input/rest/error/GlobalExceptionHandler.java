@@ -1,146 +1,108 @@
 package com.posapi.infrastructure.adapter.input.rest.error;
 
-import com.fasterxml.jackson.databind.exc.InvalidFormatException;
-import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
+import com.posapi.domain.exception.ApplicationException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.validation.FieldError;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
-@ControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+@RestControllerAdvice
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    // 🛡️ NUEVO: Manejador para errores de autorización (403 Forbidden)
-    @ExceptionHandler({ AccessDeniedException.class, org.springframework.security.authorization.AuthorizationDeniedException.class })
-    public ResponseEntity<ErrorResponse> handleAccessDeniedException(Exception ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.FORBIDDEN.value(),
-                "Forbidden",
-                "You do not have permission to perform this action.",
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    @ExceptionHandler(ApplicationException.class)
+    public ResponseEntity<ErrorResponse> handleApplicationException(
+            ApplicationException ex,
+            WebRequest request) {
+
+        log.warn("Excepción de aplicación: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(ex.getHttpStatus().value())
+                .message(ex.getMessage())
+                .timestamp(Instant.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
+        return ResponseEntity.status(ex.getHttpStatus().value()).body(errorResponse);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.UNAUTHORIZED.value(),
-                "Unauthorized",
-                "Invalid email or password.",
-                request.getDescription(false).replace("uri=", "")
-        );
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(
+            BadCredentialsException ex,
+            WebRequest request) {
+
+        log.warn("Intento de login fallido: {}", ex.getMessage());
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .message("Credenciales inválidas")
+                .detail("El email o la contraseña son incorrectos.")
+                .timestamp(Instant.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, WebRequest request) {
-        String specificMessage = "The request body is malformed or contains invalid data types.";
-        Throwable cause = ex.getCause();
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            @NonNull MethodArgumentNotValidException ex,
+            @NonNull HttpHeaders headers,
+            @NonNull HttpStatusCode status,
+            @NonNull WebRequest request) {
 
-        if (cause instanceof InvalidFormatException ife) {
-            String fieldPath = ife.getPath().stream()
-                    .map(ref -> ref.getFieldName())
-                    .collect(Collectors.joining("."));
-            specificMessage = String.format("Invalid value for field '%s'. Expected a value of type '%s'.", fieldPath, ife.getTargetType().getSimpleName());
-        }
+        log.warn("Error de validación: {}", ex.getMessage());
 
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                specificMessage,
-                request.getDescription(false).replace("uri=", "")
-        );
+        BindingResult bindingResult = ex.getBindingResult();
+        List<ErrorResponse.FieldError> fieldErrors = new ArrayList<>();
+
+        bindingResult.getFieldErrors().forEach(error -> fieldErrors.add(ErrorResponse.FieldError.builder()
+                .field(error.getField())
+                .message(error.getDefaultMessage())
+                .rejectedValue(error.getRejectedValue())
+                .build()));
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.BAD_REQUEST.value())
+                .message("Error de validación")
+                .detail("Uno o más campos contienen valores inválidos")
+                .timestamp(Instant.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .errors(fieldErrors)
+                .build();
+
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex, WebRequest request) {
-        String error = String.format("The parameter '%s' with value '%s' is invalid. Expected type: '%s'.",
-                ex.getName(), ex.getValue(), ex.getRequiredType().getSimpleName());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                error,
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
-        List<ValidationError> errors = ex.getBindingResult().getAllErrors().stream()
-                .map(error -> {
-                    String fieldName = ((FieldError) error).getField();
-                    String errorMessage = error.getDefaultMessage();
-                    return new ValidationError(fieldName, errorMessage);
-                })
-                .collect(Collectors.toList());
-
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                "Validation failed for one or more fields",
-                request.getDescription(false).replace("uri=", "")
-        );
-        errorResponse.setValidationErrors(errors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
-    }
-
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
-        log.error("An unexpected error occurred: ", ex);
-        ErrorResponse errorResponse = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
-                "An unexpected error occurred. Please contact support.",
-                request.getDescription(false).replace("uri=", "")
-        );
+    public ResponseEntity<ErrorResponse> handleGlobalException(
+            Exception ex,
+            WebRequest request) {
+
+        log.error("Error interno no esperado", ex);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .message("Error interno del servidor")
+                .detail("Ha ocurrido un error inesperado. Por favor, intente más tarde.")
+                .timestamp(Instant.now())
+                .path(request.getDescription(false).replace("uri=", ""))
+                .build();
+
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

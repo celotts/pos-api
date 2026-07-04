@@ -51,7 +51,8 @@ public class AuditAspect {
             UUID recordId = getRecordId(joinPoint, result);
             String newValue = convertToJson(result);
 
-            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
+                    .currentRequestAttributes()).getRequest();
             String ipAddress = request.getRemoteAddr();
             String userAgent = request.getHeader("User-Agent");
 
@@ -74,13 +75,11 @@ public class AuditAspect {
     }
 
     private UUID getRecordId(JoinPoint joinPoint, Object result) {
-        // First, try to find a UUID in the method arguments
         return Arrays.stream(joinPoint.getArgs())
                 .filter(UUID.class::isInstance)
                 .map(UUID.class::cast)
                 .findFirst()
                 .orElseGet(() -> {
-                    // If not in args, try to get it from the result (for create operations)
                     if (result instanceof Optional) {
                         Object unwrapped = ((Optional<?>) result).orElse(null);
                         return getFromObject(unwrapped);
@@ -90,7 +89,9 @@ public class AuditAspect {
     }
 
     private UUID getFromObject(Object obj) {
-        if (obj == null) return null;
+        if (obj == null) {
+            return null;
+        }
         try {
             Method getIdMethod = obj.getClass().getMethod("getId");
             return (UUID) getIdMethod.invoke(obj);

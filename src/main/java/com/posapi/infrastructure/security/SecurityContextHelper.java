@@ -1,12 +1,10 @@
 package com.posapi.infrastructure.security;
 
-import com.posapi.domain.model.user.User;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
-import java.util.UUID;
 
 @Component
 public class SecurityContextHelper {

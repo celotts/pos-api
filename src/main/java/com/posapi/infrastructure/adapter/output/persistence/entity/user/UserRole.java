@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.persistence.entity.user;
+package com.posapi.infrastructure.adapter.output.persistence.entity.user;
 
 public enum UserRole {
     ADMIN,

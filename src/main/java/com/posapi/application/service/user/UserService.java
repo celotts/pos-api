@@ -42,11 +42,13 @@ public class UserService implements UserManagementPort {
         log.debug("Attempting to create a new user with email: {}", user.getEmail());
         if (userRepository.existsByEmail(user.getEmail())) {
             log.warn("User creation failed: email {} already exists.", user.getEmail());
-            throw new DuplicateResourceException("An account with this email already exists: " + user.getEmail());
+            throw new DuplicateResourceException(
+                    "An account with this email already exists: " + user.getEmail());
         }
 
         Role role = roleRepository.findById(user.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException("Role with ID '" + user.getRoleId() + "' not found."));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Role with ID '" + user.getRoleId() + "' not found."));
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
@@ -55,7 +57,8 @@ public class UserService implements UserManagementPort {
                 .map(User::getId)
                 .orElse(null);
 
-        User userToSave = User.createNew(user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
+        User userToSave = User.createNew(
+                user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
 
         User savedUser = userRepository.save(userToSave);
         log.info("Successfully created new user with ID: {}", savedUser.getId());
@@ -135,7 +138,8 @@ public class UserService implements UserManagementPort {
     private UUID validateRoleOnUpdate(User existingUser, User partialUpdate) {
         if (partialUpdate.getRoleId() != null && !partialUpdate.getRoleId().equals(existingUser.getRoleId())) {
             roleRepository.findById(partialUpdate.getRoleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Role with ID " + partialUpdate.getRoleId() + " does not exist."));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Role with ID " + partialUpdate.getRoleId() + " does not exist."));
             return partialUpdate.getRoleId();
         }
         return existingUser.getRoleId();

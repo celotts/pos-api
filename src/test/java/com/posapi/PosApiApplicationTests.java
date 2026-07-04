@@ -4,7 +4,7 @@ import com.posapi.application.service.bootstrap.BootstrapService;
 import com.posapi.infrastructure.adapter.output.persistence.adapter.user.UserPersistenceAdapter;
 import com.posapi.infrastructure.security.JwtAuthenticationEntryPoint;
 import com.posapi.infrastructure.security.JwtRequestFilter;
-import com.posapi.infrastructure.security.UserDetailsServiceImpl;
+import com.posapi.infrastructure.security.UserDetailsProvider;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -52,14 +51,8 @@ class PosApiApplicationTests {
 
         @Bean
         @Primary
-        public UserDetailsServiceImpl userDetailsService() {
-            return Mockito.mock(UserDetailsServiceImpl.class);
-        }
-
-        @Bean
-        @Primary
-        public PasswordEncoder passwordEncoder() {
-            return Mockito.mock(PasswordEncoder.class);
+        public UserDetailsProvider userDetailsService() {
+            return Mockito.mock(UserDetailsProvider.class);
         }
     }
 

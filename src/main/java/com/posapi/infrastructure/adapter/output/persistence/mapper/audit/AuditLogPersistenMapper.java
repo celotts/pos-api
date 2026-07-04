@@ -8,7 +8,9 @@ import org.springframework.stereotype.Component;
 public class AuditLogPersistenMapper {
 
     public AuditLogEntity toEntity(AuditLog domain) {
-        if (domain == null) return null;
+        if (domain == null) {
+            return null;
+        }
 
         return AuditLogEntity.builder()
                 .id(domain.getId())
@@ -24,7 +26,9 @@ public class AuditLogPersistenMapper {
     }
 
     public AuditLog toDomain(AuditLogEntity entity) {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
 
         return AuditLog.builder()
                 .id(entity.getId())

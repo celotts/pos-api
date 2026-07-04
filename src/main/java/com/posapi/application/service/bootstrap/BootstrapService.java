@@ -60,7 +60,8 @@ public class BootstrapService implements CommandLineRunner {
 
     private void createOrUpdateAdminUser() {
         Role adminRole = roleRepository.findByName(adminRoleName)
-                .orElseThrow(() -> new IllegalStateException("Critical: ADMIN role not found after bootstrap attempt."));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Critical: ADMIN role not found after bootstrap attempt."));
 
         userRepository.findByEmail(adminEmail)
                 .map(existingUser -> {

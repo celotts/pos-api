@@ -31,12 +31,14 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public String getPassword() { return password; }
+    public String getPassword() {
+        return password;
+    }
 
     @Override
-    public String getUsername() { return email; } // Spring usa email como username
-
-    // ... dentro de tu clase CustomUserDetails ...
+    public String getUsername() {
+        return email; // Spring usa email como username
+    }
 
     @Override
     public boolean isAccountNonExpired() {

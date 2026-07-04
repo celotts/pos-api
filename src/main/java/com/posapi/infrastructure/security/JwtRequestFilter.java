@@ -1,5 +1,6 @@
 package com.posapi.infrastructure.security;
 
+import com.posapi.application.service.jwt.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,7 +21,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtRequestFilter extends OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     @Override
@@ -28,17 +29,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
 
-        String path = request.getServletPath();
-
-        // ⚡ SOLUCIÓN 1: Si va hacia la autenticación o registro, saltamos el filtro por completo
-        if (path.startsWith("/api/v1/auth") || path.equals("/api/v1/users/register")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         final String authHeader = request.getHeader("Authorization");
         final String jwt;
-        String userEmail = null; // Cambiado a variable mutable para manejar el catch
+        final String userEmail;
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
@@ -46,19 +39,13 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-
-        try {
-            // ⚡ SOLUCIÓN 2: Envolvemos la extracción por si el token está expirado o corrupto
-            userEmail = jwtUtil.extractUsername(jwt);
-        } catch (Exception e) {
-            // Si el token expiró, limpiamos el contexto y dejamos que continúe el filtro.
-            // Spring Security se encargará de rechazarlo si la ruta es protegida.
-            SecurityContextHolder.clearContext();
-        }
+        userEmail = jwtService.extractUsername(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-            if (jwtUtil.validateToken(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt, userDetails)) {
+                System.out.println("Autoridades cargadas en UserDetails: " + userDetails.getAuthorities());
+
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

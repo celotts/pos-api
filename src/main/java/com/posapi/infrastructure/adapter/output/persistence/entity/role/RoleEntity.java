@@ -1,8 +1,19 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.role;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -28,33 +39,35 @@ public class RoleEntity {
     @ToString.Include
     private String name;
 
-    // 🕒 El Trigger de Postgres maneja el tiempo. Java solo lo lee.
+    @Generated(event = EventType.INSERT)
     @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // 👤 IDs de los Usuarios Operativos (Enviados desde Java mediante el JWT)
-    @Column(name = "created_by")
+    @Column(name = "created_by_user_id")
     private UUID createdBy;
 
-    @Column(name = "updated_by")
+    @Column(name = "updated_by_user_id")
     private UUID updatedBy;
 
-    @Column(name = "deleted_by")
+    @Column(name = "deleted_by_user_id")
     private UUID deletedBy;
 
-    // 🛡️ IDs de los Roles de Auditoría (Calculados 100% de forma automática por el Trigger)
+    @Generated(event = EventType.INSERT)
     @Column(name = "created_by_role_id", insertable = false, updatable = false)
     private UUID createdByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_by_role_id", insertable = false, updatable = false)
     private UUID updatedByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "deleted_by_role_id", insertable = false, updatable = false)
     private UUID deletedByRoleId;
 }

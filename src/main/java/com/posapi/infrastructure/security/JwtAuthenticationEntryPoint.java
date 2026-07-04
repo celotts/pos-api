@@ -15,12 +15,13 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint, Se
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
 
-        // Verificamos si el filtro dejó una excepción específica (como ExpiredJwtException)
         final String expiredMsg = (String) request.getAttribute("expired");
         final String message = (expiredMsg != null) ? expiredMsg : "No autorizado: Token faltante o inválido";
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write("{ \"status\": 401, \"error\": \"Unauthorized\", \"message\": \"" + message + "\" }");
+        response.getWriter().write(
+                String.format("{ \"status\": 401, \"error\": \"Unauthorized\", \"message\": \"%s\" }", message)
+        );
     }
 }
