@@ -1,13 +1,13 @@
 package com.posapi.infrastructure.adapter.output.persistence.mapper.tax;
 
-import com.posapi.domain.model.tax.TaxCategory;
+import com.posapi.domain.model.tax.Tax;
 import com.posapi.infrastructure.adapter.output.persistence.entity.tax.TaxEntity;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TaxPersistenceMapper {
 
-    public TaxEntity toEntity(TaxCategory domain) {
+    public TaxEntity toEntity(Tax domain) {
         return TaxEntity.builder()
                 .id(domain.getId())
                 .name(domain.getName())
@@ -16,8 +16,8 @@ public class TaxPersistenceMapper {
                 .build();
     }
 
-    public TaxCategory toDomain(TaxEntity entity) {
-        return TaxCategory.builder()
+    public Tax toDomain(TaxEntity entity) {
+        return Tax.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .percentage(entity.getPercentage())

@@ -1,6 +1,6 @@
 package com.posapi.domain.model.tax;
 
-public enum TaxCategoryEnum {
+public enum TaxEnum {
     IVA,
     IEPS,
     ISR
