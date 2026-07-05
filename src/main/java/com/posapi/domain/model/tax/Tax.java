@@ -8,7 +8,7 @@ import java.util.UUID;
 
 @Data
 @Builder
-public class TaxCategory {
+public class Tax {
     private UUID id;
     private String name;
     private BigDecimal percentage;
