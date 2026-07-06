@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.UUID;
 
 @Data
@@ -12,5 +13,13 @@ public class Tax {
     private UUID id;
     private String name;
     private BigDecimal percentage;
-    private String taxType; // Usamos String para el tipo en el dominio
+    private TaxCategory taxType;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private UUID createdBy;
+    private UUID updatedBy;
+
+    public enum TaxCategory {
+        IVA, IEPS, ISR
+    }
 }
