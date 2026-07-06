@@ -1,26 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { setCredentials } from '../store/slices/authSlice';
 import authService from '../services/authService';
 
+// Expresión regular simple para validar el formato de email
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('admin@posapi.com');
   const [password, setPassword] = useState('SuperSecretPassword123!');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  // useMemo para evitar recalcular en cada render
+  const isEmailValid = useMemo(() => EMAIL_REGEX.test(email), [email]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isEmailValid) {
+      setError('Please enter a valid email address.');
+      return;
+    }
     setError('');
+    setIsSubmitting(true);
     try {
       const { token } = await authService.login({ email, password });
       dispatch(setCredentials({ token }));
       navigate('/');
-    } catch (err) {
-      setError('Failed to login. Please check your credentials.');
-      console.error(err);
+    } catch (err: any) {
+      const message = err.response?.data?.message || 'Failed to login. Please check your credentials.';
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -41,9 +56,12 @@ const LoginPage: React.FC = () => {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
+              className={`focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none ${!isEmailValid && email.length > 0 ? 'border-red-500' : ''}`}
               required
             />
+            {!isEmailValid && email.length > 0 && (
+              <p className="mt-2 text-xs text-red-500">Please enter a valid email format.</p>
+            )}
           </div>
           <div className="mb-6">
             <label className="mb-2 block text-sm font-bold text-gray-700" htmlFor="password">
@@ -61,9 +79,10 @@ const LoginPage: React.FC = () => {
           <div className="flex items-center justify-between">
             <button
               type="submit"
-              className="focus:shadow-outline w-full rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none"
+              className="focus:shadow-outline w-full rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
+              disabled={!isEmailValid || isSubmitting}
             >
-              Sign In
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
         </form>

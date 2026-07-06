@@ -1,36 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import roleService, { Role } from '../services/roleService'; // Asumiendo que crearás este servicio
-import { useAuth } from '../hooks/useAuth';
-import Modal from '../components/Modal';
-// Asumiendo que crearás un RoleForm similar a CategoryForm
+import React from 'react';
+import CrudPage from '../components/CrudPage';
+import { roleService } from '../services/roleService';
+import RoleForm from '../components/RoleForm';
 
 const RolesPage: React.FC = () => {
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { isAdmin } = useAuth();
-
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        setLoading(true);
-        // const data = await roleService.getAllRoles();
-        // setRoles(data);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    // fetchRoles();
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
+  const columns = [
+    { header: 'Name', accessor: 'name' as const },
+    { header: 'Created By', accessor: 'createdByName' as const },
+    { header: 'Updated By', accessor: 'updatedByName' as const },
+  ];
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold">Manage Roles</h1>
-      {/* El resto del CRUD de Roles iría aquí */}
-    </div>
+    <CrudPage
+      title="Roles"
+      service={roleService}
+      columns={columns}
+      form={RoleForm}
+    />
   );
 };
 
