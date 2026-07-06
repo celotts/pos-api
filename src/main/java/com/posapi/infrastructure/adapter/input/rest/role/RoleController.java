@@ -6,15 +6,12 @@ import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
-import com.posapi.infrastructure.adapter.input.rest.role.mapper.RoleRestMapper;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +27,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1/roles")
@@ -38,44 +36,58 @@ public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
     private final UserRepository userRepository;
-    private final RoleRestMapper roleRestMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
-        User currentUser = getCurrentAuthenticatedUser();
-
-        Role roleToCreate = roleRestMapper.toDomain(request);
-
-        if (roleToCreate.getId() == null) {
-            roleToCreate.setId(UUID.randomUUID());
-        }
-
-        roleToCreate.setCreatedBy(currentUser.getId());
-
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        Role roleToCreate = Role.builder().name(request.name()).createdBy(currentUser.getId()).build();
         Role createdRole = roleManagementPort.createRole(roleToCreate);
-
-        RoleResponse response = roleRestMapper.toResponse(
-                createdRole,
-                currentUser.getFullName(),
-                null
+        return new ResponseEntity<>(
+                toResponse(createdRole, Map.of(currentUser.getId(), currentUser.getFullName())),
+                HttpStatus.CREATED
         );
-
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
-        User currentUser = getCurrentAuthenticatedUser();
-
-        Role roleToUpdate = Role.builder()
-                .name(request.name())
-                .updatedBy(currentUser.getId())
-                .build();
-
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        Role roleToUpdate = Role.builder().name(request.name()).updatedBy(currentUser.getId()).build();
         return roleManagementPort.updateRole(id, roleToUpdate)
-                .map(this::toResponse)
+                .map(updatedRole -> {
+                    Set<UUID> userIds = Stream.of(updatedRole.getCreatedBy(), updatedRole.getUpdatedBy())
+                            .filter(Objects::nonNull).collect(Collectors.toSet());
+                    return toResponse(updatedRole, fetchUserNames(userIds));
+                })
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<RoleResponse>> getAllRoles() {
+        List<Role> roles = roleManagementPort.getAllRoles();
+        Set<UUID> userIds = roles.stream()
+                .flatMap(role -> Stream.of(role.getCreatedBy(), role.getUpdatedBy()))
+                .filter(Objects::nonNull).collect(Collectors.toSet());
+        Map<UUID, String> userNames = fetchUserNames(userIds);
+        List<RoleResponse> roleResponses = roles.stream()
+                .map(role -> toResponse(role, userNames))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(roleResponses);
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
+        return roleManagementPort.getRoleById(id)
+                .map(role -> {
+                    Set<UUID> userIds = Stream.of(role.getCreatedBy(), role.getUpdatedBy())
+                            .filter(Objects::nonNull).collect(Collectors.toSet());
+                    return toResponse(role, fetchUserNames(userIds));
+                })
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -83,76 +95,21 @@ public class RoleController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteRole(@PathVariable UUID id) {
-        User currentUser = getCurrentAuthenticatedUser();
-
-        Role roleToDelete = Role.builder()
-                .deletedBy(currentUser.getId())
-                .build();
-
-        return roleManagementPort.deleteRole(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        roleManagementPort.deleteRole(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping
-    public ResponseEntity<List<RoleResponse>> getAllRoles() {
-        List<Role> roles = roleManagementPort.getAllRoles();
-        Set<UUID> userIds = roles.stream()
-                .map(Role::getCreatedBy)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
-        userIds.addAll(roles.stream()
-                .map(Role::getUpdatedBy)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet()));
-
-        Map<UUID, String> userNames = userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getFullName));
-
-        List<RoleResponse> roleResponses = roles.stream()
-                .map(role -> toResponse(role, userNames))
-                .collect(Collectors.toList());
-
-        return ResponseEntity.ok(roleResponses);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
-        return roleManagementPort.getRoleById(id)
-                .map(this::toResponse)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    private User getCurrentAuthenticatedUser() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BadCredentialsException("No active session found to audit the operation.");
+    private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return Map.of();
         }
-
-        String email = authentication.getName();
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User with email [" + email + "] does not exist in database. Access denied."));
-    }
-
-    private RoleResponse toResponse(Role role) {
-        String createdByName = (role.getCreatedBy() != null)
-                ? userRepository.findById(role.getCreatedBy()).map(User::getFullName).orElse(null)
-                : null;
-
-        String updatedByName = (role.getUpdatedBy() != null)
-                ? userRepository.findById(role.getUpdatedBy()).map(User::getFullName).orElse(null)
-                : null;
-
-        return RoleResponse.fromDomain(role, createdByName, updatedByName);
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getFullName));
     }
 
     private RoleResponse toResponse(Role role, Map<UUID, String> userNames) {
-        String createdByName = userNames.get(role.getCreatedBy());
-        String updatedByName = userNames.get(role.getUpdatedBy());
+        String createdByName = role.getCreatedBy() != null ? userNames.get(role.getCreatedBy()) : null;
+        String updatedByName = role.getUpdatedBy() != null ? userNames.get(role.getUpdatedBy()) : null;
         return RoleResponse.fromDomain(role, createdByName, updatedByName);
     }
 }

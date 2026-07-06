@@ -22,9 +22,11 @@ const Sidebar: React.FC = () => {
         </NavLink>
 
         {isAdmin && (
-          <NavLink to="/categories" className={linkClass}>
-            Categories
-          </NavLink>
+          <>
+            <NavLink to="/categories" className={linkClass}>Categories</NavLink>
+            <NavLink to="/roles" className={linkClass}>Roles</NavLink>
+            <NavLink to="/suppliers" className={linkClass}>Suppliers</NavLink>
+          </>
         )}
       </nav>
     </aside>
