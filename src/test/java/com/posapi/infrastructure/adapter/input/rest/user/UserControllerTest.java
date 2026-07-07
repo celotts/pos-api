@@ -6,8 +6,10 @@ import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
+import com.posapi.application.service.jwt.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -38,6 +40,12 @@ class UserControllerTest {
     @MockitoBean
     private UserRestMapper userRestMapper;
 
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private UserDetailsService userDetailsService;
+
     @Test
     @WithMockUser
     void registerUserShouldReturn201() throws Exception {
@@ -61,6 +69,7 @@ class UserControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
+                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isCreated())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(createdUser.getId().toString()))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.email").value("test@example.com"));
@@ -77,6 +86,7 @@ class UserControllerTest {
         given(userRestMapper.toResponse(foundUser)).willReturn(responseDto);
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/users/{id}", id))
+                .andDo(org.springframework.test.web.servlet.result.MockMvcResultHandlers.print())
                 .andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(MockMvcResultMatchers.jsonPath("$.id").value(id.toString()));
     }
