@@ -34,12 +34,13 @@ public class SecurityContextHelper {
     /**
      * Obtiene el objeto de dominio User completo para el usuario autenticado.
      * Lanza una excepción si no se encuentra el usuario o la sesión.
+     * 
      * @return El objeto User del dominio.
      */
     public User getCurrentUserOrThrow() {
         String email = getCurrentUsername()
                 .orElseThrow(() -> new BadCredentialsException("No active session found to audit the operation."));
-        
+
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User with email [" + email + "] does not exist in database. Access denied."));

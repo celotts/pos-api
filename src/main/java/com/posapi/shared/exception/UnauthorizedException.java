@@ -3,26 +3,26 @@ package com.posapi.shared.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * Excepción lanzada cuando el usuario no está autorizado.
+ * Excepción lanzada cuando las credenciales de autenticación faltan o son inválidas (HTTP 401 Unauthorized).
  */
 public class UnauthorizedException extends ApplicationException {
 
     /**
      * Constructor para UnauthorizedException.
      *
-     * @param message el mensaje de error
+     * @param message el mensaje de error descriptivo
      */
-    public UnauthorizedException(String message) {
+    public UnauthorizedException(final String message) {
         super(message, HttpStatus.UNAUTHORIZED);
     }
 
     /**
-     * Constructor para UnauthorizedException con causa.
+     * Constructor para UnauthorizedException con causa raíz.
      *
-     * @param message el mensaje de error
-     * @param cause   la causa de la excepción
+     * @param message el mensaje de error descriptivo
+     * @param cause   la excepción original que provocó este fallo
      */
-    public UnauthorizedException(String message, Throwable cause) {
+    public UnauthorizedException(final String message, final Throwable cause) {
         super(message, cause, HttpStatus.UNAUTHORIZED);
     }
 }

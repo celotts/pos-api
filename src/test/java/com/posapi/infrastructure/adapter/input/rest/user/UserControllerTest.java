@@ -46,6 +46,7 @@ class UserControllerTest {
     @MockitoBean
     private UserDetailsService userDetailsService;
 
+    @SuppressWarnings("null")
     @Test
     @WithMockUser
     void registerUserShouldReturn201() throws Exception {

@@ -1,0 +1,28 @@
+{
+  "folders": [
+    {
+      "name": "🛒 POS API (Main Branch)",
+      "path": "."
+    },
+    {
+      "name": "🌿 Worktree: Consulta Cuota Mensual",
+      "path": "../pos-api.worktrees/agents-consulta-cuota-mensual"
+    },
+    {
+      "name": "🌿 Worktree: User Status Check",
+      "path": "../pos-api.worktrees/agents-user-status-check"
+    },
+    {
+      "name": "🌿 Worktree: Giant Termite",
+      "path": "../pos-api.worktrees/agents-giant-termite"
+    },
+    {
+      "name": "🌿 Worktree: Yappy Snipe",
+      "path": "../pos-api.worktrees/agents-yappy-snipe"
+    }
+  ],
+  "settings": {
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive"
+  }
+}

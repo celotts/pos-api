@@ -1,43 +1,44 @@
 package com.posapi.shared.exception;
 
-import org.springframework.http.HttpStatus;
+import lombok.Getter;
+import org.springframework.http.HttpStatusCode;
 
 /**
- * Excepción base para todas las excepciones de aplicación.
+ * Excepción base inmutable para todas las excepciones de la aplicación.
+ * Diseñada para integrarse de forma limpia con el GlobalExceptionHandler.
  */
+@Getter
 public abstract class ApplicationException extends RuntimeException {
 
-    private final HttpStatus httpStatus;
+    /**
+     * -- GETTER --
+     *  Obtiene el código de estado HTTP asociado a esta excepción.
+     *
+     * @return el HttpStatusCode
+     */
+    private final HttpStatusCode httpStatus;
 
     /**
      * Constructor para ApplicationException.
      *
-     * @param message    el mensaje de error
-     * @param httpStatus el estado HTTP correspondiente
+     * @param message    el mensaje de error descriptivo
+     * @param httpStatus el código o estado HTTP correspondiente a la falla
      */
-    public ApplicationException(String message, HttpStatus httpStatus) {
+    public ApplicationException(final String message, final HttpStatusCode httpStatus) {
         super(message);
         this.httpStatus = httpStatus;
     }
 
     /**
-     * Constructor para ApplicationException con causa.
+     * Constructor para ApplicationException con causa raíz.
      *
-     * @param message    el mensaje de error
-     * @param cause      la causa de la excepción
-     * @param httpStatus el estado HTTP correspondiente
+     * @param message    el mensaje de error descriptivo
+     * @param cause      la excepción original que provocó este fallo
+     * @param httpStatus el código o estado HTTP correspondiente a la falla
      */
-    public ApplicationException(String message, Throwable cause, HttpStatus httpStatus) {
+    public ApplicationException(final String message, final Throwable cause, final HttpStatusCode httpStatus) {
         super(message, cause);
         this.httpStatus = httpStatus;
     }
 
-    /**
-     * Obtiene el estado HTTP asociado a esta excepción.
-     *
-     * @return el HttpStatus
-     */
-    public HttpStatus getHttpStatus() {
-        return httpStatus;
-    }
 }

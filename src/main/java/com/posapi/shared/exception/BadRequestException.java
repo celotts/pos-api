@@ -3,26 +3,26 @@ package com.posapi.shared.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * Excepción lanzada cuando la solicitud es inválida.
+ * Excepción lanzada cuando la solicitud del cliente es inválida (HTTP 400 Bad Request).
  */
 public class BadRequestException extends ApplicationException {
 
     /**
      * Constructor para BadRequestException.
      *
-     * @param message el mensaje de error
+     * @param message el mensaje de error descriptivo
      */
-    public BadRequestException(String message) {
+    public BadRequestException(final String message) {
         super(message, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * Constructor para BadRequestException con causa.
+     * Constructor para BadRequestException con causa raíz.
      *
-     * @param message el mensaje de error
-     * @param cause   la causa de la excepción
+     * @param message el mensaje de error descriptivo
+     * @param cause   la excepción original que provocó este fallo
      */
-    public BadRequestException(String message, Throwable cause) {
+    public BadRequestException(final String message, final Throwable cause) {
         super(message, cause, HttpStatus.BAD_REQUEST);
     }
 }
