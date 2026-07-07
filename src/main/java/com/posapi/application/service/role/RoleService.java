@@ -1,5 +1,6 @@
 package com.posapi.application.service.role;
 
+import com.posapi.domain.model.user.User;
 import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.audit.AuditAction;
@@ -35,10 +36,11 @@ public class RoleService implements RoleManagementPort {
             throw new DuplicateResourceException("Role with name '" + role.getName() + "' already exists.");
         }
         
+        @SuppressWarnings("null")
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
-                .map(com.posapi.domain.model.user.User::getId)
-                .orElse(SYSTEM_USER_ID); // Usar un ID de sistema si no hay usuario
+                .map(User::getId)
+                .orElse(SYSTEM_USER_ID);
 
         Role roleToSave = Role.builder()
                 .id(UUID.randomUUID())
@@ -65,6 +67,7 @@ public class RoleService implements RoleManagementPort {
     @Transactional
     @Auditable(action = AuditAction.UPDATE, tableName = "roles")
     public Optional<Role> updateRole(UUID id, Role role) {
+        @SuppressWarnings("null")
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
                 .map(com.posapi.domain.model.user.User::getId)
@@ -85,18 +88,19 @@ public class RoleService implements RoleManagementPort {
     @Override
     @Transactional
     @Auditable(action = AuditAction.DELETE, tableName = "roles")
-    public boolean deleteRole(UUID id) {
+    public void deleteRole(UUID id) {
+        @SuppressWarnings("null")
         UUID currentUserId = securityContextHelper.getCurrentUsername()
                 .flatMap(userRepository::findByEmail)
                 .map(com.posapi.domain.model.user.User::getId)
                 .orElse(SYSTEM_USER_ID);
 
-        return roleRepository.findById(id).map(roleToDelete -> {
+        roleRepository.findById(id).map(roleToDelete -> {
             roleToDelete.setDeletedAt(Instant.now());
             roleToDelete.setDeletedBy(currentUserId);
             roleToDelete.setUpdatedBy(currentUserId);
             roleRepository.save(roleToDelete);
             return true;
-        }).orElse(false);
+        });
     }
 }

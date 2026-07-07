@@ -12,17 +12,17 @@ interface AuthState {
   token: string | null;
 }
 
-// Función para inicializar el estado desde localStorage
 const loadState = (): AuthState => {
   try {
     const token = localStorage.getItem('token');
-    if (token === null) {
-      return { user: null, token: null };
-    }
+    if (!token) return { user: null, token: null };
+
     const decoded = jwtDecode<DecodedToken>(token);
-    return { user: { email: decoded.sub, roles: decoded.roles || [] }, token };
+    // Limpiamos el prefijo 'ROLE_' para que el resto de la app no se preocupe por él.
+    const roles = decoded.roles.map(role => role.replace('ROLE_', ''));
+
+    return { user: { email: decoded.sub, roles }, token };
   } catch (error) {
-    // Si el token es inválido o ha expirado, limpiamos
     localStorage.removeItem('token');
     return { user: null, token: null };
   }
@@ -36,8 +36,10 @@ const authSlice = createSlice({
       const { token } = action.payload;
       const decoded = jwtDecode<DecodedToken>(token);
 
+      const roles = decoded.roles.map(role => role.replace('ROLE_', ''));
+
       state.token = token;
-      state.user = { email: decoded.sub, roles: decoded.roles || [] };
+      state.user = { email: decoded.sub, roles };
 
       localStorage.setItem('token', token);
     },

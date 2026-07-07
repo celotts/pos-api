@@ -5,7 +5,7 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.audit.AuditLo
 import org.springframework.stereotype.Component;
 
 @Component
-public class AuditLogPersistenMapper {
+public class AuditLogPersistenceMapper {
 
     public AuditLogEntity toEntity(AuditLog domain) {
         if (domain == null) {

@@ -41,9 +41,7 @@ public class CategoryController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
-        User currentUser = securityContextHelper.getCurrentUser()
-                .flatMap(details -> userRepository.findByEmail(details.getUsername()))
-                .orElseThrow(() -> new IllegalStateException("Cannot find current user details"));
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
 
         Category categoryToCreate = Category.builder()
                 .name(request.name())
@@ -63,9 +61,7 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable UUID id, @Valid @RequestBody CategoryRequest request
     ) {
-        User currentUser = securityContextHelper.getCurrentUser()
-                .flatMap(details -> userRepository.findByEmail(details.getUsername()))
-                .orElseThrow(() -> new IllegalStateException("Cannot find current user details"));
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
 
         Category categoryToUpdate = Category.builder()
                 .name(request.name())

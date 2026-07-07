@@ -36,11 +36,18 @@ public class TaxEntity {
     private TaxType taxType;
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "created_by", updatable = false)
+    private UUID createdBy;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
 
     // Enum para el tipo de impuesto, específico de la persistencia
     public enum TaxType {

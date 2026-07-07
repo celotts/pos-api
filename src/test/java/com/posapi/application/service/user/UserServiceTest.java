@@ -63,6 +63,7 @@ class UserServiceTest {
                 .build();
     }
 
+    @SuppressWarnings("null")
     @Test
     @DisplayName("Should encode password and assign role when creating user")
     void createUserShouldEncodePasswordAndAssignRole() {

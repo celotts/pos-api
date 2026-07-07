@@ -1,12 +1,12 @@
 package com.posapi.domain.model.supplier;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Getter
+@Data
 @Builder
 public class Supplier {
     private UUID id;
@@ -16,8 +16,8 @@ public class Supplier {
     private String contactEmail;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant deletedAt;
+    private Instant deletedAt; // <-- AÑADIDO
     private UUID createdBy;
     private UUID updatedBy;
-    private UUID deletedBy;
+    private UUID deletedBy;   // <-- AÑADIDO
 }

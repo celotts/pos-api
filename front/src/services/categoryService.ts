@@ -1,57 +1,29 @@
-import axios from 'axios';
-import { store } from '../store';
+import api from './api';
 
-// Interfaz para el objeto Category que recibimos de la API
+// Mantenemos tu interfaz original extendiéndola para compatibilidad con el formulario
 export interface Category {
   id: string;
   name: string;
-  createdAt: string;
-  updatedAt: string | null;
-  createdByName: string;
-  updatedByName: string | null;
+  createdByName?: string;
+  updatedByName?: string;
 }
 
-// Interfaz para crear/actualizar una categoría
-export interface CategoryData {
+// Interfaz estandarizada para los selectores (CatalogItem)
+export interface CategoryOption {
+  id: string;
   name: string;
 }
 
-const API_URL = '/api/v1/categories';
+export const categoryService = {
+  // Obtiene todas las categorías (retorna Category[], compatible con Selects)
+  getAll: () => api.get<Category[]>('/categories').then(res => res.data),
 
-// Helper para obtener el token y configurar los headers
-const getAuthHeaders = () => {
-  const token = store.getState().auth.token;
-  return {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  };
+  // Create ahora espera el objeto completo según tu lógica de dominio
+  create: (data: { name: string }) => api.post<Category>('/categories', data).then(res => res.data),
+
+  // Update
+  update: (id: string, data: { name: string }) => api.put<Category>(`/categories/${id}`, data).then(res => res.data),
+
+  // Delete
+  delete: (id: string) => api.delete(`/categories/${id}`),
 };
-
-const getAllCategories = async (): Promise<Category[]> => {
-  const response = await axios.get<Category[]>(API_URL, getAuthHeaders());
-  return response.data;
-};
-
-const createCategory = async (categoryData: CategoryData): Promise<Category> => {
-  const response = await axios.post<Category>(API_URL, categoryData, getAuthHeaders());
-  return response.data;
-};
-
-const updateCategory = async (id: string, categoryData: CategoryData): Promise<Category> => {
-  const response = await axios.put<Category>(`${API_URL}/${id}`, categoryData, getAuthHeaders());
-  return response.data;
-};
-
-const deleteCategory = async (id: string): Promise<void> => {
-  await axios.delete(`${API_URL}/${id}`, getAuthHeaders());
-};
-
-const categoryService = {
-  getAllCategories,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-};
-
-export default categoryService;

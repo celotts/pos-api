@@ -11,5 +11,5 @@ public interface RoleManagementPort {
     Optional<Role> getRoleById(UUID id);
     List<Role> getAllRoles();
     Optional<Role> updateRole(UUID id, Role role);
-    boolean deleteRole(UUID id);
+    void deleteRole(UUID id);
 }

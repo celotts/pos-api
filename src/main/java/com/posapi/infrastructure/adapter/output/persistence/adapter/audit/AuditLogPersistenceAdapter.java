@@ -2,7 +2,7 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.audit;
 
 import com.posapi.domain.model.audit.AuditLog;
 import com.posapi.domain.port.output.AuditLogRepository;
-import com.posapi.infrastructure.adapter.output.persistence.mapper.audit.AuditLogPersistenMapper;
+import com.posapi.infrastructure.adapter.output.persistence.mapper.audit.AuditLogPersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.audit.AuditLogJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class AuditLogPersistenceAdapter implements AuditLogRepository {
 
     private final AuditLogJpaRepository jpaRepository;
-    private final AuditLogPersistenMapper mapper;
+    private final AuditLogPersistenceMapper mapper;
 
     @Override
     public void save(AuditLog auditLog) {

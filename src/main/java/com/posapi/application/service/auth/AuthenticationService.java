@@ -8,16 +8,17 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
+@Validated
 @RequiredArgsConstructor
 public class AuthenticationService {
 
@@ -36,7 +37,8 @@ public class AuthenticationService {
             // 1. Extraer los roles/autoridades
             Map<String, Object> extraClaims = new HashMap<>();
             List<String> roles = userDetails.getAuthorities().stream()
-                    .map(GrantedAuthority::getAuthority)
+                    .map(authority -> authority != null ? authority.getAuthority() : "")
+                    .filter(role -> !role.isEmpty())
                     .toList();
 
             // 2. Guardar los roles en el token bajo la clave "roles"

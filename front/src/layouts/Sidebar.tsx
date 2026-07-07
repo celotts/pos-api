@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../utils/roles';
 
 const Sidebar: React.FC = () => {
   const { isAdmin } = useAuth();
+  const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `block px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700 ${
@@ -21,11 +22,36 @@ const Sidebar: React.FC = () => {
           Dashboard
         </NavLink>
 
+        {/* Menú de Mantenimiento Desplegable */}
         {isAdmin && (
-          <NavLink to="/categories" className={linkClass}>
-            Categories
-          </NavLink>
+          <div>
+            <button
+              onClick={() => setIsMaintenanceOpen(!isMaintenanceOpen)}
+              className="w-full flex justify-between items-center px-4 py-2 rounded-lg text-gray-300 hover:bg-gray-700"
+            >
+              <span>Mantenimiento</span>
+              <svg
+                className={`w-5 h-5 transition-transform ${isMaintenanceOpen ? 'rotate-180' : ''}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isMaintenanceOpen && (
+              <div className="pl-4 mt-2 space-y-2">
+                <NavLink to="/categories" className={linkClass}>Categories</NavLink>
+                <NavLink to="/product" className={linkClass}>Product</NavLink>
+                <NavLink to="/roles" className={linkClass}>Roles</NavLink>
+                <NavLink to="/suppliers" className={linkClass}>Suppliers</NavLink>
+                <NavLink to="/taxes" className={linkClass}>Taxes</NavLink>
+                <NavLink to="/users" className={linkClass}>Users</NavLink>
+              </div>
+            )}
+          </div>
         )}
+
       </nav>
     </aside>
   );

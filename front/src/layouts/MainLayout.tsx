@@ -33,6 +33,7 @@ const Navbar: React.FC = () => {
 
 const MainLayout: React.FC = () => {
   return (
+    // La clase 'flex' en el div principal es la clave para que el Sidebar y el contenido coexistan.
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">

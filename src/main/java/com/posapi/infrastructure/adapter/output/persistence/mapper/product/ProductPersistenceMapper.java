@@ -5,7 +5,7 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.product.Produ
 import org.springframework.stereotype.Component;
 
 @Component
-public class ProductPersistenMapper {
+public class ProductPersistenceMapper {
 
     public ProductEntity toEntity(Product domain) {
         if (domain == null) {
