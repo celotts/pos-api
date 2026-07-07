@@ -1,23 +1,10 @@
-import axios from 'axios';
-
-const API_URL = '/api/v1/auth';
+import api from './api';
 
 export interface LoginCredentials {
   email: string;
   password: string;
 }
 
-export interface LoginResponse {
-  token: string;
-}
-
-const login = async (credentials: LoginCredentials): Promise<LoginResponse> => {
-  const response = await axios.post<LoginResponse>(`${API_URL}/login`, credentials);
-  return response.data;
+export const authService = {
+  login: (credentials: LoginCredentials) => api.post<{ token: string }>('/auth/login', credentials).then(res => res.data),
 };
-
-const authService = {
-  login,
-};
-
-export default authService;

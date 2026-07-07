@@ -3,8 +3,9 @@ import { RootState } from '..';
 import { jwtDecode } from 'jwt-decode';
 
 interface DecodedToken {
-  sub: string; // Email
+  sub: string;
   roles: string[];
+  exp: number;
 }
 
 interface AuthState {
@@ -18,9 +19,12 @@ const loadState = (): AuthState => {
     if (!token) return { user: null, token: null };
 
     const decoded = jwtDecode<DecodedToken>(token);
-    // Limpiamos el prefijo 'ROLE_' para que el resto de la app no se preocupe por él.
-    const roles = decoded.roles.map(role => role.replace('ROLE_', ''));
+    if (decoded.exp * 1000 < Date.now()) {
+      localStorage.removeItem('token');
+      return { user: null, token: null };
+    }
 
+    const roles = decoded.roles.map(role => role.replace('ROLE_', ''));
     return { user: { email: decoded.sub, roles }, token };
   } catch (error) {
     localStorage.removeItem('token');
@@ -35,7 +39,6 @@ const authSlice = createSlice({
     setCredentials: (state, action: PayloadAction<{ token: string }>) => {
       const { token } = action.payload;
       const decoded = jwtDecode<DecodedToken>(token);
-
       const roles = decoded.roles.map(role => role.replace('ROLE_', ''));
 
       state.token = token;

@@ -1,73 +1,70 @@
 package com.posapi.application.service.product;
 
-import com.posapi.application.port.product.ProductManagementPort; // Importar la interfaz
-import com.posapi.domain.exception.ResourceNotFoundException;
+import com.posapi.application.port.product.ProductManagementPort;
+import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.port.output.ProductRepository;
-import jakarta.validation.constraints.NotNull; // Importar NotNull
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
-@Validated
-public class ProductService implements ProductManagementPort { // Implementa la interfaz
+@RequiredArgsConstructor
+public class ProductService implements ProductManagementPort {
 
     private final ProductRepository productRepository;
 
-    public ProductService(ProductRepository productRepository) {
-        this.productRepository = productRepository;
-    }
-
     @Override
-    @NotNull
-    public Product createProduct(@NotNull Product product) {
-        // Aquí se podría añadir lógica de negocio antes de guardar
-        // Validaciones de negocio, etc.
+    @Transactional
+    public Product createProduct(Product product) {
+        if (productRepository.existsBySku(product.getSku())) {
+            throw new DuplicateResourceException("Product with SKU '" + product.getSku() + "' already exists.");
+        }
+        product.setId(UUID.randomUUID());
         return productRepository.save(product);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Product> getProductById(UUID id) {
         return productRepository.findById(id);
     }
 
     @Override
-    @NotNull
+    @Transactional(readOnly = true)
     public List<Product> getAllProducts() {
         return productRepository.findAll();
     }
 
     @Override
-    @NotNull
-    public Product updateProduct(UUID id, @NotNull Product updatedProduct) {
-        return productRepository.findById(id).map(existingProduct -> {
-            // Actualizar campos relevantes
-            existingProduct.setSku(updatedProduct.getSku());
-            existingProduct.setName(updatedProduct.getName());
-            existingProduct.setDescription(updatedProduct.getDescription());
-            existingProduct.setPurchasePrice(updatedProduct.getPurchasePrice());
-            existingProduct.setSalePrice(updatedProduct.getSalePrice());
-            existingProduct.setCurrentStock(updatedProduct.getCurrentStock());
-            existingProduct.setTaxId(updatedProduct.getTaxId());
-            existingProduct.setSupplierId(updatedProduct.getSupplierId());
-            // Hibernate se encargará del updatedAt automáticamente
-            return productRepository.save(existingProduct);
-        }).orElseThrow(() -> new ResourceNotFoundException(
-                "Product not found with ID: " + id)); // Manejo de error básico
+    @Transactional
+    public Optional<Product> updateProduct(UUID id, Product product) {
+        return productRepository.findById(id)
+                .map(existing -> {
+                    existing.setName(product.getName());
+                    existing.setDescription(product.getDescription());
+                    existing.setPurchasePrice(product.getPurchasePrice());
+                    existing.setSalePrice(product.getSalePrice());
+                    existing.setCategoryId(product.getCategoryId());
+                    existing.setTaxId(product.getTaxId());
+                    existing.setSupplierId(product.getSupplierId());
+                    existing.setUpdatedBy(product.getUpdatedBy());
+                    return productRepository.save(existing);
+                });
     }
 
     @Override
+    @Transactional
     public void deleteProduct(UUID id) {
-        // En un sistema real, probablemente haríamos un "soft delete" (marcar como
-        // deleted_at)
         productRepository.deleteById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Optional<Product> getProductBySku(String sku) {
         return productRepository.findBySku(sku);
     }

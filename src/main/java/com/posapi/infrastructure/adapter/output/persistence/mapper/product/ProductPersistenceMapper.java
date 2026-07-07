@@ -6,12 +6,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ProductPersistenceMapper {
-
     public ProductEntity toEntity(Product domain) {
         if (domain == null) {
             return null;
         }
-
         return ProductEntity.builder()
                 .id(domain.getId())
                 .sku(domain.getSku())
@@ -20,13 +18,11 @@ public class ProductPersistenceMapper {
                 .purchasePrice(domain.getPurchasePrice())
                 .salePrice(domain.getSalePrice())
                 .currentStock(domain.getCurrentStock())
+                .categoryId(domain.getCategoryId())
                 .taxId(domain.getTaxId())
                 .supplierId(domain.getSupplierId())
-                // Omitimos createdAt y updatedAt para que Hibernate los gestione
-                .deletedAt(domain.getDeletedAt())
                 .createdBy(domain.getCreatedBy())
                 .updatedBy(domain.getUpdatedBy())
-                .deletedBy(domain.getDeletedBy())
                 .build();
     }
 
@@ -34,7 +30,6 @@ public class ProductPersistenceMapper {
         if (entity == null) {
             return null;
         }
-
         return Product.builder()
                 .id(entity.getId())
                 .sku(entity.getSku())
@@ -43,14 +38,13 @@ public class ProductPersistenceMapper {
                 .purchasePrice(entity.getPurchasePrice())
                 .salePrice(entity.getSalePrice())
                 .currentStock(entity.getCurrentStock())
+                .categoryId(entity.getCategoryId())
                 .taxId(entity.getTaxId())
                 .supplierId(entity.getSupplierId())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                .deletedAt(entity.getDeletedAt())
                 .createdBy(entity.getCreatedBy())
                 .updatedBy(entity.getUpdatedBy())
-                .deletedBy(entity.getDeletedBy())
                 .build();
     }
 }

@@ -1,10 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { setCredentials } from '../store/slices/authSlice';
-import authService from '../services/authService';
+import { authService } from '../services/authService';
 
-// Expresión regular simple para validar el formato de email
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const LoginPage: React.FC = () => {
@@ -15,16 +14,19 @@ const LoginPage: React.FC = () => {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  // useMemo para evitar recalcular en cada render
+  useEffect(() => {
+    if (searchParams.get('sessionExpired')) {
+      setError('Your session has expired. Please log in again.');
+    }
+  }, [searchParams]);
+
   const isEmailValid = useMemo(() => EMAIL_REGEX.test(email), [email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isEmailValid) {
-      setError('Please enter a valid email address.');
-      return;
-    }
+    if (!isEmailValid) return;
     setError('');
     setIsSubmitting(true);
     try {

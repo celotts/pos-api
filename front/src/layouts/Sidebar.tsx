@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { ROLES } from '../utils/roles';
 
 const Sidebar: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isEditor, isViewer } = useAuth();
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -22,7 +22,10 @@ const Sidebar: React.FC = () => {
           Dashboard
         </NavLink>
 
-        {/* Menú de Mantenimiento Desplegable */}
+        <NavLink to="/products" className={linkClass}>
+          Products
+        </NavLink>
+
         {isAdmin && (
           <div>
             <button
@@ -41,17 +44,15 @@ const Sidebar: React.FC = () => {
             </button>
             {isMaintenanceOpen && (
               <div className="pl-4 mt-2 space-y-2">
-                <NavLink to="/categories" className={linkClass}>Categories</NavLink>
-                <NavLink to="/product" className={linkClass}>Product</NavLink>
+                <NavLink to="/users" className={linkClass}>Users</NavLink>
                 <NavLink to="/roles" className={linkClass}>Roles</NavLink>
+                <NavLink to="/categories" className={linkClass}>Categories</NavLink>
                 <NavLink to="/suppliers" className={linkClass}>Suppliers</NavLink>
                 <NavLink to="/taxes" className={linkClass}>Taxes</NavLink>
-                <NavLink to="/users" className={linkClass}>Users</NavLink>
               </div>
             )}
           </div>
         )}
-
       </nav>
     </aside>
   );

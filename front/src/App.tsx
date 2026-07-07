@@ -6,6 +6,8 @@ import CategoriesPage from './pages/CategoriesPage';
 import RolesPage from './pages/RolesPage';
 import SuppliersPage from './pages/SuppliersPage';
 import TaxesPage from './pages/TaxesPage';
+import ProductsPage from './pages/ProductsPage';
+import UsersPage from './pages/UsersPage';
 import { selectIsAuthenticated } from './store/slices/authSlice';
 import ProtectedRoute from './components/ProtectedRoute';
 import { ROLES } from './utils/roles';
@@ -16,33 +18,26 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
   return (
-    <BrowserRouter
-      future={{
-        v7_startTransition: true,
-        v7_relativeSplatPath: true,
-      }}
-    >
+    <BrowserRouter>
       <Routes>
-        {/* Ruta pública: Login */}
+        {/* La página de Login es pública */}
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
 
-        {/* Rutas Privadas envueltas en el MainLayout */}
+        {/* Todas las demás rutas están protegidas */}
         <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}>
           <Route index element={<DashboardPage />} />
-
-          {/* Rutas protegidas por Roles */}
-          <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.EDITOR, ROLES.VIEWER]} />}>
-            <Route path="categories" element={<CategoriesPage />} />
-          </Route>
+          <Route path="products" element={<ProductsPage />} />
 
           <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN]} />}>
+            <Route path="users" element={<UsersPage />} />
             <Route path="roles" element={<RolesPage />} />
+            <Route path="categories" element={<CategoriesPage />} />
             <Route path="suppliers" element={<SuppliersPage />} />
             <Route path="taxes" element={<TaxesPage />} />
           </Route>
         </Route>
 
-        {/* Catch-all para redirigir cualquier ruta inexistente */}
+        {/* Si se intenta acceder a una ruta no definida, se redirige a la raíz */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

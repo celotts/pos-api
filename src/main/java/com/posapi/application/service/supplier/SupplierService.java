@@ -3,7 +3,9 @@ package com.posapi.application.service.supplier;
 import com.posapi.application.port.supplier.SupplierManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.supplier.Supplier;
+import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.SupplierRepository;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class SupplierService implements SupplierManagementPort {
 
     private final SupplierRepository supplierRepository;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional
@@ -24,7 +27,9 @@ public class SupplierService implements SupplierManagementPort {
         if (supplierRepository.existsByRfc(supplier.getRfc())) {
             throw new DuplicateResourceException("Supplier with RFC '" + supplier.getRfc() + "' already exists.");
         }
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
         supplier.setId(UUID.randomUUID());
+        supplier.setCreatedBy(currentUser.getId());
         return supplierRepository.save(supplier);
     }
 
@@ -43,13 +48,13 @@ public class SupplierService implements SupplierManagementPort {
     @Override
     @Transactional
     public Optional<Supplier> updateSupplier(UUID id, Supplier supplier) {
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
         return supplierRepository.findById(id)
                 .map(existingSupplier -> {
-                    // Lógica de actualización
                     existingSupplier.setBusinessName(supplier.getBusinessName());
                     existingSupplier.setTaxRegimen(supplier.getTaxRegimen());
                     existingSupplier.setContactEmail(supplier.getContactEmail());
-                    existingSupplier.setUpdatedBy(supplier.getUpdatedBy());
+                    existingSupplier.setUpdatedBy(currentUser.getId());
                     return supplierRepository.save(existingSupplier);
                 });
     }

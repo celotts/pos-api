@@ -3,7 +3,9 @@ package com.posapi.application.service.category;
 import com.posapi.application.port.category.CategoryManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.category.Category;
+import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.CategoryRepository;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class CategoryService implements CategoryManagementPort {
 
     private final CategoryRepository categoryRepository;
+    private final SecurityContextHelper securityContextHelper;
 
     @Override
     @Transactional
@@ -24,11 +27,10 @@ public class CategoryService implements CategoryManagementPort {
         if (categoryRepository.existsByName(category.getName())) {
             throw new DuplicateResourceException("Category with name '" + category.getName() + "' already exists.");
         }
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
         category.setId(UUID.randomUUID());
+        category.setCreatedBy(currentUser.getId());
         
-        // Guardamos la entidad y la devolvemos inmediatamente.
-        // El adaptador de persistencia se asegurará de que la entidad guardada se mapee de nuevo al dominio,
-        // trayendo consigo los valores generados por la base de datos como createdAt.
         return categoryRepository.save(category);
     }
 
@@ -47,6 +49,7 @@ public class CategoryService implements CategoryManagementPort {
     @Override
     @Transactional
     public Optional<Category> updateCategory(UUID id, Category category) {
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
         return categoryRepository.findById(id)
                 .map(existingCategory -> {
                     if (category.getName() != null && !category.getName().equals(existingCategory.getName())) {
@@ -56,8 +59,7 @@ public class CategoryService implements CategoryManagementPort {
                         }
                         existingCategory.setName(category.getName());
                     }
-                    // Al guardar, @UpdateTimestamp se activará y actualizará el updatedAt.
-                    // El adaptador devolverá el objeto de dominio con el timestamp actualizado.
+                    existingCategory.setUpdatedBy(currentUser.getId());
                     return categoryRepository.save(existingCategory);
                 });
     }

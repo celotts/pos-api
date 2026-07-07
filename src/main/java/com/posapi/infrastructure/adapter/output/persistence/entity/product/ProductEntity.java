@@ -1,14 +1,8 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.product;
 
-import com.posapi.infrastructure.adapter.output.persistence.entity.category.CategoryEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,9 +36,8 @@ public class ProductEntity {
 
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
+    @Column(name = "category_id", nullable = false)
+    private UUID categoryId;
 
     @Column(name = "purchase_price", nullable = false, precision = 18, scale = 2)
     private BigDecimal purchasePrice;
@@ -78,14 +71,4 @@ public class ProductEntity {
 
     @Column(name = "deleted_by")
     private UUID deletedBy;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = Instant.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = Instant.now();
-    }
 }

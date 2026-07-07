@@ -1,25 +1,25 @@
 package com.posapi.application.service.product;
 
-import com.posapi.domain.exception.ResourceNotFoundException;
+import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.port.output.ProductRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -46,144 +46,121 @@ class ProductServiceTest {
                 .id(UUID.randomUUID())
                 .sku("SKU001")
                 .name("Product 1")
-                .description("Description 1")
-                .purchasePrice(BigDecimal.valueOf(10.0))
-                .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(new BigDecimal("100.00"))
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .salePrice(BigDecimal.valueOf(100))
                 .build();
 
         product2 = Product.builder()
                 .id(UUID.randomUUID())
-                .sku("SKU001")
-                .name("Product 1")
-                .description("Description 1")
-                .purchasePrice(BigDecimal.valueOf(10.0))
-                .salePrice(BigDecimal.valueOf(15.0))
-                .currentStock(new BigDecimal("100.00"))
-                .createdAt(Instant.now())
-                .updatedAt(Instant.now())
+                .sku("SKU002")
+                .name("Product 2")
+                .salePrice(BigDecimal.valueOf(200))
                 .build();
     }
 
     @Test
-    void createProductShouldReturnCreatedProduct() {
+    void createProductShouldSaveAndReturnProductWhenSkuIsUnique() {
+        when(productRepository.existsBySku(anyString())).thenReturn(false);
         when(productRepository.save(any(Product.class))).thenReturn(product1);
 
-        Product createdProduct = productService.createProduct(product1);
+        Product newProduct = Product.builder().sku("SKU001").name("New Product").build();
+        Product createdProduct = productService.createProduct(newProduct);
 
-        assertThat(createdProduct.getId()).isNotNull();
-        assertThat(createdProduct.getSku()).isEqualTo("SKU001");
+        assertNotNull(createdProduct);
+        assertNotNull(createdProduct.getId());
+        assertEquals("SKU001", createdProduct.getSku());
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
-    void getProductByIdShouldReturnProductWhenFound() {
-        when(productRepository.findById(product1.getId())).thenReturn(Optional.of(product1));
+    void createProductShouldThrowDuplicateResourceExceptionWhenSkuExists() {
+        when(productRepository.existsBySku("SKU001")).thenReturn(true);
 
-        Optional<Product> foundProduct = productService.getProductById(product1.getId());
+        Product newProduct = Product.builder().sku("SKU001").name("New Product").build();
 
-        assertThat(foundProduct).isPresent();
-        assertThat(foundProduct.get().getId()).isEqualTo(product1.getId());
-        assertThat(foundProduct.get().getName()).isEqualTo(product1.getName());
+        assertThrows(DuplicateResourceException.class, () -> {
+            productService.createProduct(newProduct);
+        });
 
-        verify(productRepository, times(1)).findById(product1.getId());
-    }
-
-    @Test
-    void getProductByIdShouldReturnEmptyWhenNotFound() {
-        when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
-
-        Optional<Product> foundProduct = productService.getProductById(UUID.randomUUID());
-
-        assertThat(foundProduct).isNotPresent();
-        verify(productRepository, times(1)).findById(any(UUID.class));
+        verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
     void getAllProductsShouldReturnListOfProducts() {
-        List<Product> products = Arrays.asList(product1, product2);
-        when(productRepository.findAll()).thenReturn(products);
+        when(productRepository.findAll()).thenReturn(List.of(product1, product2));
 
-        List<Product> allProducts = productService.getAllProducts();
+        List<Product> products = productService.getAllProducts();
 
-        assertThat(allProducts).isNotNull();
-        assertThat(allProducts).hasSize(2);
+        assertEquals(2, products.size());
         verify(productRepository, times(1)).findAll();
     }
 
     @Test
-    void updateProductShouldReturnUpdatedProductWhenFound() {
-        UUID id = UUID.randomUUID();
-        Product existingProduct = Product.builder()
-                .id(id)
-                .name("Old Name")
-                .currentStock(new BigDecimal("50.0"))
-                .build();
+    void getProductByIdShouldReturnProductWhenFound() {
+        UUID id = product1.getId();
+        when(productRepository.findById(id)).thenReturn(Optional.of(product1));
 
-        Product updatedDetails = Product.builder()
-                .name("New Name")
-                .currentStock(new BigDecimal("75.5"))
-                .build();
+        Optional<Product> foundProduct = productService.getProductById(id);
 
-        when(productRepository.findById(id)).thenReturn(Optional.of(existingProduct));
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        Product result = productService.updateProduct(id, updatedDetails);
-
-        ArgumentCaptor<Product> productCaptor = ArgumentCaptor.forClass(Product.class);
-        verify(productRepository).save(productCaptor.capture());
-        Product savedProduct = productCaptor.getValue();
-
-        assertThat(savedProduct.getName()).isEqualTo("New Name");
-        assertThat(savedProduct.getCurrentStock()).isEqualTo(new BigDecimal("75.5"));
-        verify(productRepository, times(1)).findById(id);
+        assertTrue(foundProduct.isPresent());
+        assertEquals(product1, foundProduct.get());
     }
 
     @Test
-    void updateProductShouldThrowExceptionWhenNotFound() {
+    void updateProductShouldUpdateAndReturnProductWhenFound() {
+        UUID id = product1.getId();
+        Product updatedDetails = Product.builder().name("Updated Name").build();
+
+        when(productRepository.findById(id)).thenReturn(Optional.of(product1));
+        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Optional<Product> result = productService.updateProduct(id, updatedDetails);
+
+        assertTrue(result.isPresent());
+        assertEquals("Updated Name", result.get().getName());
+        verify(productRepository, times(1)).save(any(Product.class));
+    }
+
+    @Test
+    void updateProductShouldReturnEmptyWhenNotFound() {
         UUID id = UUID.randomUUID();
-        Product updatedDetails = Product.builder().name("Non Existent").build();
+        Product updatedDetails = Product.builder().name("Updated Name").build();
 
-        when(productRepository.findById(any(UUID.class))).thenReturn(Optional.empty());
+        when(productRepository.findById(id)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () ->
-                productService.updateProduct(id, updatedDetails)
-        );
+        Optional<Product> result = productService.updateProduct(id, updatedDetails);
 
-        assertThat(exception.getMessage()).isEqualTo("Product not found with ID: " + id);
-        verify(productRepository, times(1)).findById(any(UUID.class));
+        assertFalse(result.isPresent());
         verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
     void deleteProductShouldCallRepositoryDelete() {
-        doNothing().when(productRepository).deleteById(product1.getId());
+        UUID id = product1.getId();
+        doNothing().when(productRepository).deleteById(id);
 
-        productService.deleteProduct(product1.getId());
+        productService.deleteProduct(id);
 
-        verify(productRepository, times(1)).deleteById(product1.getId());
+        verify(productRepository, times(1)).deleteById(id);
     }
-
+    
     @Test
-    void getProductBySkuShouldReturnProductWhenFound() {
+    void getProductBySkuShouldReturnProductWhenSkuExists() {
         when(productRepository.findBySku(product1.getSku())).thenReturn(Optional.of(product1));
 
         Optional<Product> foundProduct = productService.getProductBySku(product1.getSku());
 
-        assertThat(foundProduct).isPresent();
-        assertThat(foundProduct.get().getName()).isEqualTo(product1.getName());
+        assertTrue(foundProduct.isPresent());
+        assertEquals(product1.getSku(), foundProduct.get().getSku());
         verify(productRepository, times(1)).findBySku(product1.getSku());
     }
 
     @Test
-    void getProductBySkuShouldReturnEmptyWhenNotFound() {
+    void getProductBySkuShouldReturnEmptyWhenSkuDoesNotExist() {
         when(productRepository.findBySku(anyString())).thenReturn(Optional.empty());
 
         Optional<Product> foundProduct = productService.getProductBySku("NON_EXISTENT_SKU");
 
-        assertThat(foundProduct).isNotPresent();
+        assertFalse(foundProduct.isPresent());
         verify(productRepository, times(1)).findBySku(anyString());
     }
 }

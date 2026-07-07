@@ -28,11 +28,6 @@ public class JwtUtil {
     @Value("${app.jwt.expiration-in-ms}")
     private long expiration;
 
-    public long getExpirationTime() {
-        return expiration;
-    }
-
-    // 🛡️ CORRECCIÓN: Añadir los roles a los claims del token
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("roles", userDetails.getAuthorities().stream()
