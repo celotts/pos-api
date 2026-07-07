@@ -1,57 +1,64 @@
 package com.posapi.shared.exception;
 
-import com.posapi.domain.exception.DuplicateResourceException;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.posapi.domain.exception.DuplicateResourceException; // <-- AÑADIDO
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.ServletWebRequest;
+import org.springframework.web.context.request.WebRequest;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // Manejador para errores de validación de DTOs (@Valid)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.toList());
-        ErrorResponse errorResponse = new ErrorResponse("Validation Failed", errors);
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
-    }
-
-    // Manejador para duplicados de negocio (ej. RFC, nombre, etc.)
     @ExceptionHandler(DuplicateResourceException.class)
-    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex) {
-        ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), null);
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT); // 409 Conflict es más semántico
+    public ResponseEntity<ErrorResponse> handleDuplicateResourceException(DuplicateResourceException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.CONFLICT;
+        ErrorResponse errorResponse = new ErrorResponse(
+                Instant.now(),
+                status,
+                status.value(),
+                ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI(),
+                null
+        );
+        return new ResponseEntity<>(errorResponse, status);
     }
 
-    // Manejador para violaciones de integridad de la base de datos (ej. unique constraints)
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        // Extraer un mensaje más amigable si es posible
-        String message = "A data integrity error occurred. A common cause is trying to duplicate a unique value.";
-        if (ex.getMostSpecificCause() != null) {
-            message = ex.getMostSpecificCause().getMessage();
-        }
-        ErrorResponse errorResponse = new ErrorResponse(message, null);
-        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex, WebRequest request) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.put(error.getField(), error.getDefaultMessage()));
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                Instant.now(),
+                status,
+                status.value(),
+                "Validation failed",
+                ((ServletWebRequest) request).getRequest().getRequestURI(),
+                errors
+        );
+        return new ResponseEntity<>(errorResponse, status);
     }
-    
-    // Manejador para cualquier otra excepción no controlada (el que causa el 500)
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
-        // Log the exception for debugging purposes
-        ex.printStackTrace(); 
-        ErrorResponse errorResponse = new ErrorResponse("An unexpected internal server error occurred. Please contact support.", null);
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        ErrorResponse errorResponse = new ErrorResponse(
+                Instant.now(),
+                status,
+                status.value(),
+                "An unexpected error occurred: " + ex.getMessage(),
+                ((ServletWebRequest) request).getRequest().getRequestURI(),
+                null
+        );
+        return new ResponseEntity<>(errorResponse, status);
     }
-
-    // Record para una respuesta de error estructurada
-    public record ErrorResponse(String message, List<String> errors) {}
 }

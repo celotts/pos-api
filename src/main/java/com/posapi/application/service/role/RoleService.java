@@ -32,10 +32,17 @@ public class RoleService implements RoleManagementPort {
     @Override
     @Transactional
     public Role createRole(Role role) {
+        // Validación para nombres duplicados en general
         if (roleRepository.existsByName(role.getName())) {
             throw new DuplicateResourceException("Role with name '" + role.getName() + "' already exists.");
         }
         
+        // NUEVA VALIDACIÓN: No permitir crear roles con nombres reservados
+        String upperCaseName = role.getName().toUpperCase();
+        if ("ADMIN".equals(upperCaseName) || "USER".equals(upperCaseName)) {
+            throw new DuplicateResourceException("Cannot create a role with the reserved name '" + role.getName() + "'.");
+        }
+
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         role.setId(UUID.randomUUID());
         role.setCreatedBy(currentUser.getId());
@@ -60,6 +67,21 @@ public class RoleService implements RoleManagementPort {
     public Optional<Role> updateRole(UUID id, Role role) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         return roleRepository.findById(id).map(existingRole -> {
+            
+            // Si el nombre ha cambiado, aplicar validaciones
+            if (!existingRole.getName().equalsIgnoreCase(role.getName())) {
+                // NUEVA VALIDACIÓN: No permitir renombrar a un rol protegido si ya existe
+                String upperCaseName = role.getName().toUpperCase();
+                if ("ADMIN".equals(upperCaseName) || "USER".equals(upperCaseName)) {
+                     throw new DuplicateResourceException("Cannot rename a role to the reserved name '" + role.getName() + "'.");
+                }
+
+                // Validación para nombres duplicados en general
+                if (roleRepository.existsByName(role.getName())) {
+                    throw new DuplicateResourceException("Role with name '" + role.getName() + "' already exists.");
+                }
+            }
+
             existingRole.setName(role.getName());
             existingRole.setUpdatedBy(currentUser.getId());
             return roleRepository.save(existingRole);
@@ -72,6 +94,7 @@ public class RoleService implements RoleManagementPort {
         roleRepository.deleteById(id);
     }
 
+    // ... (métodos de mapeo sin cambios)
     @Override
     @Transactional(readOnly = true)
     public Optional<RoleResponse> getRoleByIdWithUserNames(UUID id) {
@@ -83,12 +106,12 @@ public class RoleService implements RoleManagementPort {
     public List<RoleResponse> getAllRolesWithUserNames() {
         List<Role> roles = roleRepository.findAll();
         Set<UUID> userIds = roles.stream()
-                .flatMap(role -> Stream.of(role.getCreatedBy(), role.getUpdatedBy()))
+                .flatMap(r -> Stream.of(r.getCreatedBy(), r.getUpdatedBy()))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         Map<UUID, String> userNames = fetchUserNames(userIds);
         return roles.stream()
-                .map(role -> toResponse(role, userNames))
+                .map(r -> toResponse(r, userNames))
                 .collect(Collectors.toList());
     }
 
