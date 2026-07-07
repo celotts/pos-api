@@ -1,101 +1,80 @@
 package com.posapi.infrastructure.adapter.input.rest.product;
 
-import com.posapi.application.service.product.ProductService; // Actualizado
-import com.posapi.domain.model.product.Product; // Actualizado
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest; // Actualizado
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse; // Actualizado
+import com.posapi.application.port.product.ProductManagementPort;
+import com.posapi.domain.model.product.Product;
+import com.posapi.domain.model.user.User;
+import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/v1/products")
+@RequiredArgsConstructor
+@PreAuthorize("hasRole('ADMIN')")
 public class ProductController {
 
-    private final ProductService productService;
-
-    public ProductController(ProductService productService) {
-        this.productService = productService;
-    }
+    private final ProductManagementPort productManagementPort;
+    private final SecurityContextHelper securityContextHelper;
 
     @PostMapping
-    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest productRequest) {
-        Product product = toDomain(productRequest);
-        Product createdProduct = productService.createProduct(product);
-        return new ResponseEntity<>(toResponse(createdProduct), HttpStatus.CREATED);
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody ProductRequest request) {
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        Product product = Product.builder()
+                .sku(request.sku()).name(request.name()).description(request.description())
+                .purchasePrice(request.purchasePrice()).salePrice(request.salePrice())
+                .currentStock(request.currentStock()).categoryId(request.categoryId())
+                .taxId(request.taxId()).supplierId(request.supplierId())
+                .createdBy(currentUser.getId())
+                .build();
+        Product createdProduct = productManagementPort.createProduct(product);
+        return new ResponseEntity<>(createdProduct, HttpStatus.CREATED);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Product>> getAllProducts() {
+        return ResponseEntity.ok(productManagementPort.getAllProducts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProductResponse> getProductById(@PathVariable UUID id) {
-        return productService.getProductById(id)
-                .map(this::toResponse)
+    public ResponseEntity<Product> getProductById(@PathVariable UUID id) {
+        return productManagementPort.getProductById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        List<ProductResponse> products = productService.getAllProducts().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(products);
-    }
-
     @PutMapping("/{id}")
-    public ResponseEntity<ProductResponse> updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductRequest productRequest) {
-        Product product = toDomain(productRequest);
-        try {
-            Product updatedProduct = productService.updateProduct(id, product);
-            return ResponseEntity.ok(toResponse(updatedProduct));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build(); // Manejo de error básico
-        }
+    public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @Valid @RequestBody ProductRequest request) {
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        Product product = Product.builder()
+                .sku(request.sku()).name(request.name()).description(request.description())
+                .purchasePrice(request.purchasePrice()).salePrice(request.salePrice())
+                .currentStock(request.currentStock()).categoryId(request.categoryId())
+                .taxId(request.taxId()).supplierId(request.supplierId())
+                .updatedBy(currentUser.getId())
+                .build();
+        return productManagementPort.updateProduct(id, product)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable UUID id) {
-        productService.deleteProduct(id);
+        productManagementPort.deleteProduct(id);
         return ResponseEntity.noContent().build();
-    }
-
-    // --- Mappers ---
-    private Product toDomain(ProductRequest request) {
-        return Product.builder()
-                .sku(request.getSku())
-                .name(request.getName())
-                .description(request.getDescription())
-                .purchasePrice(request.getPurchasePrice())
-                .salePrice(request.getSalePrice())
-                .currentStock(request.getCurrentStock())
-                .taxId(request.getTaxId())
-                .supplierId(request.getSupplierId())
-                // ID, created_at, updated_at, etc. se manejan en el servicio o la persistencia
-                .build();
-    }
-
-    private ProductResponse toResponse(Product product) {
-        return ProductResponse.builder()
-                .id(product.getId())
-                .sku(product.getSku())
-                .name(product.getName())
-                .description(product.getDescription())
-                .purchasePrice(product.getPurchasePrice())
-                .salePrice(product.getSalePrice())
-                .currentStock(product.getCurrentStock())
-                .taxId(product.getTaxId())
-                .supplierId(product.getSupplierId())
-                .createdAt(product.getCreatedAt())
-                .updatedAt(product.getUpdatedAt())
-                .deletedAt(product.getDeletedAt())
-                .createdByUserId(product.getCreatedByUserId())
-                .updatedByUserId(product.getUpdatedByUserId())
-                .deletedByUserId(product.getDeletedByUserId())
-                .build();
     }
 }

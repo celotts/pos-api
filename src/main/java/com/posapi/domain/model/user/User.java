@@ -1,42 +1,91 @@
 package com.posapi.domain.model.user;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
+import com.posapi.domain.model.role.Role;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
-import lombok.NonNull; // Importar NonNull
-
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import java.time.Instant;
 import java.util.UUID;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class User {
-
-    @NonNull
+    @Id
     private UUID id;
-    @NonNull
-    private String email;
-    @NonNull
-    private String passwordHash; // Asumimos que la contraseña siempre estará presente
-    @NonNull
-    private String fullName;
-    private Boolean isActive; // Puede ser null si no se inicializa, pero en UserService lo forzamos a true
-    @NonNull
-    private String role; // Asumimos que el rol siempre estará presente
-    @NonNull
-    private Instant createdAt;
-    @NonNull
-    private Instant updatedAt;
-    private Instant deletedAt; // Puede ser null
-    private UUID createdByUserId; // Puede ser null
-    private UUID updatedByUserId; // Puede ser null
-    private UUID deletedByUserId; // Puede ser null
 
-    // Métodos de dominio específicos para User podrían ir aquí
-    // Por ejemplo, para verificar la contraseña, asignar roles, etc.
+    private String email;
+    private String password;
+
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "is_active")
+    private Boolean isActive;
+
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts;
+
+    @Column(name = "role_id")
+    private UUID roleId;
+
+    @Column(name = "role_name")
+    private String roleName;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
+    @Column(name = "created_by")
+    private UUID createdBy;
+
+    @Column(name = "updated_by")
+    private UUID updatedBy;
+
+    @Column(name = "deleted_by")
+    private UUID deletedBy;
+
+    public static User createNew(
+            String email, String encodedPassword, String fullName, Role defaultRole, Boolean isActive, UUID createdBy
+    ) {
+        return User.builder()
+                .id(UUID.randomUUID())
+                .email(email)
+                .password(encodedPassword)
+                .fullName(fullName)
+                .isActive(isActive)
+                .failedLoginAttempts(0)
+                .roleId(defaultRole.getId())
+                .createdBy(createdBy)
+                .build();
+    }
+
+    public User updateWith(User updateData, String newEncodedPassword, UUID newRoleId, UUID updatedBy) {
+        return User.builder()
+                .id(this.id)
+                .email(updateData.getEmail() != null ? updateData.getEmail() : this.email)
+                .password(newEncodedPassword != null ? newEncodedPassword : this.password)
+                .fullName(updateData.getFullName() != null ? updateData.getFullName() : this.fullName)
+                .isActive(updateData.getIsActive() != null ? updateData.getIsActive() : this.isActive)
+                .roleId(newRoleId != null ? newRoleId : this.roleId)
+                .failedLoginAttempts(this.failedLoginAttempts)
+                .createdAt(this.createdAt)
+                .createdBy(this.createdBy)
+                .updatedBy(updatedBy)
+                .deletedAt(this.deletedAt)
+                .build();
+    }
 }

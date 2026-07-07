@@ -1,31 +1,52 @@
-# Server Port
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
 
-# Datasource Configuration (for local IDE execution)
-# These will be overridden by environment variables when running with Podman
 spring:
+  application:
+    name: pos-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/pos_db
-    username: pos_user
-    password: pos_password
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${POSTGRES_DB:pos_db}
+    username: ${SPRING_DATASOURCE_USERNAME:product}
+    password: ${SPRING_DATASOURCE_PASSWORD:product123}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: none # 'none' because we are managing the schema with SQL scripts (V1, V2)
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  rabbitmq:
+    host: ${SPRING_RABBITMQ_HOST:localhost}
+    port: ${SPRING_RABBITMQ_PORT:5672}
+    username: ${SPRING_RABBITMQ_USERNAME:guest}
+    password: ${SPRING_RABBITMQ_PASSWORD:guest}
 
-# Logging
+springdoc:
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+  api-docs:
+    path: /v3/api-docs
+  show-actuator: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+    expiration-in-ms: ${JWT_EXPIRATION:3600000} # 1 hora
+  bootstrap:
+    admin:
+      email: ${ADMIN_EMAIL:admin@posapi.com}
+      password: ${ADMIN_PASSWORD:SuperSecretPassword123!}
+
 logging:
   level:
-    org:
-      springframework:
-        web: DEBUG
-      hibernate:
-        SQL: DEBUG
-        orm:
-          jdbc:
-            bind: TRACE
+    com.posapi: DEBUG
+    org.springframework.web: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
+    org.springframework.security: DEBUG
+    org.springframework.security.access: DEBUG

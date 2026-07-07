@@ -1,17 +1,19 @@
 package com.posapi.application.port.user;
 
 import com.posapi.domain.model.user.User;
-import jakarta.validation.constraints.NotNull; // Importar NotNull
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface UserManagementPort {
-
-    @NotNull // Indica que este método siempre devuelve un User no nulo
-    User createUser(@NotNull User user); // También marcamos el parámetro como NotNull
+    User createUser(User user);
     Optional<User> getUserById(UUID id);
     Optional<User> getUserByEmail(String email);
-    // Puedes añadir métodos para actualizar usuario, cambiar contraseña, etc.
+    List<User> getAllUsers();
+    Page<User> getAllUsers(Pageable pageable);
+    Optional<User> updateUser(UUID id, User user);
+    boolean deleteUser(UUID id);
 }
