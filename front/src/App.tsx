@@ -16,13 +16,21 @@ function App() {
   const isAuthenticated = useSelector(selectIsAuthenticated);
 
   return (
-    <BrowserRouter>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <Routes>
+        {/* Ruta pública: Login */}
         <Route path="/login" element={!isAuthenticated ? <LoginPage /> : <Navigate to="/" />} />
 
+        {/* Rutas Privadas envueltas en el MainLayout */}
         <Route path="/" element={isAuthenticated ? <MainLayout /> : <Navigate to="/login" />}>
           <Route index element={<DashboardPage />} />
 
+          {/* Rutas protegidas por Roles */}
           <Route element={<ProtectedRoute allowedRoles={[ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.EDITOR, ROLES.VIEWER]} />}>
             <Route path="categories" element={<CategoriesPage />} />
           </Route>
@@ -34,6 +42,7 @@ function App() {
           </Route>
         </Route>
 
+        {/* Catch-all para redirigir cualquier ruta inexistente */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>

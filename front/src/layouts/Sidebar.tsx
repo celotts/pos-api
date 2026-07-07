@@ -42,6 +42,7 @@ const Sidebar: React.FC = () => {
             {isMaintenanceOpen && (
               <div className="pl-4 mt-2 space-y-2">
                 <NavLink to="/categories" className={linkClass}>Categories</NavLink>
+                <NavLink to="/product" className={linkClass}>Product</NavLink>
                 <NavLink to="/roles" className={linkClass}>Roles</NavLink>
                 <NavLink to="/suppliers" className={linkClass}>Suppliers</NavLink>
                 <NavLink to="/taxes" className={linkClass}>Taxes</NavLink>
