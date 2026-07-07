@@ -1,17 +1,21 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { logOut, selectCurrentUser } from '../store/slices/authSlice';
 import Sidebar from './Sidebar';
 
 const Navbar: React.FC = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const user = useSelector(selectCurrentUser);
 
   const handleLogout = () => {
+    // 1. Despacha la acción para limpiar el estado de Redux y el localStorage.
     dispatch(logOut());
-    navigate('/login');
+
+    // 2. Forzar una redirección completa a la página de login.
+    // Esto es más robusto que `navigate` porque limpia cualquier estado residual
+    // de la aplicación y fuerza una recarga completa desde cero.
+    window.location.href = '/login';
   };
 
   return (
@@ -33,7 +37,6 @@ const Navbar: React.FC = () => {
 
 const MainLayout: React.FC = () => {
   return (
-    // La clase 'flex' en el div principal es la clave para que el Sidebar y el contenido coexistan.
     <div className="flex h-screen bg-gray-100">
       <Sidebar />
       <div className="flex flex-1 flex-col overflow-hidden">

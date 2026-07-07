@@ -8,7 +8,6 @@ const SuppliersPage: React.FC = () => {
     { header: 'RFC', accessor: 'rfc' as const },
     { header: 'Business Name', accessor: 'businessName' as const },
     { header: 'Email', accessor: 'contactEmail' as const },
-    { header: 'Created By', accessor: 'createdByName' as const },
   ];
 
   return (

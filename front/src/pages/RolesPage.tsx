@@ -1,6 +1,6 @@
 import React from 'react';
 import CrudPage from '../components/CrudPage';
-import { roleService } from '../services/roleService';
+import { roleService, Role } from '../services/roleService';
 import RoleForm from '../components/RoleForm';
 
 const RolesPage: React.FC = () => {
@@ -10,12 +10,19 @@ const RolesPage: React.FC = () => {
     { header: 'Updated By', accessor: 'updatedByName' as const },
   ];
 
+  // La lógica de negocio para deshabilitar acciones en ciertos roles.
+  const isActionsAllowed = (role: Role) => {
+    const protectedRoles = ['ADMIN', 'USER'];
+    return !protectedRoles.includes(role.name.toUpperCase());
+  };
+
   return (
-    <CrudPage
+    <CrudPage<Role>
       title="Roles"
       service={roleService}
       columns={columns}
       form={RoleForm}
+      isActionsAllowed={isActionsAllowed} // <-- Pasamos la función de lógica
     />
   );
 };

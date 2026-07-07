@@ -8,7 +8,6 @@ const TaxesPage: React.FC = () => {
     { header: 'Name', accessor: 'name' as const },
     { header: 'Percentage', accessor: 'percentage' as const },
     { header: 'Type', accessor: 'taxType' as const },
-    { header: 'Created By', accessor: 'createdByName' as const },
   ];
 
   return (

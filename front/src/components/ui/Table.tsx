@@ -3,6 +3,7 @@ import React from 'react';
 interface Column<T> {
   header: string;
   accessor: keyof T;
+  render?: (item: T) => React.ReactNode; // <-- AÑADIDO: Función de renderizado opcional
 }
 
 interface TableProps<T> {
@@ -30,7 +31,8 @@ const Table = <T extends { id: string }>({ columns, data, renderActions }: Table
             <tr key={item.id}>
               {columns.map((col) => (
                 <td key={String(col.accessor)} className="px-5 py-5 border-b border-gray-200 bg-white text-sm">
-                  {String(item[col.accessor] ?? 'N/A')}
+                  {/* Si existe una función 'render', la usamos. Si no, mostramos el dato directamente. */}
+                  {col.render ? col.render(item) : String(item[col.accessor] ?? 'N/A')}
                 </td>
               ))}
               {renderActions && (

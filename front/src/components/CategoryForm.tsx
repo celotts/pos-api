@@ -1,29 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Category } from '../services/categoryService';
 
-interface CategoryFormProps {
-  onSubmit: (name: string) => void;
+interface FormProps {
+  onSubmit: (data: { name: string }) => void; // <-- Cambiado para esperar un objeto
   onCancel: () => void;
   initialData?: Category | null;
   isSubmitting: boolean;
   error: string | null;
 }
 
-const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, error }) => {
+const CategoryForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, error }) => {
   const [name, setName] = useState('');
 
   useEffect(() => {
-    if (initialData) {
-      setName(initialData.name);
-    } else {
-      setName('');
-    }
+    setName(initialData?.name || '');
   }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (name.trim() && !isSubmitting) {
-      onSubmit(name.trim());
+    const trimmedName = name.trim();
+    if (trimmedName && !isSubmitting) {
+      // Enviamos el objeto que la API espera, no solo el texto.
+      onSubmit({ name: trimmedName });
     }
   };
 
@@ -44,20 +42,11 @@ const CategoryForm: React.FC<CategoryFormProps> = ({ onSubmit, onCancel, initial
           disabled={isSubmitting}
         />
       </div>
-      <div className="flex justify-end space-x-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-          disabled={isSubmitting}
-        >
+      <div className="flex justify-end space-x-4 pt-4">
+        <button type="button" onClick={onCancel} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" disabled={isSubmitting}>
           Cancelar
         </button>
-        <button
-          type="submit"
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-          disabled={isSubmitting}
-        >
+        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50" disabled={isSubmitting}>
           {isSubmitting ? 'Guardando...' : 'Guardar'}
         </button>
       </div>
