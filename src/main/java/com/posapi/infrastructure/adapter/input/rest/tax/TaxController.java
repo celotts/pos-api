@@ -3,11 +3,9 @@ package com.posapi.infrastructure.adapter.input.rest.tax;
 import com.posapi.application.port.tax.TaxManagementPort;
 import com.posapi.domain.model.tax.Tax;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
-import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
 import com.posapi.infrastructure.adapter.input.rest.tax.mapper.TaxRestMapper;
-import com.posapi.infrastructure.security.SecurityContextHelper;
+import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse; // Import TaxResponse
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -23,9 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,50 +32,40 @@ import java.util.stream.Stream;
 public class TaxController {
 
     private final TaxManagementPort taxManagementPort;
-    private final TaxRestMapper taxRestMapper;
-    private final UserRepository userRepository;
-    private final SecurityContextHelper securityContextHelper;
+    private final TaxRestMapper taxRestMapper; // Still needed for toDomain(TaxRequest)
 
     @PostMapping
     public ResponseEntity<TaxResponse> createTax(@Valid @RequestBody TaxRequest request) {
-        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        // 🛡️ World-Class: Controller delegates all business logic to the service.
+        // The service will handle setting createdBy, ID, and enrichment.
         Tax taxToCreate = taxRestMapper.toDomain(request);
-        taxToCreate.setCreatedBy(currentUser.getId());
         Tax createdTax = taxManagementPort.createTax(taxToCreate);
-        return new ResponseEntity<>(
-                taxRestMapper.toResponse(createdTax, currentUser.getFullName(), null),
-                HttpStatus.CREATED
-        );
+        // After creation, fetch the enriched version for the response
+        return taxManagementPort.getTaxById(createdTax.getId()) // Use getTaxById which now returns Optional<TaxResponse>
+                .map(responseDto -> new ResponseEntity<>(responseDto, HttpStatus.CREATED))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()); // Should not happen
     }
 
     @GetMapping
     public ResponseEntity<List<TaxResponse>> getAllTaxes() {
-        List<Tax> taxes = taxManagementPort.getAllTaxes();
-        Set<UUID> userIds = taxes.stream()
-                .flatMap(t -> Stream.of(t.getCreatedBy(), t.getUpdatedBy()))
-                .filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<UUID, String> userNames = fetchUserNames(userIds);
-        return ResponseEntity.ok(taxes.stream()
-                .map(t -> taxRestMapper.toResponse(
-                        t, userNames.get(t.getCreatedBy()), userNames.get(t.getUpdatedBy()))
-                ).collect(Collectors.toList()));
+        // 🛡️ World-Class: Service now returns enriched DTOs directly.
+        return ResponseEntity.ok(taxManagementPort.getAllTaxes());
     }
     
     @GetMapping("/{id}")
     public ResponseEntity<TaxResponse> getTaxById(@PathVariable UUID id) {
+        // 🛡️ World-Class: Service now returns enriched DTO directly.
         return taxManagementPort.getTaxById(id)
-                .map(this::mapToResponseWithUserNames)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<TaxResponse> updateTax(@PathVariable UUID id, @Valid @RequestBody TaxRequest request) {
-        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        // 🛡️ World-Class: Controller delegates all business logic to the service.
+        // The service will handle setting updatedBy and enrichment.
         Tax taxToUpdate = taxRestMapper.toDomain(request);
-        taxToUpdate.setUpdatedBy(currentUser.getId());
         return taxManagementPort.updateTax(id, taxToUpdate)
-                .map(this::mapToResponseWithUserNames)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -89,22 +74,5 @@ public class TaxController {
     public ResponseEntity<Void> deleteTax(@PathVariable UUID id) {
         taxManagementPort.deleteTax(id);
         return ResponseEntity.noContent().build();
-    }
-
-    private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
-        if (userIds.isEmpty()) {
-            return Map.of();
-        }
-        return userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getFullName));
-    }
-
-    private TaxResponse mapToResponseWithUserNames(Tax tax) {
-        Set<UUID> userIds = Stream.of(tax.getCreatedBy(), tax.getUpdatedBy())
-                .filter(Objects::nonNull).collect(Collectors.toSet());
-        Map<UUID, String> userNames = fetchUserNames(userIds);
-        return taxRestMapper.toResponse(
-                tax, userNames.get(tax.getCreatedBy()), userNames.get(tax.getUpdatedBy())
-        );
     }
 }

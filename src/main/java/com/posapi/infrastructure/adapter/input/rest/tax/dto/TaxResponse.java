@@ -18,4 +18,18 @@ public record TaxResponse(
     String createdByName,
     String updatedByName
 ) {
+    public static TaxResponse fromDomain(Tax tax, String createdByName, String updatedByName) {
+        // 🛡️ World-Class: Implement the fromDomain method to correctly map the domain model
+        // and enriched data to the DTO.
+        return new TaxResponse(
+                tax.getId(),
+                tax.getName(),
+                tax.getPercentage(),
+                tax.getTaxType(),
+                tax.getCreatedAt(),
+                tax.getUpdatedAt(),
+                createdByName,
+                updatedByName
+        );
+    }
 }
