@@ -2,7 +2,6 @@ package com.posapi.infrastructure.adapter.input.rest.tax;
 
 import com.posapi.application.port.tax.TaxManagementPort;
 import com.posapi.domain.model.tax.Tax;
-import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
 import com.posapi.infrastructure.adapter.input.rest.tax.mapper.TaxRestMapper;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse; // Import TaxResponse
@@ -22,8 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/api/v1/taxes")
