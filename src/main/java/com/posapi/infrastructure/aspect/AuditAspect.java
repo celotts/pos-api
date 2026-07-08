@@ -1,9 +1,9 @@
 package com.posapi.infrastructure.aspect;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.posapi.domain.port.output.AuditLogRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.infrastructure.adapter.output.persistence.entity.audit.AuditLogEntity;
-import com.posapi.infrastructure.adapter.output.persistence.repository.audit.AuditLogJpaRepository;
+import com.posapi.domain.model.audit.AuditLog;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 @RequiredArgsConstructor
 public class AuditAspect {
 
-    private final AuditLogJpaRepository auditLogRepository;
+    private final AuditLogRepository auditLogRepository;
     private final SecurityContextHelper securityContextHelper;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
@@ -56,7 +56,7 @@ public class AuditAspect {
             String ipAddress = request.getRemoteAddr();
             String userAgent = request.getHeader("User-Agent");
 
-            AuditLogEntity logEntry = AuditLogEntity.builder()
+            AuditLog logEntry = AuditLog.builder()
                     .tableName(auditable.tableName())
                     .recordId(recordId)
                     .action(auditable.action())
@@ -66,6 +66,7 @@ public class AuditAspect {
                     .userId(userId)
                     .build();
 
+// Ahora esto es correcto, porque el puerto espera un AuditLog (dominio)
             auditLogRepository.save(logEntry);
             log.info("Audit log created for action: {} on table {}", auditable.action(), auditable.tableName());
 
