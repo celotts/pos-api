@@ -1,9 +1,10 @@
-package com.posapi.infrastructure.aspect;
+package com.posapi.infrastructure.aspect; // Paquete actualizado
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.posapi.domain.model.audit.AuditLog;
+import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.AuditLogRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.domain.model.audit.AuditLog;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -20,7 +22,6 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.UUID;
-import org.aspectj.lang.reflect.MethodSignature;
 
 @Aspect
 @Component
@@ -33,7 +34,7 @@ public class AuditAspect {
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
-    @Pointcut("@annotation(com.posapi.infrastructure.aspect.Auditable)")
+    @Pointcut("@annotation(com.posapi.common.infrastructure.aspect.Auditable)")
     public void auditableMethods() {}
 
     @AfterReturning(pointcut = "auditableMethods()", returning = "result")
@@ -45,16 +46,22 @@ public class AuditAspect {
 
             UUID userId = securityContextHelper.getCurrentUsername()
                     .flatMap(userRepository::findByEmail)
-                    .map(com.posapi.domain.model.user.User::getId)
+                    .map(User::getId)
                     .orElse(null);
 
             UUID recordId = getRecordId(joinPoint, result);
             String newValue = convertToJson(result);
 
-            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder
-                    .currentRequestAttributes()).getRequest();
-            String ipAddress = request.getRemoteAddr();
-            String userAgent = request.getHeader("User-Agent");
+            String ipAddress = "SYSTEM"; // Default para requests no web
+            String userAgent = "SYSTEM"; // Default para requests no web
+
+            // Verificar si hay un contexto de petición web disponible ANTES de intentar acceder a RequestContextHolder
+            if (RequestContextHolder.getRequestAttributes() != null && RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes) {
+                HttpServletRequest request = ((ServletRequestAttributes)
+                        RequestContextHolder.getRequestAttributes()).getRequest();
+                ipAddress = request.getRemoteAddr();
+                userAgent = request.getHeader("User-Agent");
+            }
 
             AuditLog logEntry = AuditLog.builder()
                     .tableName(auditable.tableName())
@@ -66,7 +73,6 @@ public class AuditAspect {
                     .userId(userId)
                     .build();
 
-// Ahora esto es correcto, porque el puerto espera un AuditLog (dominio)
             auditLogRepository.save(logEntry);
             log.info("Audit log created for action: {} on table {}", auditable.action(), auditable.tableName());
 
