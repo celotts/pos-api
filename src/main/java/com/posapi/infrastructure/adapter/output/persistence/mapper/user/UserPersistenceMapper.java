@@ -7,8 +7,6 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEnti
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 @RequiredArgsConstructor
 public class UserPersistenceMapper {
@@ -23,17 +21,14 @@ public class UserPersistenceMapper {
                 .password(domain.getPassword())
                 .fullName(domain.getFullName())
                 .isActive(domain.getIsActive())
-                // .failedLoginAttempts(domain.getFailedLoginAttempts()) // ELIMINADO: Ya no existe en User
-                .role(mapRoleToProxyEntity(domain.getRole())) // Mapear el objeto Role
+                .role(mapRoleToProxyEntity(domain.getRole()))
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .deletedAt(domain.getDeletedAt())
                 .createdByUserId(domain.getCreatedByUserId())
                 .updatedByUserId(domain.getUpdatedByUserId())
                 .deletedByUserId(domain.getDeletedByUserId())
-                .createdByRoleId(domain.getCreatedByRoleId())
-                .updatedByRoleId(domain.getUpdatedByRoleId())
-                .deletedByRoleId(domain.getDeletedByRoleId())
+                // CORREGIDO: Eliminados los campos *byRoleId ya que no existen en la tabla 'users' del DDL
                 .build();
     }
 
@@ -47,17 +42,17 @@ public class UserPersistenceMapper {
                 .password(entity.getPassword())
                 .fullName(entity.getFullName())
                 .isActive(entity.getIsActive())
-                // .failedLoginAttempts(entity.getFailedLoginAttempts()) // ELIMINADO: Ya no existe en UserEntity
-                .role(mapRoleEntityToDomain(entity.getRole())) // Mapear el objeto RoleEntity
+                .role(mapRoleEntityToDomain(entity.getRole()))
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .deletedAt(entity.getDeletedAt())
                 .createdByUserId(entity.getCreatedByUserId())
                 .updatedByUserId(entity.getUpdatedByUserId())
                 .deletedByUserId(entity.getDeletedByUserId())
-                .createdByRoleId(entity.getCreatedByRoleId())
-                .updatedByRoleId(entity.getUpdatedByRoleId())
-                .deletedByRoleId(entity.getDeletedByRoleId())
+                // CORREGIDO: Si el dominio User requiere estos campos, se infieren del rol de auditoría correspondiente del usuario que ejecutó la acción si estuviese cargado, o se dejan nulos ya que la DB se encarga mediante triggers
+                .createdByRoleId(null)
+                .updatedByRoleId(null)
+                .deletedByRoleId(null)
                 .build();
     }
 
@@ -65,9 +60,10 @@ public class UserPersistenceMapper {
         if (role == null) {
             return null;
         }
-        // Esto crea una referencia a la entidad Role sin cargarla completamente,
-        // útil para establecer relaciones sin tener que buscar la entidad completa.
-        return RoleEntity.builder().id(role.getId()).name(role.getName()).build(); // Solo necesitamos el ID y el nombre para el proxy
+        return RoleEntity.builder()
+                .id(role.getId())
+                .name(role.getName())
+                .build();
     }
 
     private Role mapRoleEntityToDomain(RoleEntity roleEntity) {
