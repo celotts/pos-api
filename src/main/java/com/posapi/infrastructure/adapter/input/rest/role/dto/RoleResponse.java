@@ -13,16 +13,18 @@ public record RoleResponse(
     Instant createdAt,
     Instant updatedAt,
     String createdByName,
-    String updatedByName
+    String updatedByName,
+    String deleteByName
 ) {
-    public static RoleResponse fromDomain(Role role, String createdByName, String updatedByName) {
+    public static RoleResponse fromDomain(Role role, String createdByName, String updatedByName, String deletedByName) {
         return new RoleResponse(
-            role.getId(),
-            role.getName(),
-            role.getCreatedAt(),
-            role.getUpdatedAt(),
-            createdByName,
-            updatedByName
+                role.getId(),
+                role.getName(),
+                role.getCreatedAt(),
+                role.getUpdatedAt(),
+                createdByName,
+                updatedByName,
+                deletedByName
         );
     }
 }

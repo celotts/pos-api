@@ -20,11 +20,12 @@ public class RoleRestMapper {
     }
 
     // Convierte el Dominio al DTO de salida (agregando los nombres de auditoría)
-    public RoleResponse toResponse(Role role, String createdByName, String updatedByName) {
+    // CORREGIDO: Se añade String deletedByName a la firma del método para recibirlo desde el Service
+    public RoleResponse toResponse(Role role, String createdByName, String updatedByName, String deletedByName) {
         if (role == null) {
             return null;
         }
 
-        return RoleResponse.fromDomain(role, createdByName, updatedByName);
+        return RoleResponse.fromDomain(role, createdByName, updatedByName, deletedByName);
     }
 }

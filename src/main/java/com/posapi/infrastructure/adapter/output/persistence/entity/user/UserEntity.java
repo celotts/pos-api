@@ -1,72 +1,92 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.user;
 
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity; // Importar RoleEntity
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.generator.EventType;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
 @Table(name = "users")
-@Data
-@Builder
+@Getter
+@Setter
+@Builder(toBuilder = true) // Añadido toBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 @SQLRestriction("deleted_at IS NULL")
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO) // Asumiendo UUIDs auto-generados por la DB o Hibernate
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
+    @ToString.Include
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "full_name", nullable = false)
+    @ToString.Include
     private String fullName;
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
-    @Column(name = "failed_login_attempts", nullable = false)
-    private Integer failedLoginAttempts;
+    @Column(name = "failed_login_attempts")
+    private Integer failedLoginAttempts; // Este campo no estaba en el dominio User, pero sí en la entidad UserEntity
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private RoleEntity role;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private RoleEntity role; // Cambiado a RoleEntity
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Generated(event = EventType.INSERT)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private Instant createdAt;
 
-    @UpdateTimestamp
-    @Column(name = "updated_at")
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
+    @Column(name = "updated_at", insertable = false, updatable = false)
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @Column(name = "created_by")
-    private UUID createdBy;
+    @Column(name = "created_by_user_id") // Mapea a created_by_user_id en la DB
+    private UUID createdByUserId;
 
-    @Column(name = "updated_by")
-    private UUID updatedBy;
+    @Column(name = "updated_by_user_id") // Mapea a updated_by_user_id en la DB
+    private UUID updatedByUserId;
 
-    @Column(name = "deleted_by")
-    private UUID deletedBy;
+    @Column(name = "deleted_by_user_id") // Mapea a deleted_by_user_id en la DB
+    private UUID deletedByUserId;
+
+    @Generated(event = EventType.INSERT)
+    @Column(name = "created_by_role_id", insertable = false, updatable = false)
+    private UUID createdByRoleId;
+
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
+    @Column(name = "updated_by_role_id", insertable = false, updatable = false)
+    private UUID updatedByRoleId;
+
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
+    @Column(name = "deleted_by_role_id", insertable = false, updatable = false)
+    private UUID deletedByRoleId;
+
+    // ELIMINADO: Los métodos getCreatedByUserId(), getUpdatedByUserId(), etc.
+    // son generados automáticamente por Lombok si los campos se llaman createdByUserId, etc.
 }
