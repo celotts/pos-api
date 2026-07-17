@@ -3,21 +3,14 @@ package com.posapi.infrastructure.adapter.input.rest.tax;
 import com.posapi.application.port.tax.TaxManagementPort;
 import com.posapi.domain.model.tax.Tax;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
-import com.posapi.infrastructure.adapter.input.rest.tax.mapper.TaxRestMapper;
-import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse; // Import TaxResponse
+import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,51 +18,48 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/taxes")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN')")
 public class TaxController {
 
     private final TaxManagementPort taxManagementPort;
-    private final TaxRestMapper taxRestMapper; // Still needed for toDomain(TaxRequest)
+    private final SecurityContextHelper securityContextHelper;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<TaxResponse> createTax(@Valid @RequestBody TaxRequest request) {
-        // 🛡️ World-Class: Controller delegates all business logic to the service.
-        // The service will handle setting createdBy, ID, and enrichment.
-        Tax taxToCreate = taxRestMapper.toDomain(request);
-        Tax createdTax = taxManagementPort.createTax(taxToCreate);
-        // After creation, fetch the enriched version for the response
-        return taxManagementPort.getTaxById(createdTax.getId()) // Use getTaxById which now returns Optional<TaxResponse>
-                .map(responseDto -> new ResponseEntity<>(responseDto, HttpStatus.CREATED))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()); // Should not happen
+        UUID currentUserId = securityContextHelper.getCurrentUserId();
+        TaxResponse createdTax = taxManagementPort.createTax(request, currentUserId);
+        return new ResponseEntity<>(createdTax, HttpStatus.CREATED);
     }
 
-    @GetMapping
-    public ResponseEntity<List<TaxResponse>> getAllTaxes() {
-        // 🛡️ World-Class: Service now returns enriched DTOs directly.
-        return ResponseEntity.ok(taxManagementPort.getAllTaxes());
-    }
-    
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<TaxResponse> getTaxById(@PathVariable UUID id) {
-        // 🛡️ World-Class: Service now returns enriched DTO directly.
         return taxManagementPort.getTaxById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
+    public ResponseEntity<List<TaxResponse>> getAllTaxes() {
+        List<TaxResponse> taxes = taxManagementPort.getAllTaxes();
+        return ResponseEntity.ok(taxes);
+    }
+
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<TaxResponse> updateTax(@PathVariable UUID id, @Valid @RequestBody TaxRequest request) {
-        // 🛡️ World-Class: Controller delegates all business logic to the service.
-        // The service will handle setting updatedBy and enrichment.
-        Tax taxToUpdate = taxRestMapper.toDomain(request);
-        return taxManagementPort.updateTax(id, taxToUpdate)
+        UUID currentUserId = securityContextHelper.getCurrentUserId();
+        return taxManagementPort.updateTax(id, request, currentUserId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteTax(@PathVariable UUID id) {
-        taxManagementPort.deleteTax(id);
+        UUID currentUserId = securityContextHelper.getCurrentUserId();
+        taxManagementPort.deleteTax(id, currentUserId);
         return ResponseEntity.noContent().build();
     }
 }

@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true) // Añadido toBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -51,4 +51,22 @@ public class AuditLog {
 
     @Column(name = "user_id")
     private UUID userId;
+
+    // Método estático para crear un nuevo AuditLog
+    public static AuditLog createNew(
+            AuditAction action, String tableName, UUID recordId, String oldValue, String newValue,
+            UUID userId, String ipAddress, String userAgent) {
+        return AuditLog.builder()
+                .id(UUID.randomUUID())
+                .action(action)
+                .tableName(tableName)
+                .recordId(recordId)
+                .oldValue(oldValue)
+                .newValue(newValue)
+                .userId(userId)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .createdAt(Instant.now())
+                .build();
+    }
 }

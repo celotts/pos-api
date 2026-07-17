@@ -2,6 +2,7 @@ package com.posapi.infrastructure.adapter.input.rest.tax.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.posapi.domain.model.tax.Tax;
+import com.posapi.domain.model.tax.TaxEnum;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,7 +13,7 @@ public record TaxResponse(
     UUID id,
     String name,
     BigDecimal percentage,
-    Tax.TaxCategory taxType,
+    TaxEnum taxType,
     Instant createdAt,
     Instant updatedAt,
     String createdByName,

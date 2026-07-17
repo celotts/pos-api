@@ -50,5 +50,34 @@ public class Role {
     @Column(name = "deleted_by_role_id") // Añadido para auditoría de rol
     private UUID deletedByRoleId;
 
+    // Método estático para crear un nuevo rol
+    public static Role createNew(String name, UUID currentUserId, UUID currentUserRoleId) {
+        return Role.builder()
+                .id(UUID.randomUUID())
+                .name(name)
+                .createdAt(Instant.now())
+                .createdByUserId(currentUserId)
+                .createdByRoleId(currentUserRoleId)
+                .build();
+    }
 
+    // Método de dominio para actualizar el nombre del rol
+    public void updateName(String newName, UUID updatedByUserId, UUID updatedByRoleId) {
+        if (newName == null || newName.isBlank()) {
+            throw new IllegalArgumentException("Role name cannot be null or empty.");
+        }
+        this.name = newName;
+        this.updatedAt = Instant.now();
+        this.updatedByUserId = updatedByUserId;
+        this.updatedByRoleId = updatedByRoleId;
+    }
+
+    // Método de dominio para marcar el rol como eliminado (borrado lógico)
+    public void markAsDeleted(UUID deletedByUserId, UUID deletedByRoleId) {
+        if (this.deletedAt == null) { // Solo si no ha sido eliminado lógicamente antes
+            this.deletedAt = Instant.now();
+            this.deletedByUserId = deletedByUserId;
+            this.deletedByRoleId = deletedByRoleId;
+        }
+    }
 }

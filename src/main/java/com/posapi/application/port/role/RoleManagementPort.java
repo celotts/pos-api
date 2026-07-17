@@ -5,9 +5,7 @@ import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse; // As
 import com.posapi.domain.model.role.Role; // Entidad de dominio Role
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 
 public interface RoleManagementPort {
@@ -63,6 +61,9 @@ public interface RoleManagementPort {
      */
     Object updateRole(UUID roleId, String newRoleName, UUID currentUserId);
 
+    @Transactional
+    Optional<Role> updateRole(UUID id, Role role, UUID currentUserId);
+
     /**
      * Elimina lógicamente un rol.
      * @param roleId ID del rol a eliminar.
@@ -86,4 +87,7 @@ public interface RoleManagementPort {
     Optional<Role> updateRole(UUID id, Role role);
 
     void deleteRole(UUID id);
+
+    @Transactional(readOnly = true)
+    Map<UUID, String> fetchUserNamesForAudit(Set<UUID> userIds);
 }

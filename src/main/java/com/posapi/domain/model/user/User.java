@@ -52,6 +52,12 @@ public class User implements UserDetails {
         return email;
     }
 
+    // CORREGIDO: Implementación explícita de getPassword() para UserDetails
+    @Override
+    public String getPassword() {
+        return password;
+    }
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
@@ -101,5 +107,57 @@ public class User implements UserDetails {
                 .updatedByUserId(updatedByUserId)
                 .updatedByRoleId(newRole != null ? newRole.getId() : (this.role != null ? this.role.getId() : null))
                 .build();
+    }
+
+    // Método de dominio para activar el usuario
+    public void activate(UUID updatedByUserId, UUID updatedByRoleId) {
+        if (!this.isActive) {
+            this.isActive = true;
+            this.updatedAt = Instant.now();
+            this.updatedByUserId = updatedByUserId;
+            this.updatedByRoleId = updatedByRoleId;
+        }
+    }
+
+    // Método de dominio para desactivar el usuario
+    public void deactivate(UUID updatedByUserId, UUID updatedByRoleId) {
+        if (this.isActive) {
+            this.isActive = false;
+            this.updatedAt = Instant.now();
+            this.updatedByUserId = updatedByUserId;
+            this.updatedByRoleId = updatedByRoleId;
+        }
+    }
+
+    // Método de dominio para cambiar la contraseña
+    public void changePassword(String newEncodedPassword, UUID updatedByUserId, UUID updatedByRoleId) {
+        if (newEncodedPassword == null || newEncodedPassword.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null or empty.");
+        }
+        this.password = newEncodedPassword;
+        this.updatedAt = Instant.now();
+        this.updatedByUserId = updatedByUserId;
+        this.updatedByRoleId = updatedByRoleId;
+    }
+
+    // Método de dominio para asignar un nuevo rol
+    public void assignRole(Role newRole, UUID updatedByUserId, UUID updatedByRoleId) {
+        if (newRole == null) {
+            throw new IllegalArgumentException("Role cannot be null.");
+        }
+        this.role = newRole;
+        this.updatedAt = Instant.now();
+        this.updatedByUserId = updatedByUserId;
+        this.updatedByRoleId = updatedByRoleId;
+    }
+
+    // Método de dominio para borrado lógico
+    public void markAsDeleted(UUID deletedByUserId, UUID deletedByRoleId) {
+        if (this.deletedAt == null) {
+            this.deletedAt = Instant.now();
+            this.deletedByUserId = deletedByUserId;
+            this.deletedByRoleId = deletedByRoleId;
+            this.isActive = false; // Un usuario eliminado lógicamente también debe estar inactivo
+        }
     }
 }

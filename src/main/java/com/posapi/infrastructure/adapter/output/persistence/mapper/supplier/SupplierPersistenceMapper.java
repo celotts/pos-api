@@ -7,31 +7,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class SupplierPersistenceMapper {
 
-    public Supplier toDomain(SupplierEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-
-        return Supplier.builder()
-                .id(entity.getId())
-                .rfc(entity.getRfc())
-                .businessName(entity.getBusinessName())
-                .taxRegimen(entity.getTaxRegimen())
-                .contactEmail(entity.getContactEmail())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .deletedAt(entity.getDeletedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
-                .deletedBy(entity.getDeletedBy())
-                .build();
-    }
-
     public SupplierEntity toEntity(Supplier domain) {
         if (domain == null) {
             return null;
         }
-
         return SupplierEntity.builder()
                 .id(domain.getId())
                 .rfc(domain.getRfc())
@@ -41,9 +20,34 @@ public class SupplierPersistenceMapper {
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .deletedAt(domain.getDeletedAt())
-                .createdBy(domain.getCreatedBy())
-                .updatedBy(domain.getUpdatedBy())
-                .deletedBy(domain.getDeletedBy())
+                .createdByUserId(domain.getCreatedByUserId())
+                .updatedByUserId(domain.getUpdatedByUserId())
+                .deletedByUserId(domain.getDeletedByUserId())
+                .createdByRoleId(domain.getCreatedByUserRoleId())
+                .updatedByRoleId(domain.getUpdatedByUserRoleId())
+                .deletedByRoleId(domain.getDeletedByUserRoleId())
+                .build();
+    }
+
+    public Supplier toDomain(SupplierEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+        return Supplier.builder()
+                .id(entity.getId())
+                .rfc(entity.getRfc())
+                .businessName(entity.getBusinessName())
+                .taxRegimen(entity.getTaxRegimen())
+                .contactEmail(entity.getContactEmail())
+                .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
+                .deletedAt(entity.getDeletedAt())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .deletedByUserId(entity.getDeletedByUserId())
+                .createdByUserRoleId(entity.getCreatedByRoleId())
+                .updatedByUserRoleId(entity.getUpdatedByRoleId())
+                .deletedByUserRoleId(entity.getDeletedByRoleId())
                 .build();
     }
 }

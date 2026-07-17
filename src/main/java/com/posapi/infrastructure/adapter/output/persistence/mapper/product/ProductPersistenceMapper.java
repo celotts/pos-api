@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class ProductPersistenceMapper {
+
     public ProductEntity toEntity(Product domain) {
         if (domain == null) {
             return null;
@@ -21,8 +22,15 @@ public class ProductPersistenceMapper {
                 .categoryId(domain.getCategoryId())
                 .taxId(domain.getTaxId())
                 .supplierId(domain.getSupplierId())
-                .createdBy(domain.getCreatedBy())
-                .updatedBy(domain.getUpdatedBy())
+                .createdAt(domain.getCreatedAt())
+                .updatedAt(domain.getUpdatedAt())
+                .deletedAt(domain.getDeletedAt())
+                .createdByUserId(domain.getCreatedByUserId())
+                .updatedByUserId(domain.getUpdatedByUserId())
+                .deletedByUserId(domain.getDeletedByUserId())
+                .createdByRoleId(domain.getCreatedByUserRoleId())
+                .updatedByRoleId(domain.getUpdatedByUserRoleId())
+                .deletedByRoleId(domain.getDeletedByUserRoleId())
                 .build();
     }
 
@@ -43,8 +51,13 @@ public class ProductPersistenceMapper {
                 .supplierId(entity.getSupplierId())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy())
-                .updatedBy(entity.getUpdatedBy())
+                .deletedAt(entity.getDeletedAt())
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .deletedByUserId(entity.getDeletedByUserId())
+                .createdByUserRoleId(entity.getCreatedByRoleId())
+                .updatedByUserRoleId(entity.getUpdatedByRoleId())
+                .deletedByUserRoleId(entity.getDeletedByRoleId())
                 .build();
     }
 }
