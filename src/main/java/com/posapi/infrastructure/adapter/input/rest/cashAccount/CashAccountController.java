@@ -1,6 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.cashAccount;
 
-import com.posapi.application.port.cashAccount.CashAccountManagementPort;
+import com.posapi.application.port.cashaccount.CashAccountManagementPort;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
 import com.posapi.infrastructure.security.SecurityContextHelper;

@@ -5,7 +5,6 @@ import com.posapi.infrastructure.adapter.input.rest.posterminal.dto.PosTerminalR
 import com.posapi.shared.dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

@@ -1,8 +1,7 @@
 package com.posapi.application.service.cashAccount;
 
-import com.posapi.application.port.cashAccount.CashAccountManagementPort;
+import com.posapi.application.port.cashaccount.CashAccountManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.cashaccount.CashAccount;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.CashAccountRepository;
@@ -11,11 +10,8 @@ import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountR
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.mapper.CashAccountRestMapper;
 import com.posapi.infrastructure.security.SecurityContextHelper;
-import com.posapi.shared.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

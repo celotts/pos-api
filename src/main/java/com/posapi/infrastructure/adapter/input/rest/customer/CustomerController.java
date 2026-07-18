@@ -1,6 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.customer;
 
-import com.posapi.application.port.customer.CustomerInputPort;
+import com.posapi.application.port.customer.CustomerManagementPort; // CORREGIDO
 import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerRequest;
 import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerResponse;
 import com.posapi.infrastructure.security.SecurityContextHelper;
@@ -21,21 +21,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CustomerController {
 
-    private final CustomerInputPort customerInputPort;
+    private final CustomerManagementPort customerManagementPort; // CORREGIDO
     private final SecurityContextHelper securityContextHelper;
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<CustomerResponse> createCustomer(@Valid @RequestBody CustomerRequest request) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        CustomerResponse createdCustomer = customerInputPort.createCustomer(request, currentUserId);
+        CustomerResponse createdCustomer = customerManagementPort.createCustomer(request, currentUserId); // CORREGIDO
         return new ResponseEntity<>(createdCustomer, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<CustomerResponse> getCustomerById(@PathVariable UUID id) {
-        return customerInputPort.getCustomerById(id)
+        return customerManagementPort.getCustomerById(id) // CORREGIDO
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -43,7 +43,7 @@ public class CustomerController {
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<PageResponse<CustomerResponse>> getAllCustomers(Pageable pageable) {
-        PageResponse<CustomerResponse> customers = customerInputPort.getAllCustomers(pageable);
+        PageResponse<CustomerResponse> customers = customerManagementPort.getAllCustomers(pageable); // CORREGIDO
         return ResponseEntity.ok(customers);
     }
 
@@ -51,7 +51,7 @@ public class CustomerController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<CustomerResponse> updateCustomer(@PathVariable UUID id, @Valid @RequestBody CustomerRequest request) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        return customerInputPort.updateCustomer(id, request, currentUserId)
+        return customerManagementPort.updateCustomer(id, request, currentUserId) // CORREGIDO
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -60,14 +60,14 @@ public class CustomerController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     public ResponseEntity<Void> deleteCustomer(@PathVariable UUID id) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        customerInputPort.deleteCustomer(id, currentUserId);
+        customerManagementPort.deleteCustomer(id, currentUserId); // CORREGIDO
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/rfc/{rfc}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'CASHIER')")
     public ResponseEntity<CustomerResponse> getCustomerByRfc(@PathVariable String rfc) {
-        return customerInputPort.getCustomerByRfc(rfc)
+        return customerManagementPort.getCustomerByRfc(rfc) // CORREGIDO
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

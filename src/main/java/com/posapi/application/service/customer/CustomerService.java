@@ -1,6 +1,6 @@
 package com.posapi.application.service.customer;
 
-import com.posapi.application.port.customer.CustomerInputPort;
+import com.posapi.application.port.customer.CustomerManagementPort; // CORREGIDO
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.customer.Customer;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CustomerService implements CustomerInputPort {
+public class CustomerService implements CustomerManagementPort { // CORREGIDO
 
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;

@@ -1,4 +1,4 @@
-package com.posapi.application.port.cashAccount;
+package com.posapi.application.port.cashaccount;
 
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
