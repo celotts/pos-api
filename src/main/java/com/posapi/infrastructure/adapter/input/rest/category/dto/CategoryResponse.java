@@ -1,8 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.category.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.posapi.domain.model.category.Category; // Necesario para el método fromDomain
-
+import com.posapi.domain.model.category.Category;
 import java.time.Instant;
 import java.util.UUID;
 

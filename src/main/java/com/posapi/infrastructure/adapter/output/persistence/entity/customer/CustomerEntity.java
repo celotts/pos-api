@@ -1,43 +1,46 @@
-package com.posapi.infrastructure.adapter.output.persistence.entity.cashaccount;
+package com.posapi.infrastructure.adapter.output.persistence.entity.customer;
 
-import com.posapi.domain.model.cashaccount.CashAccountType;
+import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
+import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.generator.EventType;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cash_accounts")
+@Table(name = "customers")
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CashAccountEntity {
+@SQLRestriction("deleted_at IS NULL")
+public class CustomerEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true, nullable = false)
-    private String name;
+    @Column(name = "full_name", nullable = false)
+    private String fullName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false)
-    private CashAccountType accountType;
+    @Column(unique = true)
+    private String email;
 
-    @Column(name = "current_balance", nullable = false, precision = 18, scale = 2)
-    private BigDecimal currentBalance;
+    @Column(name = "phone_number")
+    private String phoneNumber;
 
-    @Column(nullable = false, length = 3)
-    private String currency;
+    private String address;
 
-    // Las fechas sí se pueden dejar con @Generated si la DB tiene 'DEFAULT NOW()'
+    @Column(unique = true)
+    private String rfc;
+
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", updatable = false, insertable = false)
     private Instant createdAt;
@@ -49,8 +52,7 @@ public class CashAccountEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // === AUDITORÍA DE USUARIOS (Controlados desde Java/JWT, sin @Generated) ===
-    @Column(name = "created_by_user_id", updatable = false)
+    @Column(name = "created_by_user_id")
     private UUID createdByUserId;
 
     @Column(name = "updated_by_user_id")
@@ -59,13 +61,15 @@ public class CashAccountEntity {
     @Column(name = "deleted_by_user_id")
     private UUID deletedByUserId;
 
-    // === AUDITORÍA DE ROLES (¡CORREGIDO!: Eliminado @Generated e insertable=false) ===
-    @Column(name = "created_by_role_id", updatable = false)
+    @Generated(event = EventType.INSERT)
+    @Column(name = "created_by_role_id")
     private UUID createdByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "updated_by_role_id")
     private UUID updatedByRoleId;
 
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "deleted_by_role_id")
     private UUID deletedByRoleId;
 

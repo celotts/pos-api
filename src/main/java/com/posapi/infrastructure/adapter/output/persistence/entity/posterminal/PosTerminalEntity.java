@@ -1,43 +1,38 @@
-package com.posapi.infrastructure.adapter.output.persistence.entity.cashaccount;
+package com.posapi.infrastructure.adapter.output.persistence.entity.posterminal;
 
-import com.posapi.domain.model.cashaccount.CashAccountType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.generator.EventType;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "cash_accounts")
+@Table(name = "pos_terminals")
 @Data
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class CashAccountEntity {
+@SQLRestriction("deleted_at IS NULL")
+public class PosTerminalEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "account_type", nullable = false)
-    private CashAccountType accountType;
+    private String location;
 
-    @Column(name = "current_balance", nullable = false, precision = 18, scale = 2)
-    private BigDecimal currentBalance;
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
 
-    @Column(nullable = false, length = 3)
-    private String currency;
-
-    // Las fechas sí se pueden dejar con @Generated si la DB tiene 'DEFAULT NOW()'
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", updatable = false, insertable = false)
     private Instant createdAt;
@@ -49,8 +44,8 @@ public class CashAccountEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    // === AUDITORÍA DE USUARIOS (Controlados desde Java/JWT, sin @Generated) ===
-    @Column(name = "created_by_user_id", updatable = false)
+    // CORREGIDO: Campos de auditoría de usuario como UUID y eliminadas anotaciones @ManyToOne y @JoinColumn
+    @Column(name = "created_by_user_id")
     private UUID createdByUserId;
 
     @Column(name = "updated_by_user_id")
@@ -59,8 +54,8 @@ public class CashAccountEntity {
     @Column(name = "deleted_by_user_id")
     private UUID deletedByUserId;
 
-    // === AUDITORÍA DE ROLES (¡CORREGIDO!: Eliminado @Generated e insertable=false) ===
-    @Column(name = "created_by_role_id", updatable = false)
+    // CORREGIDO: Campos de auditoría de rol como UUID y eliminadas anotaciones @ManyToOne y @JoinColumn
+    @Column(name = "created_by_role_id")
     private UUID createdByRoleId;
 
     @Column(name = "updated_by_role_id")
@@ -73,6 +68,9 @@ public class CashAccountEntity {
     protected void onCreate() {
         if (this.createdAt == null) {
             this.createdAt = Instant.now();
+        }
+        if (this.isActive == null) {
+            this.isActive = true;
         }
     }
 }
