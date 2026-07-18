@@ -1,4 +1,4 @@
-package com.posapi.application.service.cashAccount;
+package com.posapi.application.service.cashaccount;
 
 import com.posapi.application.port.cashaccount.CashAccountManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
