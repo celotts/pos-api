@@ -9,7 +9,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Generated; // Importar Generated
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.generator.EventType; // Importar EventType
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,7 +21,7 @@ import java.util.UUID;
 @Table(name = "products")
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true) // Añadido toBuilder
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("deleted_at IS NULL")
@@ -36,7 +38,7 @@ public class ProductEntity {
 
     private String description;
 
-    @Column(name = "category_id", nullable = false)
+    @Column(name = "category_id") // No nullable si hay FK
     private UUID categoryId;
 
     @Column(name = "purchase_price", nullable = false, precision = 18, scale = 2)
@@ -54,21 +56,35 @@ public class ProductEntity {
     @Column(name = "supplier_id")
     private UUID supplierId;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Generated(event = EventType.INSERT) // Añadido
+    @Column(name = "created_at", updatable = false, insertable = false) // Corregido insertable
     private Instant createdAt;
 
-    @Column(name = "updated_at")
+    @Generated(event = {EventType.INSERT, EventType.UPDATE}) // Añadido
+    @Column(name = "updated_at", insertable = false) // Corregido insertable
     private Instant updatedAt;
 
-    @Column(name = "deleted_at")
+    @Column(name = "deleted_at") // AÑADIDO
     private Instant deletedAt;
 
-    @Column(name = "created_by")
-    private UUID createdBy;
+    @Column(name = "created_by_user_id", updatable = false) // Renombrado y añadido updatable
+    private UUID createdByUserId;
 
-    @Column(name = "updated_by")
-    private UUID updatedBy;
+    @Column(name = "updated_by_user_id") // Renombrado
+    private UUID updatedByUserId;
 
-    @Column(name = "deleted_by")
-    private UUID deletedBy;
+    @Column(name = "deleted_by_user_id") // AÑADIDO
+    private UUID deletedByUserId;
+
+    @Generated(event = EventType.INSERT) // Añadido
+    @Column(name = "created_by_role_id", updatable = false, insertable = false) // AÑADIDO
+    private UUID createdByRoleId;
+
+    @Generated(event = {EventType.INSERT, EventType.UPDATE}) // Añadido
+    @Column(name = "updated_by_role_id", insertable = false) // AÑADIDO
+    private UUID updatedByRoleId;
+
+    @Generated(event = {EventType.INSERT, EventType.UPDATE}) // Añadido
+    @Column(name = "deleted_by_role_id", insertable = false) // AÑADIDO
+    private UUID deletedByRoleId;
 }

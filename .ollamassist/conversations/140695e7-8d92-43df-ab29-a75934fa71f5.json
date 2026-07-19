@@ -1,0 +1,15 @@
+{
+  "id" : "140695e7-8d92-43df-ab29-a75934fa71f5",
+  "title" : "estas activo?",
+  "createdAt" : 1784439471289,
+  "updatedAt" : 1784439617249,
+  "messages" : [ {
+    "role" : "USER",
+    "content" : "estas activo?",
+    "timestamp" : 1784439590615
+  }, {
+    "role" : "ASSISTANT",
+    "content" : "\nEstoy listo para ayudar contigo. ¿Cómo te puedo apoyar hoy?",
+    "timestamp" : 1784439617249
+  } ]
+}

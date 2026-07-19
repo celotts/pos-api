@@ -24,19 +24,21 @@ public class UserDetailsProvider implements UserDetailsService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
 
-        String roleName = getRoleName(user.getRoleId());
+        // CORREGIDO: Acceder al nombre del rol directamente desde el objeto Role en la entidad User
+        String roleName = user.getRole().getName();
 
         return org.springframework.security.core.userdetails.User.withUsername(user.getEmail())
                 .password(user.getPassword())
-                // .authorities(roleName) // <--- QUITA ESTA LÍNEA
+                // .authorities(roleName) // <--- QUITA ESTA LÍNEA (si aún está)
                 .roles(roleName)         // <--- USA ESTA (Spring añadirá ROLE_ automáticamente)
                 .build();
     }
 
-    private String getRoleName(java.util.UUID roleId) {
-        // Si el rol no se encuentra, se asigna 'USER' por defecto como medida de seguridad.
-        return roleRepository.findById(roleId)
-                .map(Role::getName)
-                .orElse("USER");
-    }
+    // ELIMINADO: Este método auxiliar ya no es necesario si accedemos al rol directamente desde el User
+    // private String getRoleName(java.util.UUID roleId) {
+    //     // Si el rol no se encuentra, se asigna 'USER' por defecto como medida de seguridad.
+    //     return roleRepository.findById(roleId)
+    //             .map(Role::getName)
+    //             .orElse("USER");
+    // }
 }

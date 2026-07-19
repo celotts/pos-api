@@ -15,7 +15,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true) // Añadir toBuilder para facilitar actualizaciones
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
@@ -36,9 +36,24 @@ public class CategoryEntity {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    @Column(name = "created_by", updatable = false)
-    private UUID createdBy;
+    @Column(name = "deleted_at") // Añadido
+    private Instant deletedAt;
 
-    @Column(name = "updated_by")
-    private UUID updatedBy;
+    @Column(name = "created_by_user_id", updatable = false) // Corregido el nombre de la columna
+    private UUID createdByUserId; // Corregido el nombre del campo
+
+    @Column(name = "updated_by_user_id") // Corregido el nombre de la columna
+    private UUID updatedByUserId; // Corregido el nombre del campo
+
+    @Column(name = "deleted_by_user_id") // Añadido
+    private UUID deletedByUserId;
+
+    @Column(name = "created_by_role_id", updatable = false) // Añadido
+    private UUID createdByRoleId;
+
+    @Column(name = "updated_by_role_id") // Añadido
+    private UUID updatedByRoleId;
+
+    @Column(name = "deleted_by_role_id") // Añadido
+    private UUID deletedByRoleId;
 }

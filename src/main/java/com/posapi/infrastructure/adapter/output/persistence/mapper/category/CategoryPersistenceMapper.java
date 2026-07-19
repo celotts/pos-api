@@ -14,8 +14,13 @@ public class CategoryPersistenceMapper {
                 .name(domain.getName())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
-                .createdBy(domain.getCreatedBy()) // <-- AÑADIDO
-                .updatedBy(domain.getUpdatedBy()) // <-- AÑADIDO
+                .deletedAt(domain.getDeletedAt()) // Añadido
+                .createdByUserId(domain.getCreatedByUserId()) // Corregido
+                .updatedByUserId(domain.getUpdatedByUserId()) // Corregido
+                .deletedByUserId(domain.getDeletedByUserId()) // Añadido
+                .createdByRoleId(domain.getCreatedByRoleId()) // Añadido
+                .updatedByRoleId(domain.getUpdatedByRoleId()) // Añadido
+                .deletedByRoleId(domain.getDeletedByRoleId()) // Añadido
                 .build();
     }
 
@@ -26,8 +31,13 @@ public class CategoryPersistenceMapper {
                 .name(entity.getName())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                .createdBy(entity.getCreatedBy()) // <-- AÑADIDO
-                .updatedBy(entity.getUpdatedBy()) // <-- AÑADIDO
+                .deletedAt(entity.getDeletedAt()) // Añadido
+                .createdByUserId(entity.getCreatedByUserId()) // Corregido
+                .updatedByUserId(entity.getUpdatedByUserId()) // Corregido
+                .deletedByUserId(entity.getDeletedByUserId()) // Añadido
+                .createdByRoleId(entity.getCreatedByRoleId()) // Añadido
+                .updatedByRoleId(entity.getUpdatedByRoleId()) // Añadido
+                .deletedByRoleId(entity.getDeletedByRoleId()) // Añadido
                 .build();
     }
 }

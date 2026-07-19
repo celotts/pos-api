@@ -16,5 +16,4 @@ public record ProductRequest(
     @NotNull UUID categoryId,
     UUID taxId,
     UUID supplierId
-) {
-}
+) { }

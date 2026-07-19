@@ -17,7 +17,8 @@ public class SupplierRestMapper {
                 .build();
     }
 
-    public SupplierResponse toResponse(Supplier domain, String createdByName, String updatedByName) {
+    // CORREGIDO: Añadido deletedByName a la firma del método
+    public SupplierResponse toResponse(Supplier domain, String createdByName, String updatedByName, String deletedByName) {
         return new SupplierResponse(
                 domain.getId(),
                 domain.getRfc(),
@@ -26,8 +27,16 @@ public class SupplierRestMapper {
                 domain.getContactEmail(),
                 domain.getCreatedAt(),
                 domain.getUpdatedAt(),
+                domain.getDeletedAt(), // Añadido
+                domain.getCreatedByUserId(), // Añadido
+                domain.getUpdatedByUserId(), // Añadido
+                domain.getDeletedByUserId(), // Añadido
+                domain.getCreatedByUserRoleId(), // Añadido
+                domain.getUpdatedByUserRoleId(), // Añadido
+                domain.getDeletedByUserRoleId(), // Añadido
                 createdByName,
-                updatedByName
+                updatedByName,
+                deletedByName // Añadido
         );
     }
 }

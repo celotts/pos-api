@@ -19,10 +19,14 @@ public class RolePersistenceMapper {
                 .name(domain.getName())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
-                .createdBy(domain.getCreatedBy())
-                .updatedBy(domain.getUpdatedBy())
                 .deletedAt(domain.getDeletedAt())
-                .deletedBy(domain.getDeletedBy())
+                // CORREGIDO: Usar los campos de auditoría correctos de la entidad de dominio
+                .createdByUserId(domain.getCreatedByUserId())
+                .updatedByUserId(domain.getUpdatedByUserId())
+                .deletedByUserId(domain.getDeletedByUserId())
+                .createdByRoleId(domain.getCreatedByRoleId())
+                .updatedByRoleId(domain.getUpdatedByRoleId())
+                .deletedByRoleId(domain.getDeletedByRoleId())
                 .build();
     }
 
@@ -35,11 +39,12 @@ public class RolePersistenceMapper {
                 .id(entity.getId())
                 .name(entity.getName())
                 .createdAt(entity.getCreatedAt())
-                .createdBy(entity.getCreatedBy())
                 .updatedAt(entity.getUpdatedAt())
-                .updatedBy(entity.getUpdatedBy())
                 .deletedAt(entity.getDeletedAt())
-                .deletedBy(entity.getDeletedBy())
+                // CORREGIDO: Usar los campos de auditoría correctos de la entidad de persistencia
+                .createdByUserId(entity.getCreatedByUserId())
+                .updatedByUserId(entity.getUpdatedByUserId())
+                .deletedByUserId(entity.getDeletedByUserId())
                 .createdByRoleId(entity.getCreatedByRoleId())
                 .updatedByRoleId(entity.getUpdatedByRoleId())
                 .deletedByRoleId(entity.getDeletedByRoleId())

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class AuditLogPersistenceMapper {
 
-    public AuditLogEntity toEntity(AuditLog domain) {
+    public AuditLogEntity toEntity(AuditLog domain) { // <--- CORREGIDO: Recibe AuditLog
         if (domain == null) {
             return null;
         }
@@ -16,12 +16,13 @@ public class AuditLogPersistenceMapper {
                 .id(domain.getId())
                 .tableName(domain.getTableName())
                 .recordId(domain.getRecordId())
-                .action(domain.getAction()) // Ahora los tipos coinciden (enum)
+                .action(domain.getAction())
                 .oldValue(domain.getOldValue())
                 .newValue(domain.getNewValue())
                 .ipAddress(domain.getIpAddress())
                 .userAgent(domain.getUserAgent())
                 .userId(domain.getUserId())
+                .createdAt(domain.getCreatedAt()) // Asegúrate de incluir este campo si existe
                 .build();
     }
 
