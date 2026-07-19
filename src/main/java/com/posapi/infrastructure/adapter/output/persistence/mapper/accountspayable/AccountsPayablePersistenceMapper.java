@@ -1,7 +1,8 @@
-package com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.mapper;
+package com.posapi.infrastructure.adapter.output.persistence.mapper.accountspayable;
 
 import com.posapi.domain.model.accountspayable.AccountsPayable;
-import com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.entity.AccountsPayableEntity;
+import com.posapi.domain.model.accountspayable.AccountsPayable.ArApStatus; // Importar el enum del dominio
+import com.posapi.infrastructure.adapter.output.persistence.entity.accountspayable.AccountsPayableEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,16 +19,16 @@ public class AccountsPayablePersistenceMapper {
                 .originalAmount(domain.getOriginalAmount())
                 .outstandingAmount(domain.getOutstandingAmount())
                 .dueDate(domain.getDueDate())
-                .status(toEntityStatus(domain.getStatus()))
+                .status(toEntityStatus(domain.getStatus())) // Usar método de mapeo explícito
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .deletedAt(domain.getDeletedAt())
                 .createdByUserId(domain.getCreatedByUserId())
                 .updatedByUserId(domain.getUpdatedByUserId())
                 .deletedByUserId(domain.getDeletedByUserId())
-                .createdByRoleId(domain.getCreatedByUserRoleId()) // CORREGIDO
-                .updatedByRoleId(domain.getUpdatedByUserRoleId()) // CORREGIDO
-                .deletedByRoleId(domain.getDeletedByUserRoleId()) // CORREGIDO
+                .createdByRoleId(domain.getCreatedByUserRoleId())
+                .updatedByRoleId(domain.getUpdatedByUserRoleId())
+                .deletedByRoleId(domain.getDeletedByUserRoleId())
                 .build();
     }
 
@@ -42,7 +43,7 @@ public class AccountsPayablePersistenceMapper {
                 .originalAmount(entity.getOriginalAmount())
                 .outstandingAmount(entity.getOutstandingAmount())
                 .dueDate(entity.getDueDate())
-                .status(toDomainStatus(entity.getStatus()))
+                .status(toDomainStatus(entity.getStatus())) // Usar método de mapeo explícito
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .deletedAt(entity.getDeletedAt())
@@ -55,7 +56,9 @@ public class AccountsPayablePersistenceMapper {
                 .build();
     }
 
-    private AccountsPayableEntity.ArApStatus toEntityStatus(AccountsPayable.ArApStatus domainStatus) {
+    // --- MÉTODOS DE MAPEO EXPLÍCITOS Y SEGUROS PARA EL ENUM ---
+
+    private AccountsPayableEntity.ArApStatus toEntityStatus(ArApStatus domainStatus) {
         if (domainStatus == null) return null;
         switch (domainStatus) {
             case OPEN: return AccountsPayableEntity.ArApStatus.OPEN;
@@ -68,15 +71,15 @@ public class AccountsPayablePersistenceMapper {
         }
     }
 
-    private AccountsPayable.ArApStatus toDomainStatus(AccountsPayableEntity.ArApStatus entityStatus) {
+    private ArApStatus toDomainStatus(AccountsPayableEntity.ArApStatus entityStatus) {
         if (entityStatus == null) return null;
         switch (entityStatus) {
-            case OPEN: return AccountsPayable.ArApStatus.OPEN;
-            case CLOSED: return AccountsPayable.ArApStatus.CLOSED;
-            case OVERDUE: return AccountsPayable.ArApStatus.OVERDUE;
-            case PENDING: return AccountsPayable.ArApStatus.PENDING;
-            case PAID: return AccountsPayable.ArApStatus.PAID;
-            case CANCELED: return AccountsPayable.ArApStatus.CANCELED;
+            case OPEN: return ArApStatus.OPEN;
+            case CLOSED: return ArApStatus.CLOSED;
+            case OVERDUE: return ArApStatus.OVERDUE;
+            case PENDING: return ArApStatus.PENDING;
+            case PAID: return ArApStatus.PAID;
+            case CANCELED: return ArApStatus.CANCELED;
             default: throw new IllegalArgumentException("Unknown entity ArApStatus: " + entityStatus);
         }
     }
