@@ -14,23 +14,7 @@ files:
   readOnly: false
 - path: "src/main/java/com/posapi/application/service/product/ProductService.java"
   readOnly: false
-- path: "src/main/resources/db/migration/V1__initial_schema.sql"
-  readOnly: false
-- path: "src/main/resources/db/migration/V2__add_failed_login_attempts_to_users.sql"
-  readOnly: false
-- path: "src/main/resources/db/migration/V2__add_pos_features.sql"
-  readOnly: false
-- path: "src/main/resources/db/migration/V3__insert_initial_admin_user.sql"
-  readOnly: false
-- path: "src/main/resources/db/migration/V4__add_name_to_suppliers.sql"
-  readOnly: false
-- path: "src/main/resources/db/migration/V5__create_categories_table.sql"
-  readOnly: false
 - path: "src/main/java/com/posapi/infrastructure/adapter/output/persistence/adapter/category/CategoryPersistenceAdapter.java"
-  readOnly: false
-- path: "src/main/java/com/posapi/domain/model/tax/TaxCategoryEnum.java"
-  readOnly: false
-- path: "src/main/java/com/posapi/domain/model/tax/TaxCategory.java"
   readOnly: false
 - path: "src/main/java/com/posapi/domain/model/audit/AuditLog.java"
   readOnly: false
@@ -61,4 +45,20 @@ files:
 - path: "config/config.yml"
   readOnly: false
 - path: "src/main/java/com/posapi/infrastructure/security/SecurityConfig.java"
+  readOnly: false
+- path: "src/main/resources/db/migration/V1__create_initial_schema.sql"
+  readOnly: false
+- path: "src/main/java/com/posapi/application/service/posterminal/PosTerminalService.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/shared/dto/PageResponse.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/domain/exception/DuplicateResourceException.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/domain/exception/ResourceNotFoundException.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/domain/model/posterminal/PosTerminal.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/application/port/posterminal/PosTerminalManagementPort.java"
+  readOnly: false
+- path: "src/main/java/com/posapi/application/service/user/UserService.java"
   readOnly: false

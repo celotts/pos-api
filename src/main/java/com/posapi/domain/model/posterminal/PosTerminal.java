@@ -9,7 +9,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class PosTerminal {
@@ -56,5 +56,4 @@ public class PosTerminal {
             this.isActive = false;
         }
     }
-
 }
