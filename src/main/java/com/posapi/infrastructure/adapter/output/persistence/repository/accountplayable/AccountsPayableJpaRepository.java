@@ -1,15 +1,15 @@
-package com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.repository;
+package com.posapi.infrastructure.adapter.output.persistence.repository.accountplayable;
 
-import com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.entity.AccountsPayableEntity;
-import com.posapi.domain.model.accountspayable.AccountsPayable; // Importar el enum del dominio
+import com.posapi.domain.model.accountspayable.AccountsPayable;
+import com.posapi.infrastructure.adapter.output.persistence.entity.accountspayable.AccountsPayableEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
-import java.util.Optional;
 import java.util.UUID;
+
 
 @Repository
 public interface AccountsPayableJpaRepository extends JpaRepository<AccountsPayableEntity, UUID> {

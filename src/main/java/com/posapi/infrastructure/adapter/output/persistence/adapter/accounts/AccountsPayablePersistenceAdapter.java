@@ -1,9 +1,9 @@
-package com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.adapter;
+package com.posapi.infrastructure.adapter.output.persistence.adapter.accounts;
 
 import com.posapi.domain.model.accountspayable.AccountsPayable;
 import com.posapi.domain.port.output.AccountsPayableRepository;
-import com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.mapper.AccountsPayablePersistenceMapper;
-import com.posapi.feature.accountspayable.infrastructure.adapter.output.persistence.repository.AccountsPayableJpaRepository;
+import com.posapi.infrastructure.adapter.output.persistence.mapper.accountspayable.AccountsPayablePersistenceMapper;
+import com.posapi.infrastructure.adapter.output.persistence.repository.accountplayable.AccountsPayableJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -71,3 +71,4 @@ public class AccountsPayablePersistenceAdapter implements AccountsPayableReposit
         return accountsPayableJpaRepository.existsById(id);
     }
 }
+
