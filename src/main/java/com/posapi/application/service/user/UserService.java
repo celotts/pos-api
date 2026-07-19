@@ -46,9 +46,10 @@ public class UserService implements UserManagementPort {
                     "An account with this email already exists: " + user.getEmail());
         }
 
-        Role role = roleRepository.findById(user.getRoleId())
+        // CORREGIDO: Obtener el objeto Role completo
+        Role role = roleRepository.findById(user.getRole().getId()) // Acceder al ID del rol a través del objeto Role
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Role with ID '" + user.getRoleId() + "' not found."));
+                        "Role with ID '" + user.getRole().getId() + "' not found.")); // Acceder al ID del rol a través del objeto Role
 
         String encodedPassword = passwordEncoder.encode(user.getPassword());
 
@@ -57,6 +58,7 @@ public class UserService implements UserManagementPort {
                 .map(User::getId)
                 .orElse(null);
 
+        // CORREGIDO: Usar el método createNew de User con el objeto Role
         User userToSave = User.createNew(
                 user.getEmail(), encodedPassword, user.getFullName(), role, user.getIsActive(), currentUserId);
 
@@ -100,11 +102,13 @@ public class UserService implements UserManagementPort {
 
         return userRepository.findById(id).map(existingUser -> {
             validateEmailOnUpdate(existingUser, userWithUpdates);
-            UUID finalRoleId = validateRoleOnUpdate(existingUser, userWithUpdates);
+            // CORREGIDO: finalRole ahora es un objeto Role
+            Role finalRole = validateRoleOnUpdate(existingUser, userWithUpdates);
             String finalPassword = preparePasswordOnUpdate(existingUser, userWithUpdates);
 
-            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRoleId, currentUserId);
-            
+            // CORREGIDO: Usar el método updateWith de User con el objeto Role
+            User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRole, currentUserId);
+
             return userRepository.save(userToUpdate);
         });
     }
@@ -121,7 +125,7 @@ public class UserService implements UserManagementPort {
         return userRepository.findById(id).map(user -> {
             log.warn("Soft-deleting user with ID: {}", id);
             user.setDeletedAt(Instant.now());
-            user.setDeletedBy(currentUserId);
+            user.setDeletedByUserId(currentUserId); // CORREGIDO: Usar setDeletedByUserId
             userRepository.save(user);
             return true;
         }).orElse(false);
@@ -135,14 +139,15 @@ public class UserService implements UserManagementPort {
         }
     }
 
-    private UUID validateRoleOnUpdate(User existingUser, User partialUpdate) {
-        if (partialUpdate.getRoleId() != null && !partialUpdate.getRoleId().equals(existingUser.getRoleId())) {
-            roleRepository.findById(partialUpdate.getRoleId())
+    // CORREGIDO: Ahora devuelve un objeto Role
+    private Role validateRoleOnUpdate(User existingUser, User partialUpdate) {
+        // CORREGIDO: Acceder al ID del rol a través del objeto Role
+        if (partialUpdate.getRole() != null && !partialUpdate.getRole().getId().equals(existingUser.getRole().getId())) {
+            return roleRepository.findById(partialUpdate.getRole().getId()) // Acceder al ID del rol a través del objeto Role
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Role with ID " + partialUpdate.getRoleId() + " does not exist."));
-            return partialUpdate.getRoleId();
+                            "Role with ID " + partialUpdate.getRole().getId() + " does not exist.")); // Acceder al ID del rol a través del objeto Role
         }
-        return existingUser.getRoleId();
+        return existingUser.getRole(); // CORREGIDO: Devolver el objeto Role existente
     }
 
     private String preparePasswordOnUpdate(User existingUser, User partialUpdate) {

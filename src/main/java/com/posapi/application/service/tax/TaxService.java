@@ -2,95 +2,131 @@ package com.posapi.application.service.tax;
 
 import com.posapi.application.port.tax.TaxManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.tax.Tax;
-import com.posapi.domain.port.output.TaxRepository;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.port.output.TaxRepository;
 import com.posapi.domain.port.output.UserRepository;
+import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
-import com.posapi.infrastructure.adapter.input.rest.tax.mapper.TaxRestMapper;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TaxService implements TaxManagementPort {
 
     private final TaxRepository taxRepository;
+    private final UserRepository userRepository;
     private final SecurityContextHelper securityContextHelper;
-    private final UserRepository userRepository; // Needed for user name enrichment
-    private final TaxRestMapper taxRestMapper; // Needed for mapping to TaxResponse
 
     @Override
     @Transactional
-    public Tax createTax(Tax tax) {
-        if (taxRepository.existsByName(tax.getName())) {
-            throw new DuplicateResourceException("Tax with name '" + tax.getName() + "' already exists.");
+    public TaxResponse createTax(TaxRequest request, UUID currentUserId) {
+        if (taxRepository.existsByName(request.name())) {
+            throw new DuplicateResourceException("Tax with name '" + request.name() + "' already exists.");
         }
-        User currentUser = securityContextHelper.getCurrentUserOrThrow(); // 🛡️ World-Class: Get current user once
-        tax.setId(UUID.randomUUID());
-        tax.setCreatedBy(currentUser.getId());
-        // createdAt and updatedAt are handled by JPA Auditing
-        return taxRepository.save(tax);
+
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        UUID currentUserRoleId = currentUser.getRole().getId();
+
+        Tax newTax = Tax.createNew(
+                request.name(),
+                request.percentage(),
+                request.taxType(),
+                currentUserId,
+                currentUserRoleId
+        );
+
+        Tax savedTax = taxRepository.save(newTax);
+        return mapToTaxResponse(savedTax);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<TaxResponse> getTaxById(UUID id) {
-        return taxRepository.findById(id)
-                .map(this::mapTaxToTaxResponse); // 🛡️ World-Class: Centralize enrichment logic
+        return taxRepository.findById(id).map(this::mapToTaxResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<TaxResponse> getAllTaxes() {
-        List<Tax> taxes = taxRepository.findAll(); // Get domain models
+        List<Tax> taxes = taxRepository.findAll();
         return taxes.stream()
-                .map(this::mapTaxToTaxResponse) // 🛡️ World-Class: Centralize enrichment logic
-                .collect(Collectors.toList()).reversed();
+                .map(this::mapToTaxResponse)
+                .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
-    public Optional<TaxResponse> updateTax(UUID id, Tax tax) {
+    public Optional<TaxResponse> updateTax(UUID id, TaxRequest request, UUID currentUserId) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        UUID currentUserRoleId = currentUser.getRole().getId();
+
         return taxRepository.findById(id).map(existingTax -> {
-            existingTax.setName(tax.getName());
-            existingTax.setPercentage(tax.getPercentage());
-            existingTax.setTaxType(tax.getTaxType());
-            existingTax.setUpdatedBy(currentUser.getId());
+            if (request.name() != null && !request.name().equals(existingTax.getName())) {
+                if (taxRepository.existsByName(request.name())) {
+                    throw new DuplicateResourceException("Tax with name '" + request.name() + "' already exists.");
+                }
+                existingTax.updateDetails(
+                        request.name(),
+                        request.percentage(),
+                        request.taxType(),
+                        currentUserId, // updatedByUserId
+                        currentUserRoleId // updatedByRoleId
+                );
+            } else {
+                existingTax.updateDetails(
+                        existingTax.getName(), // Keep existing name
+                        request.percentage(),
+                        request.taxType(),
+                        currentUserId, // updatedByUserId
+                        currentUserRoleId // updatedByRoleId
+                );
+            }
             Tax updatedTax = taxRepository.save(existingTax);
-            return mapTaxToTaxResponse(updatedTax); // Return enriched DTO
+            return mapToTaxResponse(updatedTax);
         });
     }
 
-    @Transactional(readOnly = true)
-    @Override
-    public Optional<TaxResponse> getTaxResponseById(UUID id) {
-        return taxRepository.findById(id)
-                .map(this::mapTaxToTaxResponse);
-    }
-
     @Override
     @Transactional
-    public void deleteTax(UUID id) {
-        taxRepository.deleteById(id);
+    public void deleteTax(UUID id, UUID currentUserId) {
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        UUID currentUserRoleId = currentUser.getRole().getId();
+
+        taxRepository.findById(id).ifPresent(existingTax -> {
+            existingTax.markAsDeleted(currentUserId, currentUserRoleId);
+            taxRepository.save(existingTax);
+            log.info("Tax with id {} marked as deleted by user {}", id, currentUserId);
+        });
     }
 
-    // 🛡️ World-Class: Private helper method to enrich Tax domain model with user names
-    private TaxResponse mapTaxToTaxResponse(Tax tax) {
-        Set<UUID> userIds = Stream.of(tax.getCreatedBy(), tax.getUpdatedBy())
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+    private TaxResponse mapToTaxResponse(Tax tax) {
+        Set<UUID> userIds = Stream.of(
+                tax.getCreatedByUserId(),
+                tax.getUpdatedByUserId(),
+                tax.getDeletedByUserId()
+        ).filter(Objects::nonNull).collect(Collectors.toSet());
+
         Map<UUID, String> userNames = fetchUserNames(userIds);
 
-        String createdByName = userNames.getOrDefault(tax.getCreatedBy(), null);
-        String updatedByName = userNames.getOrDefault(tax.getUpdatedBy(), null);
+        String createdByName = userNames.getOrDefault(tax.getCreatedByUserId(), null);
+        String updatedByName = userNames.getOrDefault(tax.getUpdatedByUserId(), null);
+        String deletedByName = userNames.getOrDefault(tax.getDeletedByUserId(), null);
 
         return TaxResponse.fromDomain(tax, createdByName, updatedByName);
     }

@@ -33,6 +33,7 @@ public class ProductRestMapper {
             return null;
         }
 
+        // CORREGIDO: Pasar todos los campos requeridos por el constructor de ProductResponse
         return new ProductResponse(
                 product.getId(),
                 product.getSku(),
@@ -41,10 +42,21 @@ public class ProductRestMapper {
                 product.getSalePrice(),
                 product.getPurchasePrice(),
                 product.getCurrentStock(),
+                product.getCategoryId(), // Añadido
                 product.getTaxId(),
                 product.getSupplierId(),
                 product.getCreatedAt(),
-                product.getUpdatedAt()
+                product.getUpdatedAt(),
+                product.getDeletedAt(), // Añadido
+                product.getCreatedByUserId(), // Añadido
+                product.getUpdatedByUserId(), // Añadido
+                product.getDeletedByUserId(), // Añadido
+                product.getCreatedByUserRoleId(), // Añadido
+                product.getUpdatedByUserRoleId(), // Añadido
+                product.getDeletedByUserRoleId(), // Añadido
+                null, // createdByName (se llenará en el servicio)
+                null, // updatedByName (se llenará en el servicio)
+                null  // deletedByName (se llenará en el servicio)
         );
     }
 }

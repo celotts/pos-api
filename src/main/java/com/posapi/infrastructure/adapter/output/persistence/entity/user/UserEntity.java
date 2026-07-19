@@ -1,37 +1,27 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.user;
 
 import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "users")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@SQLRestriction("deleted_at IS NULL")
+@Entity
+@Table(name = "users")
 public class UserEntity {
 
     @Id
     private UUID id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Column(nullable = false)
@@ -43,30 +33,25 @@ public class UserEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
-    @Column(name = "failed_login_attempts", nullable = false)
-    private Integer failedLoginAttempts;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
     private RoleEntity role;
 
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private Instant createdAt;
 
-    @UpdateTimestamp
     @Column(name = "updated_at")
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @Column(name = "created_by")
-    private UUID createdBy;
+    @Column(name = "created_by_user_id")
+    private UUID createdByUserId;
 
-    @Column(name = "updated_by")
-    private UUID updatedBy;
+    @Column(name = "updated_by_user_id")
+    private UUID updatedByUserId;
 
-    @Column(name = "deleted_by")
-    private UUID deletedBy;
+    @Column(name = "deleted_by_user_id")
+    private UUID deletedByUserId;
 }

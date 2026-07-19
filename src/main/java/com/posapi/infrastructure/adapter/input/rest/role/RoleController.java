@@ -4,7 +4,7 @@ import com.posapi.application.port.role.RoleManagementPort;
 import com.posapi.domain.model.role.Role;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
-import com.posapi.infrastructure.security.SecurityContextHelper;
+import com.posapi.infrastructure.adapter.input.rest.role.mapper.RoleRestMapper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,12 +22,14 @@ import java.util.UUID;
 public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
-    private final SecurityContextHelper securityContextHelper;
+    private final RoleRestMapper roleRestMapper; // INYECTADO: Ahora el componente tiene uso legítimo
 
     @PostMapping
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
-        Role roleToCreate = Role.builder().name(request.name()).build();
+        // CORREGIDO: Usamos el mapper para convertir la entrada HTTP al Dominio
+        Role roleToCreate = roleRestMapper.toDomain(request);
         Role createdRole = roleManagementPort.createRole(roleToCreate);
+
         return roleManagementPort.getRoleByIdWithUserNames(createdRole.getId())
                 .map(responseDto -> new ResponseEntity<>(responseDto, HttpStatus.CREATED))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
@@ -47,7 +49,8 @@ public class RoleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
-        Role roleToUpdate = Role.builder().name(request.name()).build();
+        // CORREGIDO: Usamos el mapper para la actualización
+        Role roleToUpdate = roleRestMapper.toDomain(request);
         return roleManagementPort.updateRole(id, roleToUpdate)
                 .flatMap(updatedRole -> roleManagementPort.getRoleByIdWithUserNames(updatedRole.getId()))
                 .map(ResponseEntity::ok)

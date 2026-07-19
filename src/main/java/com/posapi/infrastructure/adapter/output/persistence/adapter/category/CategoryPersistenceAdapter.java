@@ -6,12 +6,12 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.category.Cate
 import com.posapi.infrastructure.adapter.output.persistence.mapper.category.CategoryPersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.category.CategoryJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -23,8 +23,6 @@ public class CategoryPersistenceAdapter implements CategoryRepository {
     @Override
     public Category save(Category category) {
         CategoryEntity entity = categoryMapper.toEntity(category);
-        // Confiamos en que save() y las anotaciones de la entidad harán el trabajo.
-        // Spring Data JPA es lo suficientemente inteligente para hacer un INSERT o un UPDATE según corresponda.
         CategoryEntity savedEntity = categoryJpaRepository.save(entity);
         return categoryMapper.toDomain(savedEntity);
     }
@@ -35,10 +33,10 @@ public class CategoryPersistenceAdapter implements CategoryRepository {
     }
 
     @Override
-    public List<Category> findAll() {
-        return categoryJpaRepository.findAll().stream()
-                .map(categoryMapper::toDomain)
-                .collect(Collectors.toList());
+    public Page<Category> findAll(Pageable pageable) {
+        // CORREGIDO: Usar el método map de Page para transformar Page<CategoryEntity> a Page<Category>
+        return categoryJpaRepository.findAll(pageable)
+                .map(categoryMapper::toDomain);
     }
 
     @Override
@@ -49,5 +47,10 @@ public class CategoryPersistenceAdapter implements CategoryRepository {
     @Override
     public boolean existsByName(String name) {
         return categoryJpaRepository.existsByName(name);
+    }
+
+    @Override
+    public Optional<Category> findByName(String name) {
+        return categoryJpaRepository.findByName(name).map(categoryMapper::toDomain);
     }
 }

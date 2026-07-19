@@ -1,6 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.tax.dto;
 
 import com.posapi.domain.model.tax.Tax;
+import com.posapi.domain.model.tax.TaxEnum;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -11,6 +12,6 @@ import java.math.BigDecimal;
 public record TaxRequest(
     @NotBlank String name,
     @NotNull @DecimalMin("0.0") @DecimalMax("1.0") BigDecimal percentage,
-    @NotNull Tax.TaxCategory taxType
+    @NotNull TaxEnum taxType
 ) {
 }

@@ -22,7 +22,7 @@ import java.util.UUID;
 @Table(name = "roles")
 @Getter
 @Setter
-@Builder
+@Builder(toBuilder = true) // Añadido toBuilder para facilitar actualizaciones
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -50,14 +50,14 @@ public class RoleEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @Column(name = "created_by_user_id")
-    private UUID createdBy;
+    @Column(name = "created_by_user_id") // Mapea a created_by_user_id en la DB
+    private UUID createdByUserId; // Nombre del campo corregido
 
-    @Column(name = "updated_by_user_id")
-    private UUID updatedBy;
+    @Column(name = "updated_by_user_id") // Mapea a updated_by_user_id en la DB
+    private UUID updatedByUserId; // Nombre del campo corregido
 
-    @Column(name = "deleted_by_user_id")
-    private UUID deletedBy;
+    @Column(name = "deleted_by_user_id") // Mapea a deleted_by_user_id en la DB
+    private UUID deletedByUserId; // Nombre del campo corregido
 
     @Generated(event = EventType.INSERT)
     @Column(name = "created_by_role_id", insertable = false, updatable = false)
@@ -70,4 +70,9 @@ public class RoleEntity {
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
     @Column(name = "deleted_by_role_id", insertable = false, updatable = false)
     private UUID deletedByRoleId;
+
+    // ELIMINADO: Los métodos getCreatedByUserId(), getUpdatedByUserId(), getDeletedByUserId()
+    // son generados automáticamente por Lombok si los campos se llaman createdByUserId, etc.
+    // Si los campos se llamaran createdBy, updatedBy, deletedBy, entonces los getters serían getCreatedBy(), etc.
+    // Pero como los campos ya tienen el nombre completo, Lombok los genera correctamente.
 }
