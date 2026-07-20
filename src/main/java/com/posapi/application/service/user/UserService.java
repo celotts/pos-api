@@ -102,11 +102,9 @@ public class UserService implements UserManagementPort {
 
         return userRepository.findById(id).map(existingUser -> {
             validateEmailOnUpdate(existingUser, userWithUpdates);
-            // CORREGIDO: finalRole ahora es un objeto Role
             Role finalRole = validateRoleOnUpdate(existingUser, userWithUpdates);
             String finalPassword = preparePasswordOnUpdate(existingUser, userWithUpdates);
 
-            // CORREGIDO: Usar el método updateWith de User con el objeto Role
             User userToUpdate = existingUser.updateWith(userWithUpdates, finalPassword, finalRole, currentUserId);
 
             return userRepository.save(userToUpdate);
@@ -125,7 +123,7 @@ public class UserService implements UserManagementPort {
         return userRepository.findById(id).map(user -> {
             log.warn("Soft-deleting user with ID: {}", id);
             user.setDeletedAt(Instant.now());
-            user.setDeletedByUserId(currentUserId); // CORREGIDO: Usar setDeletedByUserId
+            user.setDeletedByUserId(currentUserId);
             userRepository.save(user);
             return true;
         }).orElse(false);
@@ -139,15 +137,13 @@ public class UserService implements UserManagementPort {
         }
     }
 
-    // CORREGIDO: Ahora devuelve un objeto Role
     private Role validateRoleOnUpdate(User existingUser, User partialUpdate) {
-        // CORREGIDO: Acceder al ID del rol a través del objeto Role
         if (partialUpdate.getRole() != null && !partialUpdate.getRole().getId().equals(existingUser.getRole().getId())) {
             return roleRepository.findById(partialUpdate.getRole().getId()) // Acceder al ID del rol a través del objeto Role
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Role with ID " + partialUpdate.getRole().getId() + " does not exist.")); // Acceder al ID del rol a través del objeto Role
+                            "Role with ID " + partialUpdate.getRole().getId() + " does not exist."));
         }
-        return existingUser.getRole(); // CORREGIDO: Devolver el objeto Role existente
+        return existingUser.getRole();
     }
 
     private String preparePasswordOnUpdate(User existingUser, User partialUpdate) {

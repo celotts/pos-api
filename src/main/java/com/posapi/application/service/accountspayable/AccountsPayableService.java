@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Service // ¡IMPORTANTE! Para que Spring lo detecte como un bean
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class AccountsPayableService implements AccountsPayableManagementPort {
