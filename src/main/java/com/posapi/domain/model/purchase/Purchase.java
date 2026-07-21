@@ -76,7 +76,9 @@ public class Purchase {
     }
 
     // Método de dominio para actualizar el estado de pago
-    public void updatePaymentStatus(PurchasePaymentStatus newPaymentStatus, UUID updatedByUserId, UUID updatedByUserRoleId) {
+    public void updatePaymentStatus(PurchasePaymentStatus newPaymentStatus,
+                                    UUID updatedByUserId,
+                                    UUID updatedByUserRoleId) {
         this.paymentStatus = newPaymentStatus;
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;

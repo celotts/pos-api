@@ -18,7 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,7 +82,8 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier(UUID supplierId, Pageable pageable) {
-        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository.findBySupplierId(supplierId, pageable);
+        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
+                .findBySupplierId(supplierId, pageable); // CORREGIDO: Línea dividida
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
                 .map(this::mapToAccountsPayableResponse)
                 .collect(Collectors.toList());
@@ -134,14 +140,15 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
         accountsPayableRepository.findById(id).ifPresent(existingAccountsPayable -> {
             existingAccountsPayable.markAsDeleted(currentUserId, currentUserRoleId);
             accountsPayableRepository.save(existingAccountsPayable);
-            log.info("Accounts Payable with id {} marked as deleted by user {}", id, currentUserId);
+            log.info("POS Terminal with id {} marked as deleted by user {}", id, currentUserId);
         });
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AccountsPayableResponse> getOverdueAccountsPayable(LocalDate asOfDate, Pageable pageable) {
-        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository.findByDueDateBeforeAndStatus(asOfDate, AccountsPayable.ArApStatus.OVERDUE, pageable);
+        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
+                .findByDueDateBeforeAndStatus(asOfDate, AccountsPayable.ArApStatus.OVERDUE, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
                 .map(this::mapToAccountsPayableResponse)
                 .collect(Collectors.toList());
@@ -166,7 +173,8 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
         String createdByName = userNames.getOrDefault(accountsPayable.getCreatedByUserId(), null);
         String updatedByName = userNames.getOrDefault(accountsPayable.getUpdatedByUserId(), null);
-        String deletedByName = userNames.getOrDefault(accountsPayable.getDeletedByUserId(), null);
+        String deletedByName = userNames.getOrDefault(
+                accountsPayable.getDeletedByUserId(), null); // CORREGIDO: Línea dividida
 
         return AccountsPayableResponse.fromDomain(accountsPayable, createdByName, updatedByName, deletedByName);
     }
