@@ -5,27 +5,30 @@ import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.UUID;
+
 @Component
 public class TaxRestMapper {
 
-    public Tax toDomain(TaxRequest dto) {
+    public Tax toDomain(TaxRequest request) {
+        if (request == null) {
+            return null;
+        }
         return Tax.builder()
-                .name(dto.name())
-                .percentage(dto.percentage())
-                .taxType(dto.taxType())
+                .name(request.name())
+                .percentage(request.percentage())
+                .taxType(request.taxType())
                 .build();
     }
 
-    public TaxResponse toResponse(Tax domain, String createdByName, String updatedByName) {
-        return new TaxResponse(
-                domain.getId(),
-                domain.getName(),
-                domain.getPercentage(),
-                domain.getTaxType(),
-                domain.getCreatedAt(),
-                domain.getUpdatedAt(),
-                createdByName,
-                updatedByName
-        );
+    // Método para mapear de Tax (dominio) a TaxResponse (DTO)
+    public TaxResponse toResponse(Tax tax, String createdByName, String updatedByName, String deletedByName) {
+        if (tax == null) {
+            return null;
+        }
+        // CORREGIDO: Usar el método estático fromDomain del record TaxResponse
+        return TaxResponse.fromDomain(tax, createdByName, updatedByName, deletedByName);
     }
 }

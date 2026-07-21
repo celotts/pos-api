@@ -3,7 +3,6 @@ package com.posapi.domain.port.output;
 import com.posapi.domain.model.category.Category;
 import org.springframework.data.domain.Page; // Añadir importación para Page
 import org.springframework.data.domain.Pageable;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

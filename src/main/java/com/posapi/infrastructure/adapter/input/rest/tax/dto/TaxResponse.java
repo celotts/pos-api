@@ -10,18 +10,17 @@ import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record TaxResponse(
-    UUID id,
-    String name,
-    BigDecimal percentage,
-    TaxEnum taxType,
-    Instant createdAt,
-    Instant updatedAt,
-    String createdByName,
-    String updatedByName
+        UUID id,
+        String name,
+        BigDecimal percentage,
+        TaxEnum taxType,
+        Instant createdAt,
+        Instant updatedAt,
+        String createdByName,
+        String updatedByName
+        // AÑADIDO
 ) {
-    public static TaxResponse fromDomain(Tax tax, String createdByName, String updatedByName) {
-        // 🛡️ World-Class: Implement the fromDomain method to correctly map the domain model
-        // and enriched data to the DTO.
+    public static TaxResponse fromDomain(Tax tax, String createdByName, String updatedByName, String deletedByName) { // AÑADIDO deletedByName
         return new TaxResponse(
                 tax.getId(),
                 tax.getName(),
@@ -31,6 +30,7 @@ public record TaxResponse(
                 tax.getUpdatedAt(),
                 createdByName,
                 updatedByName
+                // AÑADIDO
         );
     }
 }

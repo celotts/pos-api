@@ -1,6 +1,6 @@
 package com.posapi.application.service.category;
 
-import com.posapi.application.port.category.CategoryInputPort;
+import com.posapi.application.port.category.CategoryManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.category.Category;
 import com.posapi.domain.model.user.User;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CategoryService implements CategoryInputPort {
+public class CategoryService implements CategoryManagementPort {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository; // Para obtener nombres de usuario

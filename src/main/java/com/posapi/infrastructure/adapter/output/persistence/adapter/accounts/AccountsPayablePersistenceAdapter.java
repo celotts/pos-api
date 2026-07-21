@@ -71,4 +71,3 @@ public class AccountsPayablePersistenceAdapter implements AccountsPayableReposit
         return accountsPayableJpaRepository.existsById(id);
     }
 }
-

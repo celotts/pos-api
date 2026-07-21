@@ -7,6 +7,8 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.Instant; // AÑADIDO
+import java.util.UUID; // AÑADIDO
 
 @Component
 public class ProductRestMapper {
@@ -23,17 +25,18 @@ public class ProductRestMapper {
                 .purchasePrice(request.purchasePrice())
                 .salePrice(request.salePrice())
                 .currentStock(request.currentStock() != null ? request.currentStock() : BigDecimal.ZERO)
+                .categoryId(request.categoryId())
                 .taxId(request.taxId())
                 .supplierId(request.supplierId())
                 .build();
     }
 
-    public ProductResponse toResponse(Product product) {
+    // CORREGIDO: Método toResponse para aceptar nombres de auditoría
+    public ProductResponse toResponse(Product product, String createdByName, String updatedByName, String deletedByName) {
         if (product == null) {
             return null;
         }
 
-        // CORREGIDO: Pasar todos los campos requeridos por el constructor de ProductResponse
         return new ProductResponse(
                 product.getId(),
                 product.getSku(),
@@ -42,21 +45,21 @@ public class ProductRestMapper {
                 product.getSalePrice(),
                 product.getPurchasePrice(),
                 product.getCurrentStock(),
-                product.getCategoryId(), // Añadido
+                product.getCategoryId(),
                 product.getTaxId(),
                 product.getSupplierId(),
                 product.getCreatedAt(),
                 product.getUpdatedAt(),
-                product.getDeletedAt(), // Añadido
-                product.getCreatedByUserId(), // Añadido
-                product.getUpdatedByUserId(), // Añadido
-                product.getDeletedByUserId(), // Añadido
-                product.getCreatedByUserRoleId(), // Añadido
-                product.getUpdatedByUserRoleId(), // Añadido
-                product.getDeletedByUserRoleId(), // Añadido
-                null, // createdByName (se llenará en el servicio)
-                null, // updatedByName (se llenará en el servicio)
-                null  // deletedByName (se llenará en el servicio)
+                product.getDeletedAt(),
+                product.getCreatedByUserId(),
+                product.getUpdatedByUserId(),
+                product.getDeletedByUserId(),
+                product.getCreatedByUserRoleId(),
+                product.getUpdatedByUserRoleId(),
+                product.getDeletedByUserRoleId(),
+                createdByName,
+                updatedByName,
+                deletedByName
         );
     }
 }

@@ -1,6 +1,11 @@
 package com.posapi.domain.model.category;
 
-import jakarta.persistence.*; // Importar las anotaciones de JPA
+import jakarta.persistence.Column; // CORREGIDO
+import jakarta.persistence.Entity; // CORREGIDO
+import jakarta.persistence.GeneratedValue; // CORREGIDO
+import jakarta.persistence.GenerationType; // CORREGIDO
+import jakarta.persistence.Id; // CORREGIDO
+import jakarta.persistence.Table; // CORREGIDO
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor; // Añadir NoArgsConstructor

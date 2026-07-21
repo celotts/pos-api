@@ -39,7 +39,8 @@ public class PosTerminalService implements PosTerminalManagementPort {
     @Transactional
     public PosTerminalResponse createPosTerminal(PosTerminalRequest request, UUID currentUserId) {
         if (posTerminalRepository.existsByName(request.name())) {
-            throw new DuplicateResourceException("POS Terminal with name '" + request.name() + "' already exists.");
+            throw new DuplicateResourceException(
+                    "POS Terminal with name '" + request.name() + "' already exists.");
         }
 
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
@@ -88,7 +89,8 @@ public class PosTerminalService implements PosTerminalManagementPort {
         return posTerminalRepository.findById(id).map(existingPosTerminal -> {
             if (request.name() != null && !request.name().equals(existingPosTerminal.getName())) {
                 if (posTerminalRepository.existsByName(request.name())) {
-                    throw new DuplicateResourceException("POS Terminal with name '" + request.name() + "' already exists.");
+                    throw new DuplicateResourceException(
+                            "POS Terminal with name '" + request.name() + "' already exists.");
                 }
             }
             existingPosTerminal.updateDetails(

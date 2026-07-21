@@ -2,8 +2,15 @@ package com.posapi.application.service.product;
 
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.product.Product;
+import com.posapi.domain.model.role.Role;
+import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.ProductRepository;
+import com.posapi.domain.port.output.UserRepository;
+import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
+import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -11,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,8 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -33,134 +42,209 @@ class ProductServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private SecurityContextHelper securityContextHelper;
 
     @InjectMocks
     private ProductService productService;
 
+    private static final UUID USER_ID = UUID.randomUUID();
+    private static final UUID ADMIN_ROLE_ID = UUID.randomUUID();
+
+    private User adminUser;
     private Product product1;
     private Product product2;
+    private ProductRequest productRequest1;
 
     @BeforeEach
     void setUp() {
+        Role adminRole = Role.builder()
+                .id(ADMIN_ROLE_ID)
+                .name("ADMIN")
+                .build();
+
+        adminUser = User.builder()
+                .id(USER_ID)
+                .email("admin@example.com")
+                .fullName("Admin User")
+                .role(adminRole)
+                .createdByRoleId(ADMIN_ROLE_ID)
+                .build();
+
         product1 = Product.builder()
                 .id(UUID.randomUUID())
                 .sku("SKU001")
                 .name("Product 1")
+                .purchasePrice(BigDecimal.valueOf(50))
                 .salePrice(BigDecimal.valueOf(100))
+                .currentStock(BigDecimal.valueOf(10))
+                .createdByUserId(USER_ID)
+                .createdByUserRoleId(ADMIN_ROLE_ID)
+                .createdAt(Instant.now())
                 .build();
 
         product2 = Product.builder()
                 .id(UUID.randomUUID())
                 .sku("SKU002")
                 .name("Product 2")
+                .purchasePrice(BigDecimal.valueOf(75))
                 .salePrice(BigDecimal.valueOf(200))
+                .currentStock(BigDecimal.valueOf(5))
+                .createdByUserId(USER_ID)
+                .createdByUserRoleId(ADMIN_ROLE_ID)
+                .createdAt(Instant.now())
                 .build();
+
+        productRequest1 = new ProductRequest(
+                product1.getSku(), product1.getName(), product1.getDescription(),
+                product1.getPurchasePrice(), product1.getSalePrice(), product1.getCurrentStock(),
+                product1.getCategoryId(), product1.getTaxId(), product1.getSupplierId()
+        );
+
+        lenient().when(securityContextHelper.getCurrentUserOrThrow()).thenReturn(adminUser);
+        lenient().when(securityContextHelper.getCurrentUserId()).thenReturn(USER_ID);
+        lenient().when(securityContextHelper.getCurrentUserRoleId()).thenReturn(ADMIN_ROLE_ID);
     }
 
     @Test
-    void createProductShouldSaveAndReturnProductWhenSkuIsUnique() {
+    @DisplayName("Create product - Should save and return product response when SKU is unique")
+    void createProductShouldSaveAndReturnProductResponseWhenSkuIsUnique() {
         when(productRepository.existsBySku(anyString())).thenReturn(false);
         when(productRepository.save(any(Product.class))).thenReturn(product1);
+        when(userRepository.findAllById(anySet())).thenReturn(List.of(adminUser));
 
-        Product newProduct = Product.builder().sku("SKU001").name("New Product").build();
-        Product createdProduct = productService.createProduct(newProduct);
+        ProductResponse createdProductResponse = productService.createProduct(productRequest1, USER_ID);
 
-        assertNotNull(createdProduct);
-        assertNotNull(createdProduct.getId());
-        assertEquals("SKU001", createdProduct.getSku());
+        assertNotNull(createdProductResponse);
+        assertNotNull(createdProductResponse.id());
+        assertEquals("SKU001", createdProductResponse.sku());
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
+    @DisplayName("Create product - Should throw DuplicateResourceException when SKU exists")
     void createProductShouldThrowDuplicateResourceExceptionWhenSkuExists() {
         when(productRepository.existsBySku("SKU001")).thenReturn(true);
 
-        Product newProduct = Product.builder().sku("SKU001").name("New Product").build();
-
-        assertThrows(DuplicateResourceException.class, () -> {
-            productService.createProduct(newProduct);
-        });
+        assertThrows(DuplicateResourceException.class, () ->
+                productService.createProduct(productRequest1, USER_ID)
+        );
 
         verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
-    void getAllProductsShouldReturnListOfProducts() {
+    @DisplayName("Get all products - Should return list of product responses")
+    void getAllProductsShouldReturnListOfProductResponses() {
         when(productRepository.findAll()).thenReturn(List.of(product1, product2));
+        when(userRepository.findAllById(anySet())).thenReturn(List.of(adminUser));
 
-        List<Product> products = productService.getAllProducts();
+        List<ProductResponse> products = productService.getAllProducts();
 
         assertEquals(2, products.size());
+        assertEquals(product1.getSku(), products.getFirst().sku());
         verify(productRepository, times(1)).findAll();
     }
 
     @Test
-    void getProductByIdShouldReturnProductWhenFound() {
+    @DisplayName("Get product by ID - Should return product response when found")
+    void getProductByIdShouldReturnProductResponseWhenFound() {
         UUID id = product1.getId();
         when(productRepository.findById(id)).thenReturn(Optional.of(product1));
+        when(userRepository.findAllById(anySet())).thenReturn(List.of(adminUser));
 
-        Optional<Product> foundProduct = productService.getProductById(id);
+        Optional<ProductResponse> foundProductResponse = productService.getProductById(id);
 
-        assertTrue(foundProduct.isPresent());
-        assertEquals(product1, foundProduct.get());
+        assertTrue(foundProductResponse.isPresent());
+        assertEquals(product1.getSku(), foundProductResponse.get().sku());
     }
 
     @Test
-    void updateProductShouldUpdateAndReturnProductWhenFound() {
+    @DisplayName("Update product - Should update and return product response when found")
+    void updateProductShouldUpdateAndReturnProductResponseWhenFound() {
         UUID id = product1.getId();
-        Product updatedDetails = Product.builder().name("Updated Name").build();
+        ProductRequest updateRequest = new ProductRequest(
+                "SKU001", "Updated Name", "Updated Desc",
+                BigDecimal.valueOf(60), BigDecimal.valueOf(110), BigDecimal.valueOf(10),
+                null, null, null
+        );
+        Product updatedDomainProduct = product1.toBuilder().name("Updated Name").build();
 
         when(productRepository.findById(id)).thenReturn(Optional.of(product1));
-        when(productRepository.save(any(Product.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(productRepository.save(any(Product.class))).thenReturn(updatedDomainProduct);
+        when(userRepository.findAllById(anySet())).thenReturn(List.of(adminUser));
 
-        Optional<Product> result = productService.updateProduct(id, updatedDetails);
+        Optional<ProductResponse> result = productService.updateProduct(id, updateRequest, USER_ID);
 
         assertTrue(result.isPresent());
-        assertEquals("Updated Name", result.get().getName());
+        assertEquals("Updated Name", result.get().name());
         verify(productRepository, times(1)).save(any(Product.class));
     }
 
     @Test
+    @DisplayName("Update product - Should return empty when not found")
     void updateProductShouldReturnEmptyWhenNotFound() {
         UUID id = UUID.randomUUID();
-        Product updatedDetails = Product.builder().name("Updated Name").build();
+        ProductRequest updateRequest = new ProductRequest(
+                "SKU001", "Updated Name", "Updated Desc",
+                BigDecimal.valueOf(60), BigDecimal.valueOf(110), BigDecimal.valueOf(10),
+                null, null, null
+        );
 
         when(productRepository.findById(id)).thenReturn(Optional.empty());
 
-        Optional<Product> result = productService.updateProduct(id, updatedDetails);
+        Optional<ProductResponse> result = productService.updateProduct(id, updateRequest, USER_ID);
 
         assertFalse(result.isPresent());
         verify(productRepository, never()).save(any(Product.class));
     }
 
     @Test
-    void deleteProductShouldCallRepositoryDelete() {
+    @DisplayName("Delete product - Should mark product as deleted when found")
+    void deleteProductShouldMarkProductAsDeleted() {
         UUID id = product1.getId();
-        doNothing().when(productRepository).deleteById(id);
+        when(productRepository.findById(id)).thenReturn(Optional.of(product1));
+        when(productRepository.save(any(Product.class))).thenReturn(product1);
 
-        productService.deleteProduct(id);
+        productService.deleteProduct(id, USER_ID);
 
-        verify(productRepository, times(1)).deleteById(id);
+        verify(productRepository, times(1)).save(any(Product.class));
     }
-    
+
     @Test
-    void getProductBySkuShouldReturnProductWhenSkuExists() {
+    @DisplayName("Delete product - Should do nothing when not found")
+    void deleteProductShouldDoNothingWhenNotFound() {
+        UUID id = UUID.randomUUID();
+        when(productRepository.findById(id)).thenReturn(Optional.empty());
+
+        productService.deleteProduct(id, USER_ID);
+
+        verify(productRepository, never()).save(any(Product.class));
+    }
+
+    @Test
+    @DisplayName("Get product by SKU - Should return product response when SKU exists")
+    void getProductBySkuShouldReturnProductResponseWhenSkuExists() {
         when(productRepository.findBySku(product1.getSku())).thenReturn(Optional.of(product1));
+        when(userRepository.findAllById(anySet())).thenReturn(List.of(adminUser));
 
-        Optional<Product> foundProduct = productService.getProductBySku(product1.getSku());
+        Optional<ProductResponse> foundProductResponse = productService.getProductBySku(product1.getSku());
 
-        assertTrue(foundProduct.isPresent());
-        assertEquals(product1.getSku(), foundProduct.get().getSku());
+        assertTrue(foundProductResponse.isPresent());
+        assertEquals(product1.getSku(), foundProductResponse.get().sku());
         verify(productRepository, times(1)).findBySku(product1.getSku());
     }
 
     @Test
+    @DisplayName("Get product by SKU - Should return empty when SKU does not exist")
     void getProductBySkuShouldReturnEmptyWhenSkuDoesNotExist() {
         when(productRepository.findBySku(anyString())).thenReturn(Optional.empty());
 
-        Optional<Product> foundProduct = productService.getProductBySku("NON_EXISTENT_SKU");
+        Optional<ProductResponse> foundProductResponse = productService.getProductBySku("NON_EXISTENT_SKU");
 
-        assertFalse(foundProduct.isPresent());
+        assertFalse(foundProductResponse.isPresent());
         verify(productRepository, times(1)).findBySku(anyString());
     }
 }

@@ -2,6 +2,8 @@ package com.posapi.application.port.tax;
 
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
+import com.posapi.shared.dto.PageResponse; // AÑADIDO
+import org.springframework.data.domain.Pageable; // AÑADIDO
 
 import java.util.List;
 import java.util.Optional;
@@ -29,6 +31,13 @@ public interface TaxManagementPort {
      * @return Una lista de DTOs de respuesta de impuestos.
      */
     List<TaxResponse> getAllTaxes();
+
+    /**
+     * Obtiene una lista paginada de todos los impuestos.
+     * @param pageable Información de paginación.
+     * @return Un PageResponse que contiene la lista paginada de DTOs de respuesta de impuestos.
+     */
+    PageResponse<TaxResponse> getAllTaxes(Pageable pageable); // AÑADIDO
 
     /**
      * Actualiza un impuesto existente.
