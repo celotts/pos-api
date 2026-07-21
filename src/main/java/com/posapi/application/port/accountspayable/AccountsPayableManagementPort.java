@@ -28,5 +28,6 @@ public interface AccountsPayableManagementPort {
 
     void deleteAccountsPayable(UUID id, UUID currentUserId);
 
-    PageResponse<AccountsPayableResponse> getOverdueAccountsPayable(LocalDate asOfDate, Pageable pageable);
+    PageResponse<AccountsPayableResponse> getOverdueAccountsPayable(
+            LocalDate asOfDate, Pageable pageable); // CORREGIDO: Línea dividida
 }

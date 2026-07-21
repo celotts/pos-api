@@ -83,7 +83,7 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
     @Transactional(readOnly = true)
     public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier(UUID supplierId, Pageable pageable) {
         Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
-                .findBySupplierId(supplierId, pageable); // CORREGIDO: Línea dividida
+                .findBySupplierId(supplierId, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
                 .map(this::mapToAccountsPayableResponse)
                 .collect(Collectors.toList());
@@ -174,7 +174,7 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
         String createdByName = userNames.getOrDefault(accountsPayable.getCreatedByUserId(), null);
         String updatedByName = userNames.getOrDefault(accountsPayable.getUpdatedByUserId(), null);
         String deletedByName = userNames.getOrDefault(
-                accountsPayable.getDeletedByUserId(), null); // CORREGIDO: Línea dividida
+                accountsPayable.getDeletedByUserId(), null);
 
         return AccountsPayableResponse.fromDomain(accountsPayable, createdByName, updatedByName, deletedByName);
     }
