@@ -1,37 +1,44 @@
 package com.posapi.infrastructure.adapter.input.rest.purchase.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.posapi.domain.model.purchase.Purchase; // Importar el modelo de dominio
+import com.posapi.domain.model.purchase.Purchase;
 import com.posapi.domain.model.purchase.PurchasePaymentStatus;
 import com.posapi.domain.model.purchase.PurchaseStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List; // AÑADIDO
 import java.util.UUID;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PurchaseResponse(
-    UUID id,
-    UUID supplierId,
-    Instant purchaseDate,
-    BigDecimal totalAmount,
-    BigDecimal totalTaxAmount,
-    PurchaseStatus status,
-    PurchasePaymentStatus paymentStatus,
-    Instant createdAt,
-    Instant updatedAt,
-    Instant deletedAt,
-    UUID createdByUserId,
-    UUID updatedByUserId,
-    UUID deletedByUserId,
-    UUID createdByUserRoleId,
-    UUID updatedByUserRoleId,
-    UUID deletedByUserRoleId,
-    String createdByName,
-    String updatedByName,
-    String deletedByName
+        UUID id,
+        UUID supplierId,
+        Instant purchaseDate,
+        BigDecimal totalAmount,
+        BigDecimal totalTaxAmount,
+        PurchaseStatus status,
+        PurchasePaymentStatus paymentStatus,
+        Instant createdAt,
+        Instant updatedAt,
+        Instant deletedAt,
+        UUID createdByUserId,
+        UUID updatedByUserId,
+        UUID deletedByUserId,
+        UUID createdByUserRoleId,
+        UUID updatedByUserRoleId,
+        UUID deletedByUserRoleId,
+        String createdByName,
+        String updatedByName,
+        String deletedByName,
+        List<PurchaseItemResponse> items // AÑADIDO: Lista de ítems de la compra
 ) {
-    public static PurchaseResponse fromDomain(Purchase purchase, String createdByName, String updatedByName, String deletedByName) {
+    public static PurchaseResponse fromDomain(
+            Purchase purchase,
+            List<PurchaseItemResponse> items, // AÑADIDO: Recibe los ítems
+            String createdByName,
+            String updatedByName,
+            String deletedByName) {
         return new PurchaseResponse(
                 purchase.getId(),
                 purchase.getSupplierId(),
@@ -51,7 +58,8 @@ public record PurchaseResponse(
                 purchase.getDeletedByUserRoleId(),
                 createdByName,
                 updatedByName,
-                deletedByName
+                deletedByName,
+                items // AÑADIDO
         );
     }
 }
