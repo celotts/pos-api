@@ -1,7 +1,7 @@
 package com.posapi.shared.exception;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatus; // AÑADIDO: Importación de HttpStatus
 
 import java.time.Instant;
 import java.util.Map;
@@ -13,5 +13,5 @@ public record ErrorResponse(
         int statusCode,
         String message,
         String path,
-        Map<String, String> fieldErrors
-) {}
+        Map<String, String> errors
+) { }
