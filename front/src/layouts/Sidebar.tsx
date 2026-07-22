@@ -26,6 +26,10 @@ const Sidebar: React.FC = () => {
           Products
         </NavLink>
 
+        <NavLink to="/purchases" className={linkClass}>
+          Purchases
+        </NavLink>
+
         {isAdmin && (
           <div>
             <button
@@ -49,6 +53,9 @@ const Sidebar: React.FC = () => {
                 <NavLink to="/categories" className={linkClass}>Categories</NavLink>
                 <NavLink to="/suppliers" className={linkClass}>Suppliers</NavLink>
                 <NavLink to="/taxes" className={linkClass}>Taxes</NavLink>
+                <NavLink to="/shifts" className={linkClass}>Shifts</NavLink>
+                <NavLink to="/accounts-payable" className={linkClass}>Accounts Payable</NavLink>
+                <NavLink to="/cash-accounts" className={linkClass}>Cash Accounts</NavLink>
               </div>
             )}
           </div>

@@ -26,6 +26,7 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('handleSubmit called!');
     if (!isEmailValid) return;
     setError('');
     setIsSubmitting(true);
@@ -33,9 +34,11 @@ const LoginPage: React.FC = () => {
       const { token } = await authService.login({ email, password });
       dispatch(setCredentials({ token }));
       navigate('/');
+      console.log('Login successful, navigating to /'); // <-- AÑADIDO
     } catch (err: any) {
       const message = err.response?.data?.message || 'Failed to login. Please check your credentials.';
       setError(message);
+      console.error('Login error:', err); // AÑADIDO
     } finally {
       setIsSubmitting(false);
     }

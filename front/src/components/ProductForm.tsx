@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ProductData } from '../services/productService';
+import type { ProductData } from '../services/productService';
 
 interface ProductFormProps {
   onSubmit: (data: ProductData) => void;

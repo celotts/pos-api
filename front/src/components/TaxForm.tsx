@@ -1,21 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import { Tax, TaxData } from '../services/taxService';
+import type { Tax, TaxData } from '../services/taxService';
 
 interface FormProps {
   onSubmit: (data: TaxData) => void;
   onCancel: () => void;
   initialData?: Tax | null;
   isSubmitting: boolean;
-  error: string | null;
+  apiError: { message: string; errors?: string[] } | null;
 }
 
-const TaxForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, error }) => {
+const TaxForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, apiError }) => {
   const [formData, setFormData] = useState<TaxData>({
     name: '', percentage: 0, taxType: 'IVA'
   });
 
   useEffect(() => {
-    if (initialData) setFormData(initialData);
+    if (initialData) {
+        setFormData({
+            name: initialData.name,
+            percentage: initialData.percentage,
+            taxType: initialData.taxType,
+        });
+    }
   }, [initialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -35,7 +41,18 @@ const TaxForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmi
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {error && <p className="mb-4 text-center text-sm text-red-500">{error}</p>}
+        {apiError && (
+            <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700">
+                <p className="font-bold">{apiError.message}</p>
+                {apiError.errors && (
+                    <ul className="ml-5 mt-2 list-disc">
+                        {apiError.errors.map((err, index) => (
+                            <li key={index}>{err}</li>
+                        ))}
+                    </ul>
+                )}
+            </div>
+        )}
       <div>
         <label htmlFor="name" className={labelStyle}>Tax Name</label>
         <input id="name" name="name" value={formData.name} onChange={handleChange} required className={inputStyle} disabled={isSubmitting} />

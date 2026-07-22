@@ -1,7 +1,7 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom'; // CORREGIDO: Quitado el '1'
 import { useDispatch } from 'react-redux';
-import { logout } from '../../features/auth/authSlice';
+import { logout } from './authSlice'; // Ruta relativa directa
 
 const Sidebar: React.FC = () => {
     const dispatch = useDispatch();

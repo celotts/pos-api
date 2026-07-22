@@ -45,11 +45,13 @@ const authSlice = createSlice({
       state.user = { email: decoded.sub, roles };
 
       localStorage.setItem('token', token);
+      console.log('authSlice - setCredentials: State updated', { token: state.token, user: state.user }); // <-- AÑADIDO
     },
     logOut: (state) => {
       state.user = null;
       state.token = null;
       localStorage.removeItem('token');
+      console.log('authSlice - logOut: State cleared'); // <-- AÑADIDO
     },
   },
 });
@@ -58,4 +60,8 @@ export const { setCredentials, logOut } = authSlice.actions;
 export default authSlice.reducer;
 
 export const selectCurrentUser = (state: RootState) => state.auth.user;
-export const selectIsAuthenticated = (state: RootState) => state.auth.token !== null;
+export const selectIsAuthenticated = (state: RootState) => {
+  console.log('selectIsAuthenticated - state.auth:', state.auth); // <-- AÑADIDO
+  console.log('selectIsAuthenticated - state.auth.token:', state.auth.token); // <-- AÑADIDO
+  return state.auth.token !== null;
+};
