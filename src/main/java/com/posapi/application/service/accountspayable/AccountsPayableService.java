@@ -81,7 +81,9 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier(UUID supplierId, Pageable pageable) {
+    public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier( // CORREGIDO: Línea dividida
+                                                                               UUID supplierId,
+                                                                               Pageable pageable) {
         Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
                 .findBySupplierId(supplierId, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()

@@ -63,10 +63,6 @@ public class ProductPersistenceAdapter implements ProductRepository {
                     } else if (quantityChange.compareTo(BigDecimal.ZERO) < 0) {
                         product.decreaseStock(quantityChange.abs(), product.getUpdatedByUserId(), product.getUpdatedByUserRoleId());
                     }
-                    // Note: The updatedByUserId and updatedByUserRoleId here might not be the current user.
-                    // This method is called from PurchaseService, where the current user context is available.
-                    // For a more robust solution, consider passing currentUserId/currentUserRoleId to this method.
-                    // For now, we'll use existing audit fields or null if not set.
 
                     ProductEntity updatedProductEntity = productMapper.toEntity(product);
                     return productMapper.toDomain(productJpaRepository.save(updatedProductEntity));

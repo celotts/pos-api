@@ -2,10 +2,10 @@ package com.posapi.infrastructure.adapter.input.rest.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.posapi.application.port.user.UserManagementPort;
-import com.posapi.application.service.jwt.JwtService;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
+import com.posapi.infrastructure.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;

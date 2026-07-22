@@ -1,9 +1,9 @@
 package com.posapi.application.service.auth;
 
 import com.posapi.application.port.auth.AuthManagementPort;
+import com.posapi.infrastructure.security.JwtService; // CORREGIDO: Importación
 import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginRequest;
 import com.posapi.infrastructure.adapter.input.rest.auth.dto.LoginResponse;
-import com.posapi.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
