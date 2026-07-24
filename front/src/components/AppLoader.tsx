@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { restoreAuthState } from '../store/slices/authSlice';
+// import { restoreAuthState } from '../store/slices/authSlice'; // ELIMINADO: Ya no es necesario
 
 interface AppLoaderProps {
   children: React.ReactNode;
@@ -11,10 +11,10 @@ const AppLoader: React.FC<AppLoaderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Intenta restaurar el estado de autenticación al cargar la app
-    dispatch(restoreAuthState());
-    // Damos por terminada la carga inicial. El resto de la app
-    // reaccionará al estado de Redux (ya sea con usuario o sin él).
+    // La lógica de restauración del estado ahora se maneja en el initialState de authSlice.
+    // No es necesario despachar una acción aquí.
+    // Si necesitas alguna inicialización asíncrona, este es el lugar.
+    // Por ahora, simplemente marcamos como cargado.
     setLoading(false);
   }, [dispatch]);
 

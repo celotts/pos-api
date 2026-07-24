@@ -2,9 +2,9 @@ import axios from 'axios';
 import { store } from '../store';
 import { logOut } from '../store/slices/authSlice';
 
-// CORREGIDO: La baseURL debe apuntar al backend
+// CORREGIDO: La baseURL debe apuntar al backend con el puerto y versión correctos
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Asegúrate de que este sea el puerto de tu backend
+  baseURL: 'http://localhost:9090/api/v1', // CORREGIDO
 });
 
 // Interceptor para AÑADIR el token a cada petición

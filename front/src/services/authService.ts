@@ -1,39 +1,31 @@
-import api from './api'
+import api from './api';
+import { UserData as BackendUserResponse } from '../store/slices/authSlice'; // Importar UserData del slice
 
 /**
  * Define la estructura de las credenciales que se envían al backend.
  */
 export interface UserCredentials {
-  email: string
-  password?: string
-}
-
-/**
- * Define la estructura de los datos del usuario que se obtienen del token JWT.
- */
-export interface UserData {
-  id: string
-  sub: string // El 'subject' del token, generalmente el email o username
-  fullName: string
-  roles: string[]
-  iat: number
-  exp: number
+  email: string;
+  password: string; // La contraseña siempre debe ser requerida para el login
 }
 
 /**
  * Define la respuesta esperada del endpoint de login.
+ * Debe coincidir con LoginResponse del backend.
  */
-interface AuthResponse {
-  token: string
+export interface AuthResponse {
+  token: string;
+  user: BackendUserResponse; // Usar la UserData definida en authSlice
 }
 
 const login = async (credentials: UserCredentials): Promise<AuthResponse> => {
-  const response = await api.post<AuthResponse>('/auth/login', credentials)
-  return response.data
-}
+  // CORREGIDO: Usar el endpoint correcto /auth/authenticate
+  const response = await api.post<AuthResponse>('/auth/authenticate', credentials);
+  return response.data;
+};
 
 const authService = {
   login,
-}
+};
 
-export default authService
+export default authService;
