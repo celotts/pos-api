@@ -1,5 +1,5 @@
-import { Product } from '../features/products/types'
-import { store } from '../store' // Asegúrate que la ruta a tu store sea correcta
+import { Product } from './models/Product'
+import { store } from './store'
 
 const API_BASE_URL = 'http://localhost:8080'
 
@@ -45,6 +45,3 @@ export const createProduct = async (productData: Omit<Product, 'id'>): Promise<P
   }
   return response.json()
 }
-
-// Aquí podrías añadir las funciones para updateProduct y deleteProduct
-// siguiendo el mismo patrón.

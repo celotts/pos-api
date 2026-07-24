@@ -1,27 +1,31 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
-import { Navigate, Outlet } from 'react-router-dom';
-import { selectCurrentUser } from '../store/slices/authSlice';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 interface ProtectedRouteProps {
-  allowedRoles: string[];
+  allowedRoles?: string[];
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
-  const user = useSelector(selectCurrentUser);
+  const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
-    // Esto no debería pasar si la ruta ya está protegida por autenticación,
-    // pero es una salvaguarda.
-    return <Navigate to="/login" replace />;
+    // Si el usuario no está autenticado, lo redirigimos al login.
+    // Guardamos la ubicación a la que intentaba acceder para redirigirlo allí después del login.
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Comprueba si el usuario tiene al menos uno de los roles permitidos
-  const hasRequiredRole = user.roles.some(role => allowedRoles.includes(role));
+  // Si se especifican roles permitidos, verificamos si el usuario tiene al menos uno.
+  // Si `allowedRoles` está vacío o no se define, solo se requiere autenticación.
+  const hasRequiredRole =
+    !allowedRoles || allowedRoles.length === 0
+      ? true
+      : user.roles.some(role => allowedRoles.includes(role));
 
   if (!hasRequiredRole) {
-    // Si no tiene el rol, lo redirigimos a una página de "No Autorizado"
-    // o de vuelta al dashboard. Por ahora, al dashboard.
+    // Si el usuario no tiene el rol necesario, lo redirigimos a la página principal.
+    // Podrías crear una página de "Acceso no autorizado" aquí.
     return <Navigate to="/" replace />;
   }
 

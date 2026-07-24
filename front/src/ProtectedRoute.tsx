@@ -1,20 +1,31 @@
 import React from 'react';
-import { useSelector } from 'react-redux';
 import { Navigate, Outlet } from 'react-router-dom';
-import { selectIsAuthenticated } from './authSlice';
-import MainLayout from './MainLayout';
+import { useAuth } from './hooks/useAuth';
 
-const ProtectedRoute: React.FC = () => {
-    const isAuthenticated = useSelector(selectIsAuthenticated);
-    console.log('ProtectedRoute - isAuthenticated:', isAuthenticated); // <-- AÑADIDO
+interface ProtectedRouteProps {
+  allowedRoles?: string[];
+}
 
-    if (!isAuthenticated) {
-        console.log('ProtectedRoute - Not authenticated, redirecting to /login'); // <-- AÑADIDO
-        return <Navigate to="/login" replace />;
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles }) => {
+    const { user } = useAuth();
+
+    if (!user) {
+        // Si no hay usuario, lo redirigimos al login.
+        // El 'replace' evita que el usuario pueda volver a la página anterior con el botón de retroceso.
+        return <Navigate to="/login" state={{ from: location.pathname }} replace />;
     }
 
-    console.log('ProtectedRoute - Authenticated, rendering MainLayout'); // <-- AÑADIDO
-    return <MainLayout><Outlet /></MainLayout>;
+    // Si se especifican roles permitidos, verificamos que el usuario tenga al menos uno.
+    const hasRequiredRole = allowedRoles
+        ? user.roles.some(role => allowedRoles.includes(role))
+        : true; // Si no se especifican roles, solo se requiere autenticación.
+
+    if (!hasRequiredRole) {
+        // Si el usuario no tiene el rol requerido, lo redirigimos a una página de "no autorizado" o al inicio.
+        return <Navigate to="/" replace />;
+    }
+
+    return <Outlet />;
 };
 
 export default ProtectedRoute;

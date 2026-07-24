@@ -1,5 +1,6 @@
 import React from 'react';
 import Sidebar from './Sidebar';
+import { Outlet } from 'react-router-dom';
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -15,7 +16,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
                     <h1 className="text-xl font-semibold">Dashboard</h1>
                 </header>
                 <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-200 p-6">
-                    {children}
+                    <Outlet />
                 </main>
             </div>
         </div>

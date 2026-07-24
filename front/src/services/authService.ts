@@ -1,20 +1,39 @@
-import api from './api';
+import api from './api'
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
+/**
+ * Define la estructura de las credenciales que se envían al backend.
+ */
+export interface UserCredentials {
+  email: string
+  password?: string
 }
 
-export const authService = {
-  login: async (credentials: LoginCredentials) => { // AÑADIDO: async para usar await
-    console.log('authService.login called with credentials:', credentials);
-    try {
-      const response = await api.post<{ token: string }>('/auth/authenticate', credentials);
-      console.log('API call successful, response:', response); // AÑADIDO
-      return response.data;
-    } catch (error) {
-      console.error('Error during API call in authService.login:', error); // AÑADIDO
-      throw error; // Re-lanzar el error para que LoginPage lo maneje
-    }
-  },
-};
+/**
+ * Define la estructura de los datos del usuario que se obtienen del token JWT.
+ */
+export interface UserData {
+  id: string
+  sub: string // El 'subject' del token, generalmente el email o username
+  fullName: string
+  roles: string[]
+  iat: number
+  exp: number
+}
+
+/**
+ * Define la respuesta esperada del endpoint de login.
+ */
+interface AuthResponse {
+  token: string
+}
+
+const login = async (credentials: UserCredentials): Promise<AuthResponse> => {
+  const response = await api.post<AuthResponse>('/auth/login', credentials)
+  return response.data
+}
+
+const authService = {
+  login,
+}
+
+export default authService

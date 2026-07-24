@@ -1,11 +1,21 @@
 /** @type {import('tailwindcss').Config} */
+import colors from 'tailwindcss/colors';
+
 export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: colors.indigo,
+        secondary: colors.slate,
+        success: colors.green,
+        warning: colors.amber,
+        error: colors.red,
+      }
+    },
   },
   plugins: [],
 }

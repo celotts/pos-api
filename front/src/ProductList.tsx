@@ -48,17 +48,28 @@ const ProductList: React.FC = () => {
                         </tr>
                     </thead>
                     <tbody className="text-gray-600 text-sm font-light">
-                        {products.map((product) => (
+                        {products.length > 0 ? (
+                            products.map((product) => (
                             <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-100">
                                 <td className="py-3 px-6 text-left whitespace-nowrap">{product.sku}</td>
                                 <td className="py-3 px-6 text-left">{product.name}</td>
                                 <td className="py-3 px-6 text-right">${product.salePrice.toFixed(2)}</td>
                                 <td className="py-3 px-6 text-right">{product.currentStock}</td>
                                 <td className="py-3 px-6 text-center">
-                                    {/* Aquí irán los botones de editar y eliminar */}
+                                    <div className="flex item-center justify-center">
+                                        <button className="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                            {/* Icono de Editar */}
+                                        </button>
+                                        <button className="w-4 mr-2 transform hover:text-red-500 hover:scale-110">
+                                            {/* Icono de Eliminar */}
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
-                        ))}
+                        ))
+                        ) : (
+                            <tr><td colSpan={5} className="text-center py-4">No se encontraron productos.</td></tr>
+                        )}
                     </tbody>
                 </table>
             </div>

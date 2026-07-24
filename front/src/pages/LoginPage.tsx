@@ -1,94 +1,105 @@
-import React, { useState, useMemo, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { setCredentials } from '../store/slices/authSlice';
-import { authService } from '../services/authService';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { login, selectAuthLoading } from '../store/slices/authSlice';
+import { useAuth } from '../hooks/useAuth';
+import toast from 'react-hot-toast';
+import Button from '../components/ui/Button';
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('admin@posapi.com');
-  const [password, setPassword] = useState('SuperSecretPassword123!');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const { user } = useAuth();
 
-  useEffect(() => {
-    if (searchParams.get('sessionExpired')) {
-      setError('Your session has expired. Please log in again.');
-    }
-  }, [searchParams]);
+  const isLoading = useSelector(selectAuthLoading);
 
-  const isEmailValid = useMemo(() => EMAIL_REGEX.test(email), [email]);
+  const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('handleSubmit called!');
-    if (!isEmailValid) return;
-    setError('');
-    setIsSubmitting(true);
+    if (isLoading) return;
+    setError(null);
+
     try {
-      const { token } = await authService.login({ email, password });
-      dispatch(setCredentials({ token }));
-      navigate('/');
-      console.log('Login successful, navigating to /'); // <-- AÑADIDO
+      // .unwrap() lanzará un error si el thunk es rechazado
+      await dispatch(login({ email, password, from, navigate })).unwrap();
+      toast.success('¡Bienvenido!');
+      // La redirección ahora es manejada por el thunk `login`
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Failed to login. Please check your credentials.';
-      setError(message);
-      console.error('Login error:', err); // AÑADIDO
-    } finally {
-      setIsSubmitting(false);
+      const errorMessage = err.message || 'Error al iniciar sesión. Verifique sus credenciales.';
+      setError(errorMessage);
+      toast.error(err.message || 'Error al iniciar sesión. Verifique sus credenciales.');
     }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-lg">
-        <h2 className="mb-6 text-center text-2xl font-bold text-gray-800">
-          POS System Login
-        </h2>
-        <form onSubmit={handleSubmit}>
-          {error && <p className="mb-4 text-center text-sm text-red-500">{error}</p>}
-          <div className="mb-4">
-            <label className="mb-2 block text-sm font-bold text-gray-700" htmlFor="email">
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none ${!isEmailValid && email.length > 0 ? 'border-red-500' : ''}`}
-              required
-            />
-            {!isEmailValid && email.length > 0 && (
-              <p className="mt-2 text-xs text-red-500">Please enter a valid email format.</p>
-            )}
+      <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
+        <div>
+          {/* Puedes reemplazar esto con tu logo */}
+          <h2 className="text-center text-3xl font-bold tracking-tight text-gray-900">
+            POS-API
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Inicia sesión para continuar
+          </p>
+        </div>
+
+        {error && !isLoading && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  {error}
+                </h3>
+              </div>
+            </div>
           </div>
-          <div className="mb-6">
-            <label className="mb-2 block text-sm font-bold text-gray-700" htmlFor="password">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="focus:shadow-outline w-full appearance-none rounded border px-3 py-2 leading-tight text-gray-700 shadow focus:outline-none"
-              required
-            />
+        )}
+
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4 rounded-md shadow-sm">
+            <div>
+              <label htmlFor="email-address" className="sr-only">Email</label>
+              <input
+                id="email-address"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                placeholder="Correo electrónico"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+            <div>
+              <label htmlFor="password" className="sr-only">Contraseña</label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                className="relative block w-full appearance-none rounded-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
           </div>
-          <div className="flex items-center justify-between">
-            <button
-              type="submit"
-              className="focus:shadow-outline w-full rounded bg-blue-500 px-4 py-2 font-bold text-white hover:bg-blue-700 focus:outline-none disabled:opacity-50"
-              disabled={!isEmailValid || isSubmitting}
-            >
-              {isSubmitting ? 'Signing In...' : 'Sign In'}
-            </button>
+
+          <div>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Cargando...' : 'Ingresar'}
+            </Button>
           </div>
         </form>
       </div>
