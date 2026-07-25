@@ -49,10 +49,6 @@ public class UserPersistenceMapper {
                 .createdByUserId(entity.getCreatedByUserId())
                 .updatedByUserId(entity.getUpdatedByUserId())
                 .deletedByUserId(entity.getDeletedByUserId())
-                // CORREGIDO: Si el dominio User requiere estos campos, se infieren del rol de auditoría correspondiente del usuario que ejecutó la acción si estuviese cargado, o se dejan nulos ya que la DB se encarga mediante triggers
-                .createdByRoleId(null)
-                .updatedByRoleId(null)
-                .deletedByRoleId(null)
                 .build();
     }
 

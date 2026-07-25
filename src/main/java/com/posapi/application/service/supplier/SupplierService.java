@@ -2,7 +2,6 @@ package com.posapi.application.service.supplier;
 
 import com.posapi.application.port.supplier.SupplierManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.supplier.Supplier;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.SupplierRepository;

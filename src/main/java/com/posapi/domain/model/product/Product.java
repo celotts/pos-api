@@ -2,17 +2,17 @@ package com.posapi.domain.model.product;
 
 import lombok.Builder;
 import lombok.Data;
-import lombok.AllArgsConstructor; // Añadido
-import lombok.NoArgsConstructor; // Añadido
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder(toBuilder = true) // Añadido toBuilder
-@NoArgsConstructor // Añadido
-@AllArgsConstructor // Añadido
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 public class Product {
     private UUID id;
     private String sku;
@@ -26,13 +26,13 @@ public class Product {
     private UUID supplierId;
     private Instant createdAt;
     private Instant updatedAt;
-    private Instant deletedAt; // Añadido para auditoría
-    private UUID createdByUserId; // Renombrado para consistencia
-    private UUID updatedByUserId; // Renombrado para consistencia
-    private UUID deletedByUserId; // Añadido para auditoría
-    private UUID createdByUserRoleId; // Añadido para auditoría
-    private UUID updatedByUserRoleId; // Añadido para auditoría
-    private UUID deletedByUserRoleId; // Añadido para auditoría
+    private Instant deletedAt;
+    private UUID createdByUserId;
+    private UUID updatedByUserId;
+    private UUID deletedByUserId;
+    private UUID createdByUserRoleId;
+    private UUID updatedByUserRoleId;
+    private UUID deletedByUserRoleId;
 
     // Método estático para crear un nuevo producto
     public static Product createNew(
@@ -89,12 +89,26 @@ public class Product {
         this.updatedByUserRoleId = updatedByUserRoleId;
     }
 
-    // Método de dominio para ajustar el stock (entrada o salida)
-    public void adjustStock(BigDecimal quantity, UUID updatedByUserId, UUID updatedByUserRoleId) {
-        if (this.currentStock.add(quantity).compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalStateException("Stock cannot go below zero.");
+    // Método de dominio para aumentar el stock
+    public void increaseStock(BigDecimal quantity, UUID updatedByUserId, UUID updatedByUserRoleId) {
+        if (quantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Quantity to increase cannot be negative.");
         }
         this.currentStock = this.currentStock.add(quantity);
+        this.updatedAt = Instant.now();
+        this.updatedByUserId = updatedByUserId;
+        this.updatedByUserRoleId = updatedByUserRoleId;
+    }
+
+    // Método de dominio para disminuir el stock
+    public void decreaseStock(BigDecimal quantity, UUID updatedByUserId, UUID updatedByUserRoleId) {
+        if (quantity.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Quantity to decrease cannot be negative.");
+        }
+        if (this.currentStock.subtract(quantity).compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalStateException("Stock cannot go below zero.");
+        }
+        this.currentStock = this.currentStock.subtract(quantity);
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
         this.updatedByUserRoleId = updatedByUserRoleId;

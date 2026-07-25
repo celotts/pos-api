@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Supplier, SupplierData } from '../services/supplierService';
+import type { Supplier, SupplierData } from '../services/supplierService';
 
 interface FormProps {
   onSubmit: (data: SupplierData) => void;
   onCancel: () => void;
   initialData?: Supplier | null;
   isSubmitting: boolean;
-  error: string | null; // Error genérico del backend
-  fieldErrors?: Record<string, string>; // Errores específicos por campo del backend
+  apiError: { message: string; errors?: string[] } | null;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const SupplierForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, error: apiError, fieldErrors: apiFieldErrors }) => {
+const SupplierForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, apiError }) => {
   const [formData, setFormData] = useState<SupplierData>({
     rfc: '',
     businessName: '',
@@ -36,12 +35,19 @@ const SupplierForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, is
     setErrors({});
   }, [initialData]);
 
-  // Sincronizar errores del backend con los errores del frontend
+  // Sync backend errors with frontend state
   useEffect(() => {
-    if (apiFieldErrors) {
-      setErrors(prev => ({ ...prev, ...apiFieldErrors }));
+    if (apiError?.errors) {
+      const fieldErrors: Record<string, string> = {};
+      apiError.errors.forEach(err => {
+        const [field, ...messageParts] = err.split(':');
+        if (field && messageParts.length > 0) {
+          fieldErrors[field.trim()] = messageParts.join(':').trim();
+        }
+      });
+      setErrors(prev => ({ ...prev, ...fieldErrors }));
     }
-  }, [apiFieldErrors]);
+  }, [apiError]);
 
   const validateField = (name: keyof SupplierData, value: string): string | null => {
     switch (name) {
@@ -90,7 +96,7 @@ const SupplierForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, is
 
   return (
     <form onSubmit={handleSubmit} className="space-y-2">
-      {apiError && !Object.keys(errors).length && <p className="mb-2 text-center text-sm text-red-500">{apiError}</p>}
+      {apiError && !apiError.errors && <p className="mb-2 text-center text-sm text-red-500">{apiError.message}</p>}
 
       <div>
         <label htmlFor="rfc" className="block text-sm font-bold text-gray-700 mb-1">RFC</label>

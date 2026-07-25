@@ -31,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -54,8 +55,8 @@ class UserServiceTest {
     private UserService userService;
 
     private static final UUID USER_ID = UUID.randomUUID();
-    private static final UUID ADMIN_ROLE_ID = UUID.randomUUID();
     private static final UUID USER_ROLE_ID = UUID.randomUUID();
+    private static final UUID ADMIN_ROLE_ID = UUID.randomUUID();
 
     private User user1;
     private Role userRole;
@@ -73,28 +74,39 @@ class UserServiceTest {
                 .id(UUID.randomUUID())
                 .email("user1@example.com")
                 .fullName("User One")
+                .address("123 Main St") // AÑADIDO
+                .phone("1234567890")   // AÑADIDO
+                .phone2("0987654321")  // AÑADIDO
                 .role(userRole)
                 .createdByUserId(USER_ID)
-                .createdByRoleId(ADMIN_ROLE_ID)
                 .createdAt(Instant.now())
+                .isActive(true) // AÑADIDO
                 .build();
 
+        // CORREGIDO: Constructor de UserRequest
         userRequest1 = new UserRequest(
                 user1.getEmail(),
                 "password123",
                 user1.getFullName(),
+                user1.getAddress(), // AÑADIDO
+                user1.getPhone(),  // AÑADIDO
+                user1.getPhone2(), // AÑADIDO
                 USER_ROLE_ID,
-                true
+                user1.getIsActive() // isActive
         );
 
+        // CORREGIDO: Constructor de UserResponse
         userResponse1 = new UserResponse(
                 user1.getId(),
                 user1.getEmail(),
                 user1.getFullName(),
                 "USER",
-                true,
+                user1.getAddress(), // AÑADIDO
+                user1.getPhone(),  // AÑADIDO
+                user1.getPhone2(), // AÑADIDO
+                user1.getIsActive(), // isActive
                 user1.getCreatedAt(),
-                null
+                null // updatedAt
         );
     }
 
@@ -106,7 +118,8 @@ class UserServiceTest {
         when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
         when(securityContextHelper.getCurrentUserId()).thenReturn(USER_ID);
         when(userRepository.save(any(User.class))).thenReturn(user1);
-        when(userRestMapper.toResponse(eq(user1), eq("USER"), any(), any())).thenReturn(userResponse1);
+
+        lenient().when(userRestMapper.toResponse(any(User.class), any(), any(), any())).thenReturn(userResponse1);
 
         UserResponse response = userService.createUser(userRequest1);
 
@@ -132,7 +145,7 @@ class UserServiceTest {
     void getUserByIdShouldReturnUserResponseWhenUserExists() {
         UUID id = user1.getId();
         when(userRepository.findById(id)).thenReturn(Optional.of(user1));
-        when(userRestMapper.toResponse(eq(user1), eq("USER"), any(), any())).thenReturn(userResponse1);
+        when(userRestMapper.toResponse(eq(user1), any(), any(), any())).thenReturn(userResponse1);
 
         Optional<UserResponse> response = userService.getUserById(id);
 
@@ -155,7 +168,7 @@ class UserServiceTest {
     @DisplayName("Get all users - Should return list of user responses")
     void getAllUsersShouldReturnListOfUserResponses() {
         when(userRepository.findAll()).thenReturn(List.of(user1));
-        when(userRestMapper.toResponse(eq(user1), eq("USER"), any(), any())).thenReturn(userResponse1);
+        when(userRestMapper.toResponse(eq(user1), any(), any(), any())).thenReturn(userResponse1);
 
         List<UserResponse> users = userService.getAllUsers();
 
@@ -167,20 +180,29 @@ class UserServiceTest {
     @DisplayName("Update user - Should return updated user response when user exists")
     void updateUserShouldReturnUpdatedUserResponseWhenUserExists() {
         UUID id = user1.getId();
+        // CORREGIDO: Constructor de UserRequest
         UserRequest updateRequest = new UserRequest(
                 "user1@example.com",
                 "newpassword",
                 "Updated Name",
+                "456 Oak Ave", // AÑADIDO
+                "9876543210",  // AÑADIDO
+                "1122334455",  // AÑADIDO
                 USER_ROLE_ID,
                 true
         );
-        User updatedUser = user1.toBuilder().fullName("Updated Name").build();
+        User updatedUser = user1.toBuilder()
+                .fullName("Updated Name")
+                .address("456 Oak Ave") // AÑADIDO
+                .phone("9876543210")   // AÑADIDO
+                .phone2("1122334455")  // AÑADIDO
+                .build();
 
         when(securityContextHelper.getCurrentUserId()).thenReturn(USER_ID);
         when(userRepository.findById(id)).thenReturn(Optional.of(user1));
         when(passwordEncoder.encode("newpassword")).thenReturn("encodedNewPassword");
         when(userRepository.save(any(User.class))).thenReturn(updatedUser);
-        when(userRestMapper.toResponse(eq(updatedUser), eq("USER"), any(), any())).thenReturn(userResponse1);
+        when(userRestMapper.toResponse(eq(updatedUser), any(), any(), any())).thenReturn(userResponse1);
 
         Optional<UserResponse> response = userService.updateUser(id, updateRequest);
 

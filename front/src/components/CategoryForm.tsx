@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Category } from '../services/categoryService';
+import type { Category, CategoryData } from '../services/categoryService';
 
 interface FormProps {
-  onSubmit: (data: { name: string }) => void; // <-- Cambiado para esperar un objeto
+  onSubmit: (data: CategoryData) => void;
   onCancel: () => void;
   initialData?: Category | null;
   isSubmitting: boolean;
-  error: string | null;
+  apiError: { message: string; errors?: string[] } | null;
 }
 
-const CategoryForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, error }) => {
+const CategoryForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, isSubmitting, apiError }) => {
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -20,14 +20,24 @@ const CategoryForm: React.FC<FormProps> = ({ onSubmit, onCancel, initialData, is
     e.preventDefault();
     const trimmedName = name.trim();
     if (trimmedName && !isSubmitting) {
-      // Enviamos el objeto que la API espera, no solo el texto.
       onSubmit({ name: trimmedName });
     }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      {error && <p className="mb-4 text-center text-sm text-red-500">{error}</p>}
+      {apiError && (
+        <div className="mb-4 rounded-md bg-red-50 p-4 text-sm text-red-700">
+          <p className="font-bold">{apiError.message}</p>
+          {apiError.errors && (
+            <ul className="ml-5 mt-2 list-disc">
+              {apiError.errors.map((err, index) => (
+                <li key={index}>{err}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
       <div className="mb-4">
         <label htmlFor="name" className="block text-sm font-bold text-gray-700 mb-2">
           Category Name

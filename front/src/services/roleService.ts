@@ -1,15 +1,25 @@
 import api from './api';
+import type { Role } from '../models/catalog.model';
 
-export interface Role {
-  id: string;
+// Data for creating/updating
+export interface RoleData {
   name: string;
-  createdByName?: string;
-  updatedByName?: string;
 }
 
+// Re-exporting the type
+export type { Role };
+
 export const roleService = {
-  getAll: () => api.get<Role[]>('/roles').then(res => res.data),
-  create: (data: { name: string }) => api.post<Role>('/roles', data).then(res => res.data),
-  update: (id: string, data: { name: string }) => api.put<Role>(`/roles/${id}`, data).then(res => res.data),
-  delete: (id: string) => api.delete(`/roles/${id}`),
+  getAll: async (): Promise<Role[]> => {
+    const res = await api.get('/roles');
+    // Handle Spring Boot's typical pagination wrapper
+    if (res.data && typeof res.data === 'object' && 'content' in res.data) {
+      return (res.data as any).content;
+    }
+    return res.data;
+  },
+  getById: (id: string): Promise<Role> => api.get<Role>(`/roles/${id}`).then(res => res.data),
+  create: (data: RoleData): Promise<Role> => api.post<Role>('/roles', data).then(res => res.data),
+  update: (id: string, data: RoleData): Promise<Role> => api.put<Role>(`/roles/${id}`, data).then(res => res.data),
+  delete: (id: string): Promise<void> => api.delete(`/roles/${id}`),
 };

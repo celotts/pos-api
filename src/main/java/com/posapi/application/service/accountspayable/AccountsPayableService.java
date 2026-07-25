@@ -99,7 +99,9 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
     @Override
     @Transactional
-    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id, AccountsPayableRequest request, UUID currentUserId) {
+    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id,
+                                                                   AccountsPayableRequest request,
+                                                                   UUID currentUserId) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 

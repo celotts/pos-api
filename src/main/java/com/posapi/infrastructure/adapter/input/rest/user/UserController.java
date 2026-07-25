@@ -1,14 +1,12 @@
 package com.posapi.infrastructure.adapter.input.rest.user;
 
 import com.posapi.application.port.user.UserManagementPort;
-import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
 import com.posapi.shared.dto.PageResponse; // Importar PageResponse
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page; // Mantener si se usa en ResponseEntity
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;

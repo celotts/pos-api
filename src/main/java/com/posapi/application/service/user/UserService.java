@@ -19,19 +19,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @Validated
@@ -57,17 +52,20 @@ public class UserService implements UserManagementPort {
         }
 
         Role userRole = roleRepository.findByName("USER")
-                .orElseGet(() -> {
-                    Role newUserRole = Role.createNew("USER", null, null); // createdByUserId y createdByRoleId pueden ser null para roles por defecto
-                    return roleRepository.save(newUserRole);
-                });
+                .orElseThrow(() -> new IllegalStateException(
+                        "Default USER role not found. Please run bootstrap."
+                ));
 
+        // CORREGIDO: Pasar todos los argumentos requeridos por User.createNew()
         User newUser = User.createNew(
                 userRequest.email(),
                 passwordEncoder.encode(userRequest.password()),
                 userRequest.fullName(),
-                userRole,
-                true, // Por defecto activo al crear
+                userRequest.address(),
+                userRequest.phone(),  // AÑADIDO
+                userRequest.phone2(), // AÑADIDO
+                userRole,             // Objeto Role
+                true,                 // isActive como boolean
                 securityContextHelper.getCurrentUserId() // Usar el ID del usuario actual si está disponible
         );
 
@@ -126,16 +124,16 @@ public class UserService implements UserManagementPort {
             Role finalRole = validateRoleOnUpdate(existingUser, userRequest);
             String finalPassword = preparePasswordOnUpdate(existingUser, userRequest);
 
-            User userToUpdate = existingUser.updateWith(
-                    User.builder()
-                            .email(userRequest.email())
-                            .fullName(userRequest.fullName())
-                            .isActive(userRequest.isActive() != null ? userRequest.isActive() : existingUser.getIsActive())
-                            .build(),
-                    finalPassword,
-                    finalRole,
-                    currentUserId
-            );
+            // CORREGIDO: Pasar todos los argumentos requeridos por User.builder()
+            User updateData = User.builder()
+                    .email(userRequest.email())
+                    .fullName(userRequest.fullName())
+                    .address(userRequest.address())
+                    .phone(userRequest.phone())
+                    .phone2(userRequest.phone2())
+                    .isActive(userRequest.isActive() != null ? userRequest.isActive() : existingUser.getIsActive())
+                    .build();
+            User userToUpdate = existingUser.updateWith(updateData, finalPassword, finalRole, currentUserId);
 
             User savedUser = userRepository.save(userToUpdate);
             return mapToUserResponse(savedUser);
@@ -151,7 +149,7 @@ public class UserService implements UserManagementPort {
 
         userRepository.findById(id).ifPresent(user -> {
             log.warn("Soft-deleting user with ID: {}", id);
-            user.markAsDeleted(currentUserId, currentUserRoleId);
+            user.markAsDeleted(currentUserId);
             userRepository.save(user);
         });
     }
@@ -159,7 +157,7 @@ public class UserService implements UserManagementPort {
     private void validateEmailOnUpdate(User existingUser, UserRequest userRequest) {
         if (userRequest.email() != null && !userRequest.email().equalsIgnoreCase(existingUser.getEmail())) {
             userRepository.findByEmail(userRequest.email()).ifPresent(u -> {
-                throw new DuplicateResourceException("The email " + u.getEmail() + " is already taken.");
+                throw new DuplicateResourceException("An account with this email already exists: " + u.getEmail());
             });
         }
     }
@@ -182,6 +180,12 @@ public class UserService implements UserManagementPort {
 
     private UserResponse mapToUserResponse(User user) {
         String roleName = user.getRole() != null ? user.getRole().getName() : null;
-        return userRestMapper.toResponse(user, roleName, null, null); // COMPLETED: Added missing arguments and semicolon
+        // CORREGIDO: Completar la llamada a userRestMapper.toResponse con todos los argumentos
+        return userRestMapper.toResponse(
+                user,
+                roleName,
+                null, // createdByName (no disponible en User de dominio directamente)
+                null  // updatedByName (no disponible en User de dominio directamente)
+        );
     }
 }

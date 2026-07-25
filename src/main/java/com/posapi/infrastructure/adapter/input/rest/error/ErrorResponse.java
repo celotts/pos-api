@@ -3,6 +3,8 @@ package com.posapi.infrastructure.adapter.input.rest.error;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,11 +18,13 @@ public class ErrorResponse {
     private String detail;
     private Instant timestamp;
     private String path;
-    private List<FieldError> errors;
+    private List<ValidationError> fieldErrors;
 
     @Data
     @Builder
-    public static class FieldError {
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ValidationError {
         private String field;
         private String message;
         private Object rejectedValue;

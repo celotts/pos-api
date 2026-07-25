@@ -7,8 +7,6 @@ import jakarta.validation.Valid;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.Instant; // AÑADIDO
-import java.util.UUID; // AÑADIDO
 
 @Component
 public class ProductRestMapper {

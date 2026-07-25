@@ -5,10 +5,6 @@ import com.posapi.infrastructure.adapter.input.rest.shift.dto.ShiftRequest;
 import com.posapi.infrastructure.adapter.input.rest.shift.dto.ShiftResponse;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
-
 @Component
 public class ShiftRestMapper {
 

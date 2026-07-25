@@ -1,21 +1,21 @@
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../store/slices/authSlice';
-import { ROLES } from '../utils/roles';
+import { useSelector } from 'react-redux'
+import { useMemo } from 'react'
+import { selectCurrentUser } from '../store/slices/authSlice'
 
 export const useAuth = () => {
-  const user = useSelector(selectCurrentUser);
+  const user = useSelector(selectCurrentUser)
 
-  const hasRole = (roles: string[]): boolean => {
-    if (!user) return false;
-    return user.roles.some(role => roles.includes(role));
-  };
+  // Usamos useMemo para evitar recalcular en cada render, a menos que el usuario cambie.
+  const roles = useMemo(() => user?.roles || [], [user])
+
+  const isAdmin = useMemo(() => roles.includes('ADMIN'), [roles])
+  const isEditor = useMemo(() => roles.includes('EDITOR'), [roles])
+  const isUser = useMemo(() => roles.includes('USER'), [roles])
 
   return {
     user,
-    roles: user?.roles || [],
-    isSuperAdmin: hasRole([ROLES.SUPER_ADMIN]),
-    isAdmin: hasRole([ROLES.SUPER_ADMIN, ROLES.ADMIN]),
-    isEditor: hasRole([ROLES.SUPER_ADMIN, ROLES.ADMIN, ROLES.EDITOR]),
-    isViewer: hasRole([ROLES.VIEWER]),
-  };
-};
+    isAdmin,
+    isEditor,
+    isUser,
+  }
+}

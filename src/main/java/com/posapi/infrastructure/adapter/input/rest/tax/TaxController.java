@@ -1,7 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.tax;
 
 import com.posapi.application.port.tax.TaxManagementPort;
-import com.posapi.domain.model.tax.Tax;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxRequest;
 import com.posapi.infrastructure.adapter.input.rest.tax.dto.TaxResponse;
 import com.posapi.infrastructure.security.SecurityContextHelper;
