@@ -5,8 +5,6 @@ import com.posapi.domain.model.tax.TaxEnum;
 import com.posapi.infrastructure.adapter.output.persistence.entity.tax.TaxEntity;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class TaxPersistenceMapper {
 

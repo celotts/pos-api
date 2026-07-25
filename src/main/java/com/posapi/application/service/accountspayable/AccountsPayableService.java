@@ -81,9 +81,7 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier( // CORREGIDO: Línea dividida
-                                                                               UUID supplierId,
-                                                                               Pageable pageable) {
+    public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier(UUID supplierId, Pageable pageable) {
         Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
                 .findBySupplierId(supplierId, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
@@ -101,7 +99,9 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
     @Override
     @Transactional
-    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id, AccountsPayableRequest request, UUID currentUserId) {
+    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id,
+                                                                   AccountsPayableRequest request,
+                                                                   UUID currentUserId) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 

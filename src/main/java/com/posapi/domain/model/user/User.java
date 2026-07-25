@@ -8,6 +8,14 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import java.time.Instant;
 import java.util.Collection;
@@ -18,28 +26,59 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "users")
 public class User implements UserDetails {
 
+    @Id
     private UUID id;
+
+    @Column(unique = true, nullable = false)
     private String email;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(name = "full_name", nullable = false)
     private String fullName;
+
+    @Column(name = "address")
+    private String address;
+
+    private String phone;
+
+    private String phone2;
+
+    @Column(name = "is_active", nullable = false) // Esta línea ya la tenías, asegúrate que esté correcta
     private Boolean isActive;
+
+    @ManyToOne(fetch = FetchType.EAGER) // EAGER es común para el rol del usuario
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
     // Auditoría
+    @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
     private Instant updatedAt;
+
+    @Column(name = "deleted_at")
     private Instant deletedAt;
+
+    @Column(name = "created_by_user_id", updatable = false)
     private UUID createdByUserId;
+
+    @Column(name = "updated_by_user_id")
     private UUID updatedByUserId;
+
+    @Column(name = "deleted_by_user_id")
     private UUID deletedByUserId;
-    private UUID createdByRoleId;
-    private UUID updatedByRoleId;
-    private UUID deletedByRoleId;
 
     // --- Métodos de UserDetails (Lógica de dominio de Seguridad) ---
+    // Se marca como @Transient para que JPA lo ignore, ya que es lógica derivada.
     @Override
+    @Transient
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (role == null || role.getName() == null) {
             return List.of();
@@ -48,50 +87,64 @@ public class User implements UserDetails {
     }
 
     @Override
+    @Transient
     public String getUsername() {
         return email;
     }
 
-    // CORREGIDO: Implementación explícita de getPassword() para UserDetails
     @Override
     public String getPassword() {
         return password;
     }
 
     @Override
+    @Transient
     public boolean isAccountNonExpired() {
         return true;
     }
 
     @Override
+    @Transient
     public boolean isAccountNonLocked() {
         return true;
     }
 
     @Override
+    @Transient
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
     @Override
+    @Transient
     public boolean isEnabled() {
         return isActive != null ? isActive : false;
     }
 
     // --- Creador semántico ---
     public static User createNew(
-            String email, String encodedPassword, String fullName, Role role, Boolean isActive, UUID currentUserId
+            String email,
+            String encodedPassword,
+            String fullName,
+            String address,
+            String phone,
+            String phone2,
+            Role role,
+            Boolean isActive,
+            UUID currentUserId
     ) {
         return User.builder()
                 .id(UUID.randomUUID())
                 .email(email)
                 .password(encodedPassword)
                 .fullName(fullName)
+                .address(address)
+                .phone(phone)   // AÑADIDO
+                .phone2(phone2) // AÑADIDO
                 .isActive(isActive)
                 .role(role)
                 .createdAt(Instant.now())
                 .createdByUserId(currentUserId)
-                .createdByRoleId(role != null ? role.getId() : null)
                 .build();
     }
 
@@ -101,62 +154,59 @@ public class User implements UserDetails {
                 .email(updateData.getEmail() != null ? updateData.getEmail() : this.email)
                 .password(newEncodedPassword != null ? newEncodedPassword : this.password)
                 .fullName(updateData.getFullName() != null ? updateData.getFullName() : this.fullName)
+                .address(updateData.getAddress() != null ? updateData.getAddress() : this.address)
+                .phone(updateData.getPhone() != null ? updateData.getPhone() : this.phone)     // AÑADIDO
+                .phone2(updateData.getPhone2() != null ? updateData.getPhone2() : this.phone2) // AÑADIDO
                 .isActive(updateData.getIsActive() != null ? updateData.getIsActive() : this.isActive)
                 .role(newRole != null ? newRole : this.role)
                 .updatedAt(Instant.now())
                 .updatedByUserId(updatedByUserId)
-                .updatedByRoleId(newRole != null ? newRole.getId() : (this.role != null ? this.role.getId() : null))
                 .build();
     }
 
     // Método de dominio para activar el usuario
-    public void activate(UUID updatedByUserId, UUID updatedByRoleId) {
+    public void activate(UUID updatedByUserId) {
         if (!this.isActive) {
             this.isActive = true;
             this.updatedAt = Instant.now();
             this.updatedByUserId = updatedByUserId;
-            this.updatedByRoleId = updatedByRoleId;
         }
     }
 
     // Método de dominio para desactivar el usuario
-    public void deactivate(UUID updatedByUserId, UUID updatedByRoleId) {
+    public void deactivate(UUID updatedByUserId) {
         if (this.isActive) {
             this.isActive = false;
             this.updatedAt = Instant.now();
             this.updatedByUserId = updatedByUserId;
-            this.updatedByRoleId = updatedByRoleId;
         }
     }
 
     // Método de dominio para cambiar la contraseña
-    public void changePassword(String newEncodedPassword, UUID updatedByUserId, UUID updatedByRoleId) {
+    public void changePassword(String newEncodedPassword, UUID updatedByUserId) {
         if (newEncodedPassword == null || newEncodedPassword.isBlank()) {
             throw new IllegalArgumentException("Password cannot be null or empty.");
         }
         this.password = newEncodedPassword;
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
-        this.updatedByRoleId = updatedByRoleId;
     }
 
     // Método de dominio para asignar un nuevo rol
-    public void assignRole(Role newRole, UUID updatedByUserId, UUID updatedByRoleId) {
+    public void assignRole(Role newRole, UUID updatedByUserId) {
         if (newRole == null) {
             throw new IllegalArgumentException("Role cannot be null.");
         }
         this.role = newRole;
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
-        this.updatedByRoleId = updatedByRoleId;
     }
 
     // Método de dominio para borrado lógico
-    public void markAsDeleted(UUID deletedByUserId, UUID deletedByRoleId) {
+    public void markAsDeleted(UUID deletedByUserId) {
         if (this.deletedAt == null) {
             this.deletedAt = Instant.now();
             this.deletedByUserId = deletedByUserId;
-            this.deletedByRoleId = deletedByRoleId;
             this.isActive = false; // Un usuario eliminado lógicamente también debe estar inactivo
         }
     }

@@ -6,7 +6,6 @@ import com.posapi.shared.dto.PageResponse;
 import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 

@@ -2,7 +2,6 @@ package com.posapi.application.service.product;
 
 import com.posapi.application.port.product.ProductManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.ProductRepository;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 

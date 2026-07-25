@@ -2,7 +2,6 @@ package com.posapi.application.service.tax;
 
 import com.posapi.application.port.tax.TaxManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.tax.Tax;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.TaxRepository;
@@ -149,7 +148,7 @@ public class TaxService implements TaxManagementPort {
         String createdByName = userNames.getOrDefault(tax.getCreatedByUserId(), null);
         String updatedByName = userNames.getOrDefault(tax.getUpdatedByUserId(), null);
         String deletedByName = userNames.getOrDefault(tax.getDeletedByUserId(), null);
-        return TaxResponse.fromDomain(tax, createdByName, updatedByName, deletedByName); // CORREGIDO: Pasa deletedByName
+        return TaxResponse.fromDomain(tax, createdByName, updatedByName, deletedByName);
     }
 
     // Método original, ajustado para llamar a la sobrecarga

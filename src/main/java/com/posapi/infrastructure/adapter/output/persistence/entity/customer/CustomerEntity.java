@@ -1,7 +1,5 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.customer;
 
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

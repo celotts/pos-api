@@ -1,6 +1,5 @@
 package com.posapi.domain.model.purchase;
 
-import com.posapi.domain.model.product.Product; // Importar Product
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

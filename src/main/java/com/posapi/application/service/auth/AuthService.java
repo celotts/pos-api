@@ -37,12 +37,15 @@ public class AuthService implements AuthManagementPort {
             User user = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new IllegalStateException("Authenticated user not found in repository"));
 
-            // CORREGIDO: Construir UserResponse con los argumentos correctos
+            // CORREGIDO: Construir UserResponse con los 10 argumentos correctos
             UserResponse userResponse = new UserResponse(
                     user.getId(),
                     user.getEmail(),
                     user.getFullName(),
                     user.getRole().getName(), // Usar el nombre del rol
+                    user.getAddress(), // CORREGIDO
+                    user.getPhone(),  // AÑADIDO
+                    user.getPhone2(), // AÑADIDO
                     user.getIsActive(),
                     user.getCreatedAt(),
                     user.getUpdatedAt()

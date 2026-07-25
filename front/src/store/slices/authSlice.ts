@@ -20,6 +20,8 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  loginAttempts: number;
+  isBlocked: boolean; // Nueva propiedad para el bloqueo
 }
 
 // Define la interfaz para el token decodificado (lo que viene dentro del JWT)
@@ -35,7 +37,7 @@ const loadState = (): AuthState => {
     const token = localStorage.getItem('token');
     const storedUser = localStorage.getItem('user');
 
-    if (!token || !storedUser) return { user: null, token: null, loading: false, error: null };
+    if (!token || !storedUser) return { user: null, token: null, loading: false, error: null, loginAttempts: 0, isBlocked: false };
 
     const decoded = jwtDecode<DecodedToken>(token);
 
@@ -43,17 +45,17 @@ const loadState = (): AuthState => {
     if (decoded.exp * 1000 < Date.now()) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      return { user: null, token: null, loading: false, error: null };
+      return { user: null, token: null, loading: false, error: null, loginAttempts: 0, isBlocked: false };
     }
 
     const user: UserData = JSON.parse(storedUser);
 
-    return { user, token, loading: false, error: null };
+    return { user, token, loading: false, error: null, loginAttempts: 0, isBlocked: false };
   } catch (error) {
     console.error("Error loading auth state from localStorage:", error);
     localStorage.removeItem('token');
     localStorage.removeItem('user'); // Limpiar también el usuario si hay error
-    return { user: null, token: null, loading: false, error: null };
+    return { user: null, token: null, loading: false, error: null, loginAttempts: 0, isBlocked: false };
   }
 };
 
@@ -101,9 +103,16 @@ const authSlice = createSlice({
       state.token = null;
       state.loading = false;
       state.error = null;
+      state.loginAttempts = 0;
+      state.isBlocked = false; // Resetear también el bloqueo
       localStorage.removeItem('token');
-      localStorage.removeItem('user'); // Limpiar también el usuario
+      localStorage.removeItem('user');
       console.log('authSlice - logOut: State cleared');
+    },
+    resetLoginAttempts: (state) => {
+      state.loginAttempts = 0;
+      state.isBlocked = false; // Resetear también el bloqueo
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -115,21 +124,29 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
         state.token = action.payload.token;
-        state.user = action.payload.user; // Usar action.payload.user directamente
+        state.user = action.payload.user;
+        state.loginAttempts = 0;
+        state.isBlocked = false; // Asegurarse de que no esté bloqueado al iniciar sesión
         console.log('authSlice - login.fulfilled: State updated', { token: state.token, user: state.user });
-        // action.payload.navigate(action.payload.from, { replace: true }); // ELIMINADO: Navegación manejada en el thunk
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
         state.user = null;
         state.token = null;
+        // Solo incrementar si no está bloqueado
+        if (!state.isBlocked) {
+          state.loginAttempts += 1;
+          if (state.loginAttempts >= 3) {
+            state.isBlocked = true;
+          }
+        }
         console.error('authSlice - login.rejected: Error', action.payload);
       });
   },
 });
 
-export const { logOut } = authSlice.actions;
+export const { logOut, resetLoginAttempts } = authSlice.actions;
 
 export default authSlice.reducer;
 
@@ -141,3 +158,6 @@ export const selectIsAuthenticated = (state: { auth: AuthState }) => {
   return !!state.auth.token;
 };
 export const selectAuthLoading = (state: { auth: AuthState }) => state.auth.loading;
+export const selectLoginAttempts = (state: { auth: AuthState }) => state.auth.loginAttempts;
+export const selectIsBlocked = (state: { auth: AuthState }) => state.auth.isBlocked;
+export const selectAuthError = (state: { auth: AuthState }) => state.auth.error;

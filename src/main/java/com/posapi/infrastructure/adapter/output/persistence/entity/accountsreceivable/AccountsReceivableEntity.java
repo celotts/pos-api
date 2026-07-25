@@ -1,9 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.accountsreceivable;
 
 import com.posapi.infrastructure.adapter.output.persistence.entity.customer.CustomerEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
 import com.posapi.infrastructure.adapter.output.persistence.entity.sale.SaleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

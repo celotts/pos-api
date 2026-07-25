@@ -13,7 +13,6 @@ import com.posapi.domain.port.output.ProductRepository;
 import com.posapi.domain.port.output.PurchaseItemRepository;
 import com.posapi.domain.port.output.PurchaseRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseRequest;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseResponse;
@@ -26,7 +25,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -87,7 +85,8 @@ public class PurchaseService implements PurchaseManagementPort {
         List<InventoryTransaction> inventoryTransactions = savedPurchaseItems.stream()
                 .map(item -> {
                     Product product = productRepository.findById(item.getProductId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " + item.getProductId()));
+                            .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: "
+                                    + item.getProductId()));
 
                     // Aumentar stock del producto
                     product.increaseStock(item.getQuantity(), currentUserId, currentUserRoleId);
@@ -196,7 +195,8 @@ public class PurchaseService implements PurchaseManagementPort {
 
             itemsToDelete.forEach(item -> {
                 Product product = productRepository.findById(item.getProductId())
-                        .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " + item.getProductId()));
+                        .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " +
+                                item.getProductId()));
 
                 // Disminuir stock del producto (revertir la entrada)
                 product.decreaseStock(item.getQuantity(), currentUserId, currentUserRoleId);

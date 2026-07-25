@@ -50,7 +50,8 @@ public class RoleService implements RoleManagementPort {
 
         String upperCaseName = request.name().toUpperCase();
         if ("ADMIN".equals(upperCaseName) || "USER".equals(upperCaseName)) {
-            throw new DuplicateResourceException("Cannot create a role with the reserved name '" + request.name() + "'.");
+            throw new DuplicateResourceException("Cannot create a role with the reserved name '"
+                    + request.name() + "'.");
         }
 
         UUID currentUserId = securityContextHelper.getCurrentUserId();
@@ -72,7 +73,9 @@ public class RoleService implements RoleManagementPort {
     public Optional<RoleResponse> getRoleById(UUID id) {
         return roleRepository.findById(id)
                 .map(role -> {
-                    Set<UUID> userIds = Stream.of(role.getCreatedByUserId(), role.getUpdatedByUserId(), role.getDeletedByUserId())
+                    Set<UUID> userIds = Stream.of(role.getCreatedByUserId(),
+                                    role.getUpdatedByUserId(),
+                                    role.getDeletedByUserId())
                             .filter(Objects::nonNull)
                             .collect(Collectors.toSet());
                     Map<UUID, String> userNames = fetchUserNamesForAudit(userIds);
@@ -136,7 +139,8 @@ public class RoleService implements RoleManagementPort {
         if (!existingRole.getName().equalsIgnoreCase(request.name())) {
             String upperCaseName = request.name().toUpperCase();
             if ("ADMIN".equals(upperCaseName) || "USER".equals(upperCaseName)) {
-                throw new DuplicateResourceException("Cannot rename a role to the reserved name '" + request.name() + "'.");
+                throw new DuplicateResourceException(
+                        "Cannot rename a role to the reserved name '" + request.name() + "'.");
             }
 
             if (roleRepository.findByName(request.name()).isPresent()) {

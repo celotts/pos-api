@@ -1,8 +1,7 @@
 package com.posapi.application.service.customer;
 
-import com.posapi.application.port.customer.CustomerManagementPort; // CORREGIDO
+import com.posapi.application.port.customer.CustomerManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.customer.Customer;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.CustomerRepository;

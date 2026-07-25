@@ -1,6 +1,5 @@
 package com.posapi.infrastructure.adapter.input.rest.tax.dto;
 
-import com.posapi.domain.model.tax.Tax;
 import com.posapi.domain.model.tax.TaxEnum;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;

@@ -1,8 +1,5 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.shift;
 
-import com.posapi.infrastructure.adapter.output.persistence.entity.posterminal.PosTerminalEntity; // Mantener si se usa en otro lugar
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity; // Mantener si se usa en otro lugar
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

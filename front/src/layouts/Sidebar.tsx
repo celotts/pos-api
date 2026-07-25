@@ -9,7 +9,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isEditor } = useAuth();
   const [isMaintenanceOpen, setIsMaintenanceOpen] = useState(false);
 
   const handleLinkClick = () => {
@@ -27,6 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
     lg:relative lg:translate-x-0 lg:flex-shrink-0
     ${isOpen ? 'translate-x-0' : '-translate-x-full'}
   `;
+
+  const canShowMaintenance = isAdmin || isEditor;
 
   return (
     <>
@@ -52,7 +54,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 Purchases
                 </NavLink>
 
-                {isAdmin && (
+                {canShowMaintenance && (
                 <div>
                     <button
                     onClick={() => setIsMaintenanceOpen(!isMaintenanceOpen)}
@@ -70,14 +72,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                     </button>
                     {isMaintenanceOpen && (
                     <div className="pl-4 mt-2 space-y-2">
-                        <NavLink to="/users" className={linkClass} onClick={handleLinkClick}>Users</NavLink>
-                        <NavLink to="/roles" className={linkClass} onClick={handleLinkClick}>Roles</NavLink>
-                        <NavLink to="/categories" className={linkClass} onClick={handleLinkClick}>Categories</NavLink>
-                        <NavLink to="/suppliers" className={linkClass} onClick={handleLinkClick}>Suppliers</NavLink>
-                        <NavLink to="/taxes" className={linkClass} onClick={handleLinkClick}>Taxes</NavLink>
-                        <NavLink to="/shifts" className={linkClass} onClick={handleLinkClick}>Shifts</NavLink>
-                        <NavLink to="/accounts-payable" className={linkClass} onClick={handleLinkClick}>Accounts Payable</NavLink>
-                        <NavLink to="/cash-accounts" className={linkClass} onClick={handleLinkClick}>Cash Accounts</NavLink>
+                        {(isAdmin || isEditor) && (
+                          <>
+                            <NavLink to="/categories" className={linkClass} onClick={handleLinkClick}>Categories</NavLink>
+                            <NavLink to="/suppliers" className={linkClass} onClick={handleLinkClick}>Suppliers</NavLink>
+                            <NavLink to="/taxes" className={linkClass} onClick={handleLinkClick}>Taxes</NavLink>
+                            <NavLink to="/customers" className={linkClass} onClick={handleLinkClick}>Customers</NavLink>
+                          </>
+                        )}
+                        {isAdmin && (
+                          <>
+                            <NavLink to="/users" className={linkClass} onClick={handleLinkClick}>Users</NavLink>
+                            <NavLink to="/roles" className={linkClass} onClick={handleLinkClick}>Roles</NavLink>
+                            <NavLink to="/shifts" className={linkClass} onClick={handleLinkClick}>Shifts</NavLink>
+                            <NavLink to="/accounts-payable" className={linkClass} onClick={handleLinkClick}>Accounts Payable</NavLink>
+                            <NavLink to="/cash-accounts" className={linkClass} onClick={handleLinkClick}>Cash Accounts</NavLink>
+                          </>
+                        )}
                     </div>
                     )}
                 </div>

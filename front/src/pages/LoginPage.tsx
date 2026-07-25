@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { login, selectAuthLoading } from '../store/slices/authSlice';
+import { login, selectAuthLoading, selectLoginAttempts, selectIsBlocked } from '../store/slices/authSlice';
 import { useAuth } from '../hooks/useAuth';
 import toast from 'react-hot-toast';
 import Button from '../components/ui/Button';
@@ -17,12 +17,14 @@ const LoginPage: React.FC = () => {
   const { user } = useAuth();
 
   const isLoading = useSelector(selectAuthLoading);
+  const loginAttempts = useSelector(selectLoginAttempts);
+  const isBlocked = useSelector(selectIsBlocked);
 
   const from = location.state?.from?.pathname || '/';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoading) return;
+    if (isLoading || isBlocked) return;
     setError(null);
 
     try {
@@ -31,9 +33,15 @@ const LoginPage: React.FC = () => {
       toast.success('¡Bienvenido!');
       // La redirección ahora es manejada por el thunk `login`
     } catch (err: any) {
-      const errorMessage = err.message || 'Error al iniciar sesión. Verifique sus credenciales.';
+      const remainingAttempts = 3 - (loginAttempts + 1);
+      let errorMessage = err.message || 'Error al iniciar sesión. Verifique sus credenciales.';
+      if (remainingAttempts > 0) {
+        errorMessage += ` Quedan ${remainingAttempts} intentos.`;
+      } else {
+        errorMessage = 'Usuario bloqueado. Demasiados intentos fallidos.';
+      }
       setError(errorMessage);
-      toast.error(err.message || 'Error al iniciar sesión. Verifique sus credenciales.');
+      toast.error(errorMessage);
     }
   };
 
@@ -50,7 +58,19 @@ const LoginPage: React.FC = () => {
           </p>
         </div>
 
-        {error && !isLoading && (
+        {isBlocked && (
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="flex">
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-red-800">
+                  Usuario bloqueado. Demasiados intentos fallidos.
+                </h3>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {error && !isLoading && !isBlocked && (
           <div className="rounded-md bg-red-50 p-4">
             <div className="flex">
               <div className="ml-3">
@@ -76,7 +96,7 @@ const LoginPage: React.FC = () => {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isBlocked}
               />
             </div>
             <div>
@@ -91,13 +111,13 @@ const LoginPage: React.FC = () => {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
+                disabled={isLoading || isBlocked}
               />
             </div>
           </div>
 
           <div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || isBlocked}>
               {isLoading ? 'Cargando...' : 'Ingresar'}
             </Button>
           </div>

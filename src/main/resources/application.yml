@@ -50,3 +50,4 @@ logging:
     org.hibernate.orm.jdbc.bind: TRACE
     org.springframework.security: DEBUG
     org.springframework.security.access: DEBUG
+    org.hibernate.tool.hbm2ddl: DEBUG

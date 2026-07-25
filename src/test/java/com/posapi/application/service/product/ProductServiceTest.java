@@ -70,7 +70,6 @@ class ProductServiceTest {
                 .email("admin@example.com")
                 .fullName("Admin User")
                 .role(adminRole)
-                .createdByRoleId(ADMIN_ROLE_ID)
                 .build();
 
         product1 = Product.builder()
@@ -81,7 +80,6 @@ class ProductServiceTest {
                 .salePrice(BigDecimal.valueOf(100))
                 .currentStock(BigDecimal.valueOf(10))
                 .createdByUserId(USER_ID)
-                .createdByUserRoleId(ADMIN_ROLE_ID)
                 .createdAt(Instant.now())
                 .build();
 
@@ -93,7 +91,6 @@ class ProductServiceTest {
                 .salePrice(BigDecimal.valueOf(200))
                 .currentStock(BigDecimal.valueOf(5))
                 .createdByUserId(USER_ID)
-                .createdByUserRoleId(ADMIN_ROLE_ID)
                 .createdAt(Instant.now())
                 .build();
 
