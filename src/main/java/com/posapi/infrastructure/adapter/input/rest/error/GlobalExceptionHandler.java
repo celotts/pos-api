@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        log.warn("ResourceNotFoundException: {}", ex.getMessage());
+        log.warn("ResourceNotFoundException: {}", ex.getMessage()); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
             DuplicateResourceException ex, WebRequest request) {
-        log.warn("DuplicateResourceException: {}", ex.getMessage());
+        log.warn("DuplicateResourceException: {}", ex.getMessage()); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 ex.getMessage(),
@@ -51,16 +51,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid( // Cambiar el tipo de retorno
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+            // Cambiar el tipo de retorno
             MethodArgumentNotValidException ex, WebRequest request) {
         List<ErrorResponse.ValidationError> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ErrorResponse.ValidationError(error.getField(), error.getDefaultMessage(), error.getRejectedValue()))
+                .map(error -> new ErrorResponse.ValidationError(
+                        error.getField(),
+                        error.getDefaultMessage(),
+                        error.getRejectedValue()))
                 .collect(Collectors.toList());
 
         Map<String, String> errorsMap = new HashMap<>(); // Para el log
-        validationErrors.forEach(error -> errorsMap.put(error.getField(), error.getMessage()));
+        validationErrors.forEach(error -> errorsMap.put(error.getField(),
+                error.getMessage())); // Formateado para legibilidad
 
-        log.warn("Validation errors: {}", errorsMap);
+        log.warn("Validation errors: {}", errorsMap); // Formateado para legibilidad
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -76,7 +81,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred. Please try again later.",
