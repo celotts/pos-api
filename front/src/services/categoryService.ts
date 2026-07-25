@@ -1,29 +1,18 @@
 import api from './api';
+import { Category } from '../models/category';
+import { Page } from '../models/page';
 
-// Mantenemos tu interfaz original extendiéndola para compatibilidad con el formulario
-export interface Category {
-  id: string;
+export type CategoryData = {
   name: string;
-  createdByName?: string;
-  updatedByName?: string;
-}
-
-// Interfaz estandarizada para los selectores (CatalogItem)
-export interface CategoryOption {
-  id: string;
-  name: string;
-}
+};
 
 export const categoryService = {
-  // Obtiene todas las categorías (retorna Category[], compatible con Selects)
-  getAll: () => api.get<Category[]>('/categories').then(res => res.data),
-
-  // Create ahora espera el objeto completo según tu lógica de dominio
-  create: (data: { name: string }) => api.post<Category>('/categories', data).then(res => res.data),
-
-  // Update
-  update: (id: string, data: { name: string }) => api.put<Category>(`/categories/${id}`, data).then(res => res.data),
-
-  // Delete
+  getAll: async (page = 0, size = 10, sort = 'name,asc'): Promise<Page<Category>> => {
+    const response = await api.get('/categories', { params: { page, size, sort } });
+    return response.data;
+  },
+  getById: (id: string) => api.get<Category>(`/categories/${id}`).then(res => res.data),
+  create: (data: CategoryData) => api.post<Category>('/categories', data).then(res => res.data),
+  update: (id: string, data: CategoryData) => api.put<Category>(`/categories/${id}`, data).then(res => res.data),
   delete: (id: string) => api.delete(`/categories/${id}`),
 };

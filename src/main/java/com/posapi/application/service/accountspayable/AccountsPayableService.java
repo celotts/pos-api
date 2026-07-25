@@ -18,11 +18,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Service // ¡IMPORTANTE! Para que Spring lo detecte como un bean
+@Service
 @RequiredArgsConstructor
 @Slf4j
 public class AccountsPayableService implements AccountsPayableManagementPort {
@@ -77,7 +82,8 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AccountsPayableResponse> getAccountsPayableBySupplier(UUID supplierId, Pageable pageable) {
-        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository.findBySupplierId(supplierId, pageable);
+        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
+                .findBySupplierId(supplierId, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
                 .map(this::mapToAccountsPayableResponse)
                 .collect(Collectors.toList());
@@ -93,7 +99,9 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
     @Override
     @Transactional
-    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id, AccountsPayableRequest request, UUID currentUserId) {
+    public Optional<AccountsPayableResponse> updateAccountsPayable(UUID id,
+                                                                   AccountsPayableRequest request,
+                                                                   UUID currentUserId) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
@@ -134,14 +142,15 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
         accountsPayableRepository.findById(id).ifPresent(existingAccountsPayable -> {
             existingAccountsPayable.markAsDeleted(currentUserId, currentUserRoleId);
             accountsPayableRepository.save(existingAccountsPayable);
-            log.info("Accounts Payable with id {} marked as deleted by user {}", id, currentUserId);
+            log.info("POS Terminal with id {} marked as deleted by user {}", id, currentUserId);
         });
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<AccountsPayableResponse> getOverdueAccountsPayable(LocalDate asOfDate, Pageable pageable) {
-        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository.findByDueDateBeforeAndStatus(asOfDate, AccountsPayable.ArApStatus.OVERDUE, pageable);
+        Page<AccountsPayable> accountsPayablePage = accountsPayableRepository
+                .findByDueDateBeforeAndStatus(asOfDate, AccountsPayable.ArApStatus.OVERDUE, pageable);
         List<AccountsPayableResponse> content = accountsPayablePage.getContent().stream()
                 .map(this::mapToAccountsPayableResponse)
                 .collect(Collectors.toList());
@@ -166,7 +175,8 @@ public class AccountsPayableService implements AccountsPayableManagementPort {
 
         String createdByName = userNames.getOrDefault(accountsPayable.getCreatedByUserId(), null);
         String updatedByName = userNames.getOrDefault(accountsPayable.getUpdatedByUserId(), null);
-        String deletedByName = userNames.getOrDefault(accountsPayable.getDeletedByUserId(), null);
+        String deletedByName = userNames.getOrDefault(
+                accountsPayable.getDeletedByUserId(), null);
 
         return AccountsPayableResponse.fromDomain(accountsPayable, createdByName, updatedByName, deletedByName);
     }

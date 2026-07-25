@@ -51,7 +51,9 @@ public class Tax {
             String newName, BigDecimal newPercentage, TaxEnum newTaxType,
             UUID updatedByUserId, UUID updatedByUserRoleId) {
 
-        if (newPercentage != null && (newPercentage.compareTo(BigDecimal.ZERO) < 0 || newPercentage.compareTo(BigDecimal.valueOf(100)) > 0)) {
+        if (newPercentage != null
+                && (newPercentage.compareTo(BigDecimal.ZERO) < 0
+                || newPercentage.compareTo(BigDecimal.valueOf(100)) > 0)) {
             throw new IllegalArgumentException("Percentage must be between 0 and 100.");
         }
 

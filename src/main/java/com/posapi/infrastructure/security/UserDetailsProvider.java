@@ -1,6 +1,5 @@
 package com.posapi.infrastructure.security;
 
-import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.RoleRepository;
 import com.posapi.domain.port.output.UserRepository;

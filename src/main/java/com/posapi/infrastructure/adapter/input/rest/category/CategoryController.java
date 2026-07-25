@@ -1,6 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.category;
 
-import com.posapi.application.port.category.CategoryInputPort;
+import com.posapi.application.port.category.CategoryManagementPort;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.category.dto.CategoryRequest;
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -29,7 +28,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class CategoryController {
 
-    private final CategoryInputPort categoryInputPort;
+    private final CategoryManagementPort categoryManagementPort;
     private final SecurityContextHelper securityContextHelper;
     private final UserRepository userRepository;
 
@@ -38,7 +37,7 @@ public class CategoryController {
     public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest request) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
 
-        CategoryResponse createdCategory = categoryInputPort.createCategory(request, currentUser.getId());
+        CategoryResponse createdCategory = categoryManagementPort.createCategory(request, currentUser.getId());
 
         Map<UUID, String> userNames = fetchUserNames(Set.of(createdCategory.createdByUserId())); // Acceso directo al campo
         String createdByName = userNames.get(createdCategory.createdByUserId()); // Acceso directo al campo
@@ -58,7 +57,7 @@ public class CategoryController {
     ) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
 
-        return categoryInputPort.updateCategory(id, request, currentUser.getId())
+        return categoryManagementPort.updateCategory(id, request, currentUser.getId())
                 .map(updatedCategoryResponse -> {
                     Set<UUID> userIds = Stream.of(
                             updatedCategoryResponse.createdByUserId(), // Acceso directo al campo
@@ -78,7 +77,7 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable UUID id) {
-        return categoryInputPort.getCategoryById(id)
+        return categoryManagementPort.getCategoryById(id)
                 .map(categoryResponse -> {
                     Set<UUID> userIds = Stream.of(
                             categoryResponse.createdByUserId(), // Acceso directo al campo
@@ -98,7 +97,7 @@ public class CategoryController {
 
     @GetMapping
     public ResponseEntity<PageResponse<CategoryResponse>> getAllCategories(@PageableDefault(size = 10, sort = "name") Pageable pageable) {
-        PageResponse<CategoryResponse> pageResponse = categoryInputPort.getAllCategories(pageable);
+        PageResponse<CategoryResponse> pageResponse = categoryManagementPort.getAllCategories(pageable);
 
         // CORREGIDO: Retornamos el objeto de paginación completo y usamos getContent()
         return ResponseEntity.ok(pageResponse);
@@ -108,7 +107,7 @@ public class CategoryController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteCategory(@PathVariable UUID id) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
-        categoryInputPort.deleteCategory(id, currentUser.getId());
+        categoryManagementPort.deleteCategory(id, currentUser.getId());
         return ResponseEntity.noContent().build();
     }
 

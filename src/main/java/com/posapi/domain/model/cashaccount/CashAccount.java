@@ -9,8 +9,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-// AÑADIDO: Importación para CashAccountType
-import com.posapi.domain.model.cashaccount.CashAccountType;
 
 @Data
 @Builder(toBuilder = true) // Añadido toBuilder

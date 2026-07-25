@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.posapi.domain.model.accountspayable.AccountsPayable;
 import com.posapi.domain.model.accountspayable.AccountsPayable.ArApStatus;
 import lombok.Builder;
-import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
 import java.time.Instant;

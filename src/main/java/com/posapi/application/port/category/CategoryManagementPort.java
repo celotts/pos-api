@@ -5,11 +5,10 @@ import com.posapi.infrastructure.adapter.input.rest.category.dto.CategoryRespons
 import com.posapi.shared.dto.PageResponse; // Para paginación
 import org.springframework.data.domain.Pageable; // Para paginación
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface CategoryInputPort {
+public interface CategoryManagementPort { // CORREGIDO: Nombre de la interfaz
 
     /**
      * Crea una nueva categoría.

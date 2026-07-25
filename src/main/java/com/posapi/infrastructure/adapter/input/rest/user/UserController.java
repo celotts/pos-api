@@ -1,13 +1,12 @@
 package com.posapi.infrastructure.adapter.input.rest.user;
 
 import com.posapi.application.port.user.UserManagementPort;
-import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
+import com.posapi.shared.dto.PageResponse; // Importar PageResponse
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -37,9 +36,8 @@ public class UserController {
     // 🛡️ Endpoint público, no necesita autorización
     @PostMapping("/register")
     public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRequest userRequest) {
-        User userTemplate = userRestMapper.toDomain(userRequest);
-        User createdUser = userManagementPort.createUser(userTemplate);
-        return new ResponseEntity<>(userRestMapper.toResponse(createdUser), HttpStatus.CREATED);
+        UserResponse createdUserResponse = userManagementPort.createUser(userRequest);
+        return new ResponseEntity<>(createdUserResponse, HttpStatus.CREATED);
     }
 
     // 🛡️ Requiere que el usuario esté autenticado
@@ -47,8 +45,7 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponse> getUserById(@PathVariable UUID id) {
         return userManagementPort.getUserById(id)
-                .map(userRestMapper::toResponse)
-                .map(ResponseEntity::ok)
+                .map(response -> ResponseEntity.ok(response))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -57,20 +54,19 @@ public class UserController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserResponse> getUserByEmail(@PathVariable String email) {
         return userManagementPort.getUserByEmail(email)
-                .map(userRestMapper::toResponse)
-                .map(ResponseEntity::ok)
+                .map(response -> ResponseEntity.ok(response))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     // 🛡️ Requiere rol de ADMIN para ver todos los usuarios
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Page<UserResponse>> getAllUsers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+    public ResponseEntity<PageResponse<UserResponse>> getAllUsers( // CORREGIDO: Retorna PageResponse
+                                                                   @RequestParam(defaultValue = "0") int page,
+                                                                   @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<UserResponse> users = userManagementPort.getAllUsers(pageable)
-                .map(userRestMapper::toResponse);
+        // CORREGIDO: userManagementPort.getAllUsers ya devuelve PageResponse<UserResponse>
+        PageResponse<UserResponse> users = userManagementPort.getAllUsers(pageable); // CORREGIDO: Tipo de variable
         return ResponseEntity.ok(users);
     }
 
@@ -78,10 +74,8 @@ public class UserController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> updateUser(@PathVariable UUID id, @Valid @RequestBody UserRequest userRequest) {
-        User userTemplate = userRestMapper.toDomain(userRequest);
-        return userManagementPort.updateUser(id, userTemplate)
-                .map(userRestMapper::toResponse)
-                .map(ResponseEntity::ok)
+        return userManagementPort.updateUser(id, userRequest)
+                .map(response -> ResponseEntity.ok(response))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -89,10 +83,9 @@ public class UserController {
     @PatchMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> toggleUserStatus(@PathVariable UUID id, @RequestParam boolean active) {
-        User userUpdate = User.builder().isActive(active).build();
-        return userManagementPort.updateUser(id, userUpdate)
-                .map(userRestMapper::toResponse)
-                .map(ResponseEntity::ok)
+        UserRequest userRequest = UserRequest.builder().isActive(active).build();
+        return userManagementPort.updateUser(id, userRequest)
+                .map(response -> ResponseEntity.ok(response))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -100,8 +93,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
-        return userManagementPort.deleteUser(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        userManagementPort.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -5,10 +5,6 @@ import com.posapi.infrastructure.adapter.input.rest.posterminal.dto.PosTerminalR
 import com.posapi.infrastructure.adapter.input.rest.posterminal.dto.PosTerminalResponse;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal; // Importar BigDecimal si es necesario (no en este caso, pero buena práctica)
-import java.time.Instant;
-import java.util.UUID;
-
 @Component
 public class PosTerminalRestMapper {
 
@@ -23,7 +19,10 @@ public class PosTerminalRestMapper {
                 .build();
     }
 
-    public PosTerminalResponse toResponse(PosTerminal posTerminal, String createdByName, String updatedByName, String deletedByName) {
+    public PosTerminalResponse toResponse(PosTerminal posTerminal,
+                                          String createdByName,
+                                          String updatedByName,
+                                          String deletedByName) {
         if (posTerminal == null) {
             return null;
         }

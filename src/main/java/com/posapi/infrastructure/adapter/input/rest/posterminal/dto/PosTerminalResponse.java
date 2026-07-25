@@ -27,7 +27,10 @@ public record PosTerminalResponse(
     String updatedByName,
     String deletedByName
 ) {
-    public static PosTerminalResponse fromDomain(PosTerminal posTerminal, String createdByName, String updatedByName, String deletedByName) {
+    public static PosTerminalResponse fromDomain(PosTerminal posTerminal,
+                                                 String createdByName,
+                                                 String updatedByName,
+                                                 String deletedByName) {
         return PosTerminalResponse.builder()
                 .id(posTerminal.getId())
                 .name(posTerminal.getName())

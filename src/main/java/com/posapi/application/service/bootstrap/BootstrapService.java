@@ -58,29 +58,33 @@ public class BootstrapService implements CommandLineRunner {
     }
 
     private void createOrUpdateAdminUser() {
-        Role adminRole = roleRepository.findByName("ADMIN")
-                .orElseThrow(() -> new ResourceNotFoundException("Admin role not found during bootstrap."));
+        Role adminRole = roleRepository
+                .findByName("ADMIN")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Admin role not found during bootstrap."
+                    )
+                );
 
         Optional<User> existingUser = userRepository.findByEmail(adminEmail);
 
         if (existingUser.isPresent()) {
             User user = existingUser.get();
             // Actualizar si el rol ha cambiado
-            if (!adminRole.getId().equals(user.getRole().getId())) { // CORREGIDO: Acceder al ID del rol a través de la relación
-                user.setRole(adminRole); // CORREGIDO: Establecer la entidad Role
+            if (!adminRole.getId().equals(user.getRole().getId())) {
+                user.setRole(adminRole);
                 userRepository.save(user);
                 log.info("Admin user role updated to 'ADMIN'.");
             }
             log.info("Admin user already exists.");
         } else {
             log.info("Admin user not found. Creating...");
-            User adminUser = User.builder()
+            User adminUser = User.builder() // Formateado para legibilidad
                     .id(UUID.randomUUID())
                     .email(adminEmail)
                     .password(passwordEncoder.encode(adminPassword))
                     .fullName("Admin User")
                     .isActive(true)
-                    .role(adminRole) // CORREGIDO: Establecer la entidad Role
+                    .role(adminRole)
                     .createdAt(Instant.now())
                     .build();
             userRepository.save(adminUser);

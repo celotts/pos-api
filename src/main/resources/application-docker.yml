@@ -12,8 +12,13 @@ spring:
     password: ${POSTGRES_PASSWORD:product123}
   jpa:
     hibernate:
-      # En el entorno de Docker, Flyway maneja el esquema, por lo que Hibernate solo debe validar.
-      ddl-auto: validate
+      # Para entornos de desarrollo/pruebas en Docker, permitimos que Hibernate actualice el esquema.
+      # Si se utiliza una herramienta de migración de base de datos como Flyway, esta debería encargarse de la creación del esquema.
+      ddl-auto: update
+    show-sql: true
+  flyway:
+    enabled: false # Deshabilitar Flyway temporalmente para permitir que Hibernate gestione el esquema.
+                   # Si Flyway es necesario, asegúrate de que tus scripts de migración creen todas las tablas.
   rabbitmq:
     # Dentro de la red de Docker, nos conectamos al servicio 'rabbitmq' (si lo tuvieras).
     host: rabbitmq
@@ -21,6 +26,7 @@ spring:
 logging:
   level:
     com.posapi: DEBUG
+    org.hibernate.tool.hbm2ddl: DEBUG
     org.springframework.security: DEBUG
     org.springframework.security.access: DEBUG
     org.springframework.web: INFO

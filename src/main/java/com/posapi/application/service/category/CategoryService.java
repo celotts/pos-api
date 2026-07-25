@@ -1,6 +1,6 @@
 package com.posapi.application.service.category;
 
-import com.posapi.application.port.category.CategoryInputPort;
+import com.posapi.application.port.category.CategoryManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.model.category.Category;
 import com.posapi.domain.model.user.User;
@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CategoryService implements CategoryInputPort {
+public class CategoryService implements CategoryManagementPort {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository; // Para obtener nombres de usuario
@@ -42,36 +42,36 @@ public class CategoryService implements CategoryInputPort {
     @Transactional
     public CategoryResponse createCategory(CategoryRequest request, UUID currentUserId) {
         if (categoryRepository.existsByName(request.name())) {
-            throw new DuplicateResourceException("Category with name '" + request.name() + "' already exists.");
+            throw new DuplicateResourceException("Category with name '"
+                    + request.name() + "' already exists.");
         }
 
         // Obtener el rol del usuario actual (asumiendo que User tiene getRoleId())
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
-        UUID currentUserRoleId = currentUser.getRole().getId(); // CORREGIDO: Acceder al ID del rol a través de la relación
-
+        UUID currentUserRoleId = currentUser.getRole().getId();
         Category newCategory = Category.builder()
                 .id(UUID.randomUUID())
                 .name(request.name())
                 .createdAt(Instant.now())
                 .createdByUserId(currentUserId)
-                .createdByRoleId(currentUserRoleId) // Asignar el rol del creador
+                .createdByRoleId(currentUserRoleId)
                 .build();
 
         Category savedCategory = categoryRepository.save(newCategory);
-        return mapToCategoryResponse(savedCategory); // Mapear a DTO de respuesta
+        return mapToCategoryResponse(savedCategory);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<CategoryResponse> getCategoryById(UUID id) {
         return categoryRepository.findById(id)
-                .map(this::mapToCategoryResponse); // Mapear a DTO de respuesta
+                .map(this::mapToCategoryResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PageResponse<CategoryResponse> getAllCategories(Pageable pageable) {
-        Page<Category> categoriesPage = categoryRepository.findAll(pageable); // Eliminado el cast innecesario
+        Page<Category> categoriesPage = categoryRepository.findAll(pageable);
         List<CategoryResponse> categoryResponses = categoriesPage.getContent().stream()
                 .map(this::mapToCategoryResponse) // Mapear cada entidad a DTO de respuesta
                 .collect(Collectors.toList());
@@ -103,10 +103,9 @@ public class CategoryService implements CategoryInputPort {
 
                     // Obtener el rol del usuario actual
                     User currentUser = securityContextHelper.getCurrentUserOrThrow();
-                    existingCategory.setUpdatedByRoleId(currentUser.getRole().getId()); // CORREGIDO: Acceder al ID del rol a través de la relación
-
+                    existingCategory.setUpdatedByRoleId(currentUser.getRole().getId());
                     Category updatedCategory = categoryRepository.save(existingCategory);
-                    return mapToCategoryResponse(updatedCategory); // Mapear a DTO de respuesta
+                    return mapToCategoryResponse(updatedCategory);
                 });
     }
 
@@ -120,8 +119,7 @@ public class CategoryService implements CategoryInputPort {
 
                     // Obtener el rol del usuario actual
                     User currentUser = securityContextHelper.getCurrentUserOrThrow();
-                    existingCategory.setDeletedByRoleId(currentUser.getRole().getId()); // CORREGIDO: Acceder al ID del rol a través de la relación
-
+                    existingCategory.setDeletedByRoleId(currentUser.getRole().getId());
                     categoryRepository.save(existingCategory);
                     log.info("Category with id {} marked as deleted by user {}", id, currentUserId);
                 });

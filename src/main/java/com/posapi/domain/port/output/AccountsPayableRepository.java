@@ -16,6 +16,8 @@ public interface AccountsPayableRepository {
     List<AccountsPayable> findAll();
     Page<AccountsPayable> findBySupplierId(UUID supplierId, Pageable pageable);
     Page<AccountsPayable> findByStatus(AccountsPayable.ArApStatus status, Pageable pageable);
-    Page<AccountsPayable> findByDueDateBeforeAndStatus(LocalDate date, AccountsPayable.ArApStatus status, Pageable pageable);
+    Page<AccountsPayable> findByDueDateBeforeAndStatus(LocalDate date,
+                                                        AccountsPayable.ArApStatus status,
+                                                        Pageable pageable);
     boolean existsById(UUID id);
 }

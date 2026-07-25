@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { User, UserData } from '../services/userService';
-import { Role } from '../services/roleService';
+import type { User, UserData } from '../services/userService';
+import type { Role } from '../services/roleService';
 
 interface FormProps {
   onSubmit: (data: UserData) => void;

@@ -36,9 +36,11 @@ public class CashAccountService implements CashAccountManagementPort {
 
     @Override
     @Transactional
-    public CashAccountResponse createCashAccount(CashAccountRequest request, UUID currentUserId) {
+    public CashAccountResponse createCashAccount(CashAccountRequest request,
+                                                 UUID currentUserId) {
         if (cashAccountRepository.existsByName(request.name())) {
-            throw new DuplicateResourceException("Cash Account with name '" + request.name() + "' already exists.");
+            throw new DuplicateResourceException("Cash Account with name '" +
+                    request.name() + "' already exists.");
         }
 
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
@@ -74,20 +76,22 @@ public class CashAccountService implements CashAccountManagementPort {
 
     @Override
     @Transactional
-    public Optional<CashAccountResponse> updateCashAccount(UUID id, CashAccountRequest request, UUID currentUserId) {
+    public Optional<CashAccountResponse> updateCashAccount(UUID id,
+                                                           CashAccountRequest request,
+                                                           UUID currentUserId) {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return cashAccountRepository.findById(id).map(existingCashAccount -> {
-            if (request.name() != null && !request.name().equals(existingCashAccount.getName())) {
+            if (request.name() != null &&
+                    !request.name().equals(existingCashAccount.getName())) {
                 if (cashAccountRepository.existsByName(request.name())) {
-                    throw new DuplicateResourceException("Cash Account with name '" + request.name() + "' already exists.");
+                    throw new DuplicateResourceException("Cash Account with name '" +
+                            request.name() +
+                            "' already exists.");
                 }
             }
             existingCashAccount.updateName(request.name(), currentUserId, currentUserRoleId);
-            // Otros campos a actualizar si es necesario
-            // existingCashAccount.setAccountType(request.accountType());
-            // existingCashAccount.setCurrency(request.currency());
 
             CashAccount updatedCashAccount = cashAccountRepository.save(existingCashAccount);
             return mapToCashAccountResponse(updatedCashAccount);

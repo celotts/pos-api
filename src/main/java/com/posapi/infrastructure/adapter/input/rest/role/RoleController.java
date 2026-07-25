@@ -1,18 +1,19 @@
 package com.posapi.infrastructure.adapter.input.rest.role;
 
 import com.posapi.application.port.role.RoleManagementPort;
-import com.posapi.domain.model.role.Role;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
 import com.posapi.infrastructure.adapter.input.rest.role.mapper.RoleRestMapper;
+import com.posapi.shared.dto.PageResponse; // AÑADIDO
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest; // AÑADIDO
+import org.springframework.data.domain.Pageable; // AÑADIDO
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,37 +23,33 @@ import java.util.UUID;
 public class RoleController {
 
     private final RoleManagementPort roleManagementPort;
-    private final RoleRestMapper roleRestMapper; // INYECTADO: Ahora el componente tiene uso legítimo
+    private final RoleRestMapper roleRestMapper;
 
     @PostMapping
     public ResponseEntity<RoleResponse> createRole(@Valid @RequestBody RoleRequest request) {
-        // CORREGIDO: Usamos el mapper para convertir la entrada HTTP al Dominio
-        Role roleToCreate = roleRestMapper.toDomain(request);
-        Role createdRole = roleManagementPort.createRole(roleToCreate);
-
-        return roleManagementPort.getRoleByIdWithUserNames(createdRole.getId())
-                .map(responseDto -> new ResponseEntity<>(responseDto, HttpStatus.CREATED))
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+        RoleResponse createdRoleResponse = roleManagementPort.createRole(request); // CORREGIDO: Pasa RoleRequest y recibe RoleResponse
+        return new ResponseEntity<>(createdRoleResponse, HttpStatus.CREATED);
     }
 
     @GetMapping
-    public ResponseEntity<List<RoleResponse>> getAllRoles() {
-        return ResponseEntity.ok(roleManagementPort.getAllRolesWithUserNames());
+    public ResponseEntity<PageResponse<RoleResponse>> getAllRoles( // CORREGIDO: Retorna PageResponse
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        PageResponse<RoleResponse> roles = roleManagementPort.getAllRoles(pageable); // CORREGIDO: Usa el método paginado
+        return ResponseEntity.ok(roles);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<RoleResponse> getRoleById(@PathVariable UUID id) {
-        return roleManagementPort.getRoleByIdWithUserNames(id)
+        return roleManagementPort.getRoleById(id) // CORREGIDO: Usa getRoleById
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<RoleResponse> updateRole(@PathVariable UUID id, @Valid @RequestBody RoleRequest request) {
-        // CORREGIDO: Usamos el mapper para la actualización
-        Role roleToUpdate = roleRestMapper.toDomain(request);
-        return roleManagementPort.updateRole(id, roleToUpdate)
-                .flatMap(updatedRole -> roleManagementPort.getRoleByIdWithUserNames(updatedRole.getId()))
+        return roleManagementPort.updateRole(id, request) // CORREGIDO: Pasa RoleRequest
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

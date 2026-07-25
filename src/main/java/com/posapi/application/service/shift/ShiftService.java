@@ -1,7 +1,6 @@
 package com.posapi.application.service.shift;
 
 import com.posapi.application.port.shift.ShiftManagementPort;
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.shift.Shift;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.ShiftRepository;
@@ -12,7 +11,7 @@ import com.posapi.infrastructure.adapter.input.rest.shift.mapper.ShiftRestMapper
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import com.posapi.shared.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j; // CORREGIDO: slf4j en lugar de slf44j
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -86,16 +85,7 @@ public class ShiftService implements ShiftManagementPort {
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return shiftRepository.findById(id).map(existingShift -> {
-            // Aquí puedes añadir lógica para actualizar otros campos si es necesario
-            // Por ejemplo, si el request incluye un nuevo userId o posTerminalId,
-            // deberías validar si el turno está abierto antes de permitir esos cambios.
-            // Para este ejemplo, solo actualizaremos los campos de auditoría.
 
-            // Si el modelo de dominio Shift tiene un método updateDetails, úsalo:
-            // existingShift.updateDetails(request.userId(), request.posTerminalId(), request.startingCash(),
-            //                             request.status(), currentUserId, currentUserRoleId);
-
-            // Por ahora, solo actualizamos los campos de auditoría si no hay un método updateDetails específico.
             existingShift.setUpdatedAt(java.time.Instant.now());
             existingShift.setUpdatedByUserId(currentUserId);
             existingShift.setUpdatedByUserRoleId(currentUserRoleId);

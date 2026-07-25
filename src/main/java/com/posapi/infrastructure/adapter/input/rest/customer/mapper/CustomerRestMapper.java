@@ -5,10 +5,6 @@ import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerRequest
 import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerResponse;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
-
 @Component // AÑADIDO: Para que Spring la detecte como un bean
 public class CustomerRestMapper {
 
