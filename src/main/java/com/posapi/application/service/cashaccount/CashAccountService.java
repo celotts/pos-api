@@ -8,7 +8,7 @@ import com.posapi.domain.port.output.CashAccountRepository;
 import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
 import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.mapper.CashAccountRestMapper;
+//import com.posapi.infrastructure.adapter.input.rest.cashAccount.mapper.CashAccountRestMapper;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class CashAccountService implements CashAccountManagementPort {
     private final CashAccountRepository cashAccountRepository;
     private final UserRepository userRepository;
     private final SecurityContextHelper securityContextHelper;
-    private final CashAccountRestMapper cashAccountRestMapper;
+    //private final CashAccountRestMapper cashAccountRestMapper;
 
     @Override
     @Transactional
