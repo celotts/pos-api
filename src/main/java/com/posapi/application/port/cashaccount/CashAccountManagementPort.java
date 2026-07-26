@@ -1,7 +1,7 @@
 package com.posapi.application.port.cashaccount;
 
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountRequest;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountResponse;
 
 import java.util.List;
 import java.util.Optional;
