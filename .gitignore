@@ -1,41 +1,35 @@
+# Documentation
 HELP.md
-.gradle
-build/
-!gradle/wrapper/gradle-wrapper.jar
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### STS ###
+# Gradle & Build Output
+.gradle/
+build/
+bin/
+out/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Spring Tool Suite / Eclipse
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+.sts4-cache/
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
 
-### VS Code ###
+# VS Code & Tools
 .vscode/
-
-# Carpetas de extensiones locales locales
 .continue/
-
