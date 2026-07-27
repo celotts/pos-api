@@ -33,3 +33,6 @@ out/
 # VS Code & Tools
 .vscode/
 .continue/
+
+app_logs_full.txt
+db_logs.txt
