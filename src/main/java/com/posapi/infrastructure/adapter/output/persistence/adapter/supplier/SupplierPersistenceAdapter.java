@@ -49,4 +49,9 @@ public class SupplierPersistenceAdapter implements SupplierRepository {
     public boolean existsByRfc(String rfc) {
         return supplierJpaRepository.existsByRfc(rfc);
     }
+
+    @Override
+    public boolean existsById(UUID supplierId) {
+        return supplierJpaRepository.existsById(supplierId);
+    }
 }

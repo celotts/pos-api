@@ -1,12 +1,14 @@
 package com.posapi.application.service.product;
 
-
-
 import com.posapi.application.port.product.ProductManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.port.output.CategoryRepository;
 import com.posapi.domain.port.output.ProductRepository;
+import com.posapi.domain.port.output.SupplierRepository;
+import com.posapi.domain.port.output.TaxRepository;
 import com.posapi.domain.port.output.UserRepository;
 
 import com.posapi.infrastructure.security.SecurityContextHelper;
@@ -17,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,9 @@ import java.util.stream.Stream;
 public class ProductService implements ProductManagementPort {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
+    private final TaxRepository taxRepository;
     private final UserRepository userRepository;
     private final SecurityContextHelper securityContextHelper;
 
@@ -34,6 +38,13 @@ public class ProductService implements ProductManagementPort {
         if (productRepository.existsBySku(productToCreate.getSku())) {
             throw new DuplicateResourceException("Product with SKU '" + productToCreate.getSku() + "' already exists.");
         }
+
+        // 1. Validar existencia de entidades relacionadas
+        validateRelatedEntities(
+                productToCreate.getCategoryId(),
+                productToCreate.getSupplierId(),
+                productToCreate.getTaxId()
+        );
 
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
@@ -70,6 +81,13 @@ public class ProductService implements ProductManagementPort {
     @Override
     @Transactional
     public Optional<Product> updateProduct(UUID id, Product productChanges, UUID currentUserId) {
+        // 1. Validar existencia de entidades relacionadas al actualizar
+        validateRelatedEntities(
+                productChanges.getCategoryId(),
+                productChanges.getSupplierId(),
+                productChanges.getTaxId()
+        );
+
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
@@ -108,8 +126,6 @@ public class ProductService implements ProductManagementPort {
         return productRepository.findBySku(sku);
     }
 
-    // Si necesitas resolver nombres de usuario para la respuesta REST,
-    // esa responsabilidad de ensamble o mapeo a ProductResponse va en el REST Controller/Mapper.
     public Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return Map.of();
@@ -124,5 +140,22 @@ public class ProductService implements ProductManagementPort {
 
         return userRepository.findAllById(validUserIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getFullName));
+    }
+
+    /**
+     * Valida que las llaves foráneas existan antes de ejecutar operaciones de persistencia.
+     */
+    private void validateRelatedEntities(UUID categoryId, UUID supplierId, UUID taxId) {
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            throw new ResourceNotFoundException("Category not found with ID: " + categoryId);
+        }
+
+        if (supplierId != null && !supplierRepository.existsById(supplierId)) {
+            throw new ResourceNotFoundException("Supplier not found with ID: " + supplierId);
+        }
+
+        if (taxId != null && !taxRepository.existsById(taxId)) {
+            throw new ResourceNotFoundException("Tax not found with ID: " + taxId);
+        }
     }
 }

@@ -1,12 +1,10 @@
-
-
 plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.2'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'checkstyle'
     id 'com.github.spotbugs' version '6.5.6'
-    id "com.diffplug.spotless" version "6.25.0" // ¡Esta línea es crucial para Spotless!
+    id "com.diffplug.spotless" version "6.25.0"
 }
 
 group = 'pos.api'
@@ -31,17 +29,18 @@ configurations.configureEach {
 
 spotbugs {
     toolVersion = '4.8.6'
-    effort.set(com.github.spotbugs.snom.Effort.valueOf("MAX")) // Usar valueOf para obtener la instancia del enum
-    reportLevel.set(com.github.spotbugs.snom.Confidence.valueOf("LOW")) // Usar valueOf para obtener la instancia del enum
+    effort.set(com.github.spotbugs.snom.Effort.valueOf("MAX"))
+    reportLevel.set(com.github.spotbugs.snom.Confidence.valueOf("LOW"))
+    excludeFilter = file("${rootDir}/config/spotbugs/exclude.xml")
 }
 
-tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach { // Calificar completamente SpotBugsTask
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
     enabled = true
     reports {
         xml.required.set(false)
         html.required.set(true)
     }
-    ignoreFailures = true
+    ignoreFailures = false
 }
 
 tasks.withType(Checkstyle).configureEach {
@@ -63,7 +62,7 @@ repositories {
 
 dependencies {
     // Platform / BOMs
-    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8") // Corregido a una versión existente y estable
+    testImplementation platform("org.testcontainers:testcontainers-bom:1.19.8")
 
     // Spring Boot Starters
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -77,7 +76,6 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     // JJWT (Seguridad / JWT)
-    // 🛡️ API en implementation; la implementación e integración Jackson van en runtimeOnly
     implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'

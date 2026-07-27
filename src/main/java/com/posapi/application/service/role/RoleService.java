@@ -5,7 +5,7 @@ import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleRequest;
 import com.posapi.infrastructure.adapter.input.rest.role.dto.RoleResponse;
 import com.posapi.shared.dto.PageResponse;
-import com.posapi.shared.exception.ResourceNotFoundException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.RoleRepository;

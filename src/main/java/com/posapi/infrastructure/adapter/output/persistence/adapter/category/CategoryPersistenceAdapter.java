@@ -33,6 +33,11 @@ public class CategoryPersistenceAdapter implements CategoryRepository {
     }
 
     @Override
+    public boolean existsById(UUID id) {
+        return categoryJpaRepository.existsById(id);
+    }
+
+    @Override
     public Page<Category> findAll(Pageable pageable) {
         // CORREGIDO: Usar el método map de Page para transformar Page<CategoryEntity> a Page<Category>
         return categoryJpaRepository.findAll(pageable)

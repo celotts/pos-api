@@ -3,6 +3,7 @@ package com.posapi.infrastructure.adapter.input.rest.error;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -91,5 +92,31 @@ public class GlobalExceptionHandler {
                 null // fieldErrors
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex, WebRequest request) {
+
+        log.error("Data Integrity Violation: {}", ex.getMessage(), ex);
+
+        String detail = "The operation failed due to a database constraint violation.";
+        String mostSpecificCause = ex.getMostSpecificCause().getMessage();
+
+        // Extraer mensaje limpio en caso de violaciones de clave foránea (FK)
+        if (mostSpecificCause != null && mostSpecificCause.contains("violates foreign key constraint")) {
+            detail = "The referenced entity (such as category, supplier, or tax) does not exist.";
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid relational data provided.", // message principal
+                detail,                              // detail estructurado
+                Instant.now(),
+                request.getDescription(false),       // path
+                null                                 // fieldErrors
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }
