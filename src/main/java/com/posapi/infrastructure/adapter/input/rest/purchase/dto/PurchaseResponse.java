@@ -7,8 +7,11 @@ import com.posapi.domain.model.purchase.PurchaseStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List; // AÑADIDO
+import java.util.List;
 import java.util.UUID;
+
+// Importación necesaria para PurchaseItemResponse
+import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PurchaseResponse(
@@ -31,11 +34,11 @@ public record PurchaseResponse(
         String createdByName,
         String updatedByName,
         String deletedByName,
-        List<PurchaseItemResponse> items // AÑADIDO: Lista de ítems de la compra
+        List<PurchaseItemResponse> items // Lista de ítems de la compra
 ) {
     public static PurchaseResponse fromDomain(
             Purchase purchase,
-            List<PurchaseItemResponse> items, // AÑADIDO: Recibe los ítems
+            List<PurchaseItemResponse> items, // Recibe los ítems
             String createdByName,
             String updatedByName,
             String deletedByName) {
@@ -59,7 +62,7 @@ public record PurchaseResponse(
                 createdByName,
                 updatedByName,
                 deletedByName,
-                items // AÑADIDO
+                items
         );
     }
 }
