@@ -3,7 +3,7 @@
 **Meta del MVP:** Permitir el registro de productos (materias primas y terminados), gestionar usuarios, registrar transacciones de compra y venta que impacten directamente el inventario, y consultar el stock actual en tiempo real.
 
 ---
-
+## Actúa como un desarrollador Java Senior especializado en Spring Boot y pruebas unitarias. Necesito solucionar dos fallos de pruebas en mi proyecto con Arquitectura Hexagonal.
 ## Fase 0: Estabilización y Fundamentos
 * **Prioridad:** Alta
 * **Objetivo:** Asegurar la estabilidad del proyecto, garantizando que todas las pruebas existentes pasen consistentemente y que la aplicación se inicie sin errores dentro del entorno containerizado (Podman). Esta fase establece la base para cualquier desarrollo futuro.
@@ -22,13 +22,14 @@
 
 ---
 
+## Actúa como un desarrollador Java Senior con experiencia en Arquitectura Hexagonal y DDD. Vamos a implementar la categorización de tipo de producto en el módulo `product`.
 ## Fase 1: Categorización de Productos e Inventario Básico
 * **Prioridad:** Alta
 * **Objetivo:** Diferenciar claramente entre Materias Primas y Productos Terminados dentro de la entidad `Product`, preparando la estructura de inventario para las transacciones.
 * **Estado Actual:** La entidad `Product` contiene el atributo `currentStock`, pero carece de una clasificación por tipo.
 * **Entregable:** Catálogo de productos con tipo definido y `ProductService` actualizado con la nueva lógica.
 
-### Tareas
+## Tareas
 1. **Modificar Entidad `Product` (`com.posapi.domain.model.product.Product`)**
    * *Acción:* Añadir el campo `productType` utilizando una enumeración adecuada (ej. `enum ProductType { RAW_MATERIAL, FINISHED_GOOD }`).
 2. **Actualizar DTOs de Producto (`ProductRequest`, `ProductResponse`)**
@@ -40,6 +41,7 @@
 
 ---
 
+## Actúa como un arquitecto de software backend Java. Vamos a implementar el módulo de Compras (`purchase`) respetando la Arquitectura Hexagonal de `pos-api`.
 ## Fase 2: Gestión de Proveedores y Órdenes de Compra
 * **Prioridad:** Alta
 * **Objetivo:** Permitir el registro de proveedores, la creación de órdenes de compra (materias primas/productos) y el incremento automático del inventario al recibir la mercancía.
@@ -69,6 +71,7 @@
 
 ---
 
+## Actúa como un desarrollador backend Java Senior. Vamos a implementar el módulo de Ventas (`sale`) con control transaccional de inventario.
 ## Fase 3: Gestión de Clientes y Órdenes de Venta
 * **Prioridad:** Alta
 * **Objetivo:** Registrar clientes, procesar órdenes de venta de productos terminados y actualizar el inventario deduciendo las existencias al completar la transacción.
@@ -98,6 +101,7 @@
 
 ---
 
+## Actúa como un desarrollador Java Senior. Vamos a implementar el historial y trazabilidad de movimientos de inventario (`InventoryMovement`) en el proyecto `pos-api`.
 ## Fase 4: Reportes Básicos de Inventario y Auditoría
 * **Prioridad:** Media
 * **Objetivo:** Brindar visibilidad completa sobre las existencias actuales de mercancía y establecer la trazabilidad de los movimientos de almacén.
