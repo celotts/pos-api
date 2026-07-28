@@ -12,4 +12,8 @@ public interface SupplierRepository {
     List<Supplier> findAll();
     void deleteById(UUID id);
     boolean existsByRfc(String rfc);
+
+    boolean existsById(UUID supplierId);
+
+    Optional<Supplier> findByRfc(String rfc);
 }

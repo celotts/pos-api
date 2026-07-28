@@ -1,8 +1,8 @@
-package com.posapi.infrastructure.adapter.input.rest.cashAccount;
+package com.posapi.infrastructure.adapter.input.rest.cashaccount;
 
 import com.posapi.application.port.cashaccount.CashAccountManagementPort;
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountRequest;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountResponse;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

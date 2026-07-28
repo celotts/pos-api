@@ -55,6 +55,9 @@ class UserControllerTest {
                 .email("test@example.com")
                 .password("password123")
                 .fullName("Test User")
+                .address("123 Test St") // Añadido: Campo @NotBlank en UserRequest
+                .phone("1234567890")   // Añadido: Campo @NotBlank en UserRequest
+                .phone2("0987654321")  // Añadido: Campo opcional para completitud
                 .roleId(UUID.randomUUID())
                 .isActive(true)
                 .build();
@@ -63,6 +66,11 @@ class UserControllerTest {
                 .id(UUID.randomUUID())
                 .email("test@example.com")
                 .fullName("Test User")
+                .roleName("USER") // Asumiendo que el servicio asigna un nombre de rol
+                .address("123 Test St")
+                .phone("1234567890")
+                .phone2("0987654321")
+                .isActive(true)
                 .build();
 
         given(userManagementPort.createUser(any(UserRequest.class)))
@@ -75,7 +83,13 @@ class UserControllerTest {
                 .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(responseDto.id().toString()))
-                .andExpect(jsonPath("$.email").value("test@example.com"));
+                .andExpect(jsonPath("$.email").value(responseDto.email()))
+                .andExpect(jsonPath("$.fullName").value(responseDto.fullName()))
+                .andExpect(jsonPath("$.roleName").value(responseDto.roleName()))
+                .andExpect(jsonPath("$.address").value(responseDto.address()))
+                .andExpect(jsonPath("$.phone").value(responseDto.phone()))
+                .andExpect(jsonPath("$.phone2").value(responseDto.phone2()))
+                .andExpect(jsonPath("$.isActive").value(responseDto.isActive()));
     }
 
     @Test

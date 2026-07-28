@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.adapter.input.rest.cashAccount.dto;
+package com.posapi.infrastructure.adapter.input.rest.cashaccount.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;// Asumiendo tu ruta de dominio
 import com.posapi.domain.model.cashaccount.CashAccount;

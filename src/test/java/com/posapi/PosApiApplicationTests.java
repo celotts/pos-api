@@ -2,7 +2,9 @@ package com.posapi;
 
 import com.posapi.application.service.bootstrap.BootstrapService;
 import com.posapi.domain.port.output.PasswordEncoderPort;
-import com.posapi.infrastructure.adapter.output.persistence.adapter.user.UserPersistenceAdapter;
+import com.posapi.domain.port.output.ProductRepository;
+import com.posapi.domain.port.output.UserRepository;
+import com.posapi.infrastructure.adapter.input.rest.product.mapper.ProductRestMapper;
 import com.posapi.infrastructure.security.JwtAuthenticationEntryPoint;
 import com.posapi.infrastructure.security.JwtRequestFilter;
 import com.posapi.infrastructure.security.UserDetailsProvider;
@@ -38,11 +40,15 @@ class PosApiApplicationTests {
     private PasswordEncoderPort passwordEncoderPort;
 
     @MockitoBean
-    private UserPersistenceAdapter userPersistenceAdapter;
+    private UserRepository userRepository;
+
+    @MockitoBean
+    private ProductRepository productRepository;
+
+    @MockitoBean
+    private ProductRestMapper productRestMapper;
 
     @Test
     void contextLoads() {
-        // El contexto ahora se cargará correctamente sin intentar
-        // instanciar las dependencias reales de BootstrapService.
     }
 }

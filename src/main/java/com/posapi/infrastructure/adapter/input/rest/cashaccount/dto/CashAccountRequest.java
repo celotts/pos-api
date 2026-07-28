@@ -1,4 +1,4 @@
-package com.posapi.infrastructure.adapter.input.rest.cashAccount.dto;
+package com.posapi.infrastructure.adapter.input.rest.cashaccount.dto;
 
 import com.posapi.domain.model.cashaccount.CashAccountType; // AÑADIDO: Importar CashAccountType
 import jakarta.validation.constraints.DecimalMin; // AÑADIDO: Para validar initialBalance

@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class JwtUtilTest {
 
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private JwtUtil jwtUtil;
 
     private static void setField(Object target, String name, Object value) throws Exception {
@@ -28,7 +29,7 @@ public class JwtUtilTest {
     void setUp() throws Exception {
         jwtUtil = new JwtUtil();
         byte[] key = new byte[64];
-        new SecureRandom().nextBytes(key);
+        SECURE_RANDOM.nextBytes(key);
         String base64Key = Base64.getEncoder().encodeToString(key);
         setField(jwtUtil, "secret", base64Key);
         setField(jwtUtil, "expiration", 3600000L);

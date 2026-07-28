@@ -1,9 +1,9 @@
-package com.posapi.infrastructure.adapter.input.rest.cashAccount.mapper;
+package com.posapi.infrastructure.adapter.input.rest.cashaccount.mapper;
 
 import com.posapi.domain.model.cashaccount.CashAccount;
 
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountRequest;
-import com.posapi.infrastructure.adapter.input.rest.cashAccount.dto.CashAccountResponse;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountRequest;
+import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountResponse;
 import org.springframework.stereotype.Component;
 import java.util.UUID;
 

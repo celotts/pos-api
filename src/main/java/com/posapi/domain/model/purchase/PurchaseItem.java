@@ -26,9 +26,6 @@ public class PurchaseItem {
     private UUID createdByUserId;
     private UUID updatedByUserId;
     private UUID deletedByUserId;
-    private UUID createdByRoleId;
-    private UUID updatedByRoleId;
-    private UUID deletedByRoleId;
 
     // Método de dominio para crear un nuevo PurchaseItem
     public static PurchaseItem createNew(
@@ -36,8 +33,7 @@ public class PurchaseItem {
             UUID productId,
             BigDecimal quantity,
             BigDecimal unitPrice,
-            UUID currentUserId,
-            UUID currentUserRoleId) {
+            UUID currentUserId, UUID currentUserRoleId) { // Eliminado currentUserRoleId
         BigDecimal subtotal = quantity.multiply(unitPrice);
         return PurchaseItem.builder()
                 .id(UUID.randomUUID())
@@ -48,7 +44,6 @@ public class PurchaseItem {
                 .subtotal(subtotal)
                 .createdAt(Instant.now())
                 .createdByUserId(currentUserId)
-                .createdByRoleId(currentUserRoleId)
                 .build();
     }
 
@@ -57,19 +52,17 @@ public class PurchaseItem {
             BigDecimal newQuantity,
             BigDecimal newUnitPrice,
             UUID updatedByUserId,
-            UUID updatedByRoleId) {
+            UUID updatedByRoleId) { // Eliminado updatedByRoleId
         this.quantity = newQuantity;
         this.unitPrice = newUnitPrice;
         this.subtotal = newQuantity.multiply(newUnitPrice);
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
-        this.updatedByRoleId = updatedByRoleId;
     }
 
     // Método de dominio para marcado lógico de borrado
-    public void markAsDeleted(UUID deletedByUserId, UUID deletedByRoleId) {
+    public void markAsDeleted(UUID deletedByUserId) { // Eliminado deletedByRoleId
         this.deletedAt = Instant.now();
         this.deletedByUserId = deletedByUserId;
-        this.deletedByRoleId = deletedByRoleId;
     }
 }

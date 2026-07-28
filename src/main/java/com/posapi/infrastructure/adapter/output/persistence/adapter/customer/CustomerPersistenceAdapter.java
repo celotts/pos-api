@@ -68,4 +68,9 @@ public class CustomerPersistenceAdapter implements CustomerRepository {
     public boolean existsByEmail(String email) {
         return customerJpaRepository.existsByEmail(email);
     }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return customerJpaRepository.existsById(id);
+    }
 }

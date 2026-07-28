@@ -9,6 +9,7 @@ import java.util.UUID;
 public interface CategoryRepository {
     Category save(Category category);
     Optional<Category> findById(UUID id);
+    boolean existsById(UUID id);
     Page<Category> findAll(Pageable pageable); // Cambiado de List a Page
     void deleteById(UUID id);
     boolean existsByName(String name);
