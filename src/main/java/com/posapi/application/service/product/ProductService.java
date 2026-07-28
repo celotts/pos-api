@@ -2,12 +2,15 @@ package com.posapi.application.service.product;
 
 import com.posapi.application.port.product.ProductManagementPort;
 import com.posapi.domain.exception.DuplicateResourceException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.user.User;
+import com.posapi.domain.port.output.CategoryRepository;
 import com.posapi.domain.port.output.ProductRepository;
+import com.posapi.domain.port.output.SupplierRepository;
+import com.posapi.domain.port.output.TaxRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductRequest;
-import com.posapi.infrastructure.adapter.input.rest.product.dto.ProductResponse;
+
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -25,72 +26,84 @@ import java.util.stream.Stream;
 public class ProductService implements ProductManagementPort {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
+    private final SupplierRepository supplierRepository;
+    private final TaxRepository taxRepository;
     private final UserRepository userRepository;
     private final SecurityContextHelper securityContextHelper;
 
     @Transactional
     @Override
-    public ProductResponse createProduct(ProductRequest request, UUID currentUserId) {
-        if (productRepository.existsBySku(request.sku())) {
-            throw new DuplicateResourceException("Product with SKU '" + request.sku() + "' already exists.");
+    public Product createProduct(Product productToCreate, UUID currentUserId) {
+        if (productRepository.existsBySku(productToCreate.getSku())) {
+            throw new DuplicateResourceException("Product with SKU '" + productToCreate.getSku() + "' already exists.");
         }
+
+        // 1. Validar existencia de entidades relacionadas
+        validateRelatedEntities(
+                productToCreate.getCategoryId(),
+                productToCreate.getSupplierId(),
+                productToCreate.getTaxId()
+        );
 
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         Product newProduct = Product.createNew(
-                request.sku(),
-                request.name(),
-                request.description(),
-                request.purchasePrice(),
-                request.salePrice(),
-                request.currentStock(),
-                request.categoryId(),
-                request.taxId(),
-                request.supplierId(),
+                productToCreate.getSku(),
+                productToCreate.getName(),
+                productToCreate.getDescription(),
+                productToCreate.getPurchasePrice(),
+                productToCreate.getSalePrice(),
+                productToCreate.getCurrentStock(),
+                productToCreate.getCategoryId(),
+                productToCreate.getTaxId(),
+                productToCreate.getSupplierId(),
                 currentUserId,
                 currentUserRoleId
         );
 
-        Product savedProduct = productRepository.save(newProduct);
-        return mapToProductResponse(savedProduct);
+        return productRepository.save(newProduct);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ProductResponse> getProductById(UUID id) {
-        return productRepository.findById(id).map(this::mapToProductResponse);
+    public Optional<Product> getProductById(UUID id) {
+        return productRepository.findById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts() { // CORREGIDO: Retorna List<ProductResponse>
-        List<Product> products = productRepository.findAll();
-        return products.stream()
-                .map(this::mapToProductResponse)
-                .collect(Collectors.toList());
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
     }
 
     @Override
     @Transactional
-    public Optional<ProductResponse> updateProduct(UUID id, ProductRequest request, UUID currentUserId) {
+    public Optional<Product> updateProduct(UUID id, Product productChanges, UUID currentUserId) {
+        // 1. Validar existencia de entidades relacionadas al actualizar
+        validateRelatedEntities(
+                productChanges.getCategoryId(),
+                productChanges.getSupplierId(),
+                productChanges.getTaxId()
+        );
+
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return productRepository.findById(id).map(existingProduct -> {
             existingProduct.updateDetails(
-                    request.name(),
-                    request.description(),
-                    request.purchasePrice(),
-                    request.salePrice(),
-                    request.categoryId(),
-                    request.taxId(),
-                    request.supplierId(),
+                    productChanges.getName(),
+                    productChanges.getDescription(),
+                    productChanges.getPurchasePrice(),
+                    productChanges.getSalePrice(),
+                    productChanges.getCategoryId(),
+                    productChanges.getTaxId(),
+                    productChanges.getSupplierId(),
                     currentUserId,
                     currentUserRoleId
             );
-            Product updatedProduct = productRepository.save(existingProduct);
-            return mapToProductResponse(updatedProduct);
+            return productRepository.save(existingProduct);
         });
     }
 
@@ -109,31 +122,40 @@ public class ProductService implements ProductManagementPort {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<ProductResponse> getProductBySku(String sku) {
-        return productRepository.findBySku(sku).map(this::mapToProductResponse);
+    public Optional<Product> getProductBySku(String sku) {
+        return productRepository.findBySku(sku);
     }
 
-    private ProductResponse mapToProductResponse(Product product) {
-        Set<UUID> userIds = Stream.of(
-                product.getCreatedByUserId(),
-                product.getUpdatedByUserId(),
-                product.getDeletedByUserId()
-        ).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        Map<UUID, String> userNames = fetchUserNames(userIds);
-
-        String createdByName = userNames.getOrDefault(product.getCreatedByUserId(), null);
-        String updatedByName = userNames.getOrDefault(product.getUpdatedByUserId(), null);
-        String deletedByName = userNames.getOrDefault(product.getDeletedByUserId(), null);
-
-        return ProductResponse.fromDomain(product, createdByName, updatedByName, deletedByName);
-    }
-
-    private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
-        if (userIds.isEmpty()) {
+    public Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
             return Map.of();
         }
-        return userRepository.findAllById(userIds).stream()
+        Set<UUID> validUserIds = userIds.stream()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        if (validUserIds.isEmpty()) {
+            return Map.of();
+        }
+
+        return userRepository.findAllById(validUserIds).stream()
                 .collect(Collectors.toMap(User::getId, User::getFullName));
+    }
+
+    /**
+     * Valida que las llaves foráneas existan antes de ejecutar operaciones de persistencia.
+     */
+    private void validateRelatedEntities(UUID categoryId, UUID supplierId, UUID taxId) {
+        if (categoryId != null && !categoryRepository.existsById(categoryId)) {
+            throw new ResourceNotFoundException("Category not found with ID: " + categoryId);
+        }
+
+        if (supplierId != null && !supplierRepository.existsById(supplierId)) {
+            throw new ResourceNotFoundException("Supplier not found with ID: " + supplierId);
+        }
+
+        if (taxId != null && !taxRepository.existsById(taxId)) {
+            throw new ResourceNotFoundException("Tax not found with ID: " + taxId);
+        }
     }
 }

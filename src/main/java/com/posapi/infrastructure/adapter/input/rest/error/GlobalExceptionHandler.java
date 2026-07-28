@@ -3,6 +3,7 @@ package com.posapi.infrastructure.adapter.input.rest.error;
 import com.posapi.domain.exception.DuplicateResourceException;
 import com.posapi.domain.exception.ResourceNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -23,7 +24,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleResourceNotFoundException(
             ResourceNotFoundException ex, WebRequest request) {
-        log.warn("ResourceNotFoundException: {}", ex.getMessage());
+        log.warn("ResourceNotFoundException: {}", ex.getMessage()); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.NOT_FOUND.value(),
                 ex.getMessage(),
@@ -38,7 +39,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResourceException(
             DuplicateResourceException ex, WebRequest request) {
-        log.warn("DuplicateResourceException: {}", ex.getMessage());
+        log.warn("DuplicateResourceException: {}", ex.getMessage()); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.CONFLICT.value(),
                 ex.getMessage(),
@@ -51,16 +52,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid( // Cambiar el tipo de retorno
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValid(
+            // Cambiar el tipo de retorno
             MethodArgumentNotValidException ex, WebRequest request) {
         List<ErrorResponse.ValidationError> validationErrors = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> new ErrorResponse.ValidationError(error.getField(), error.getDefaultMessage(), error.getRejectedValue()))
+                .map(error -> new ErrorResponse.ValidationError(
+                        error.getField(),
+                        error.getDefaultMessage(),
+                        error.getRejectedValue()))
                 .collect(Collectors.toList());
 
         Map<String, String> errorsMap = new HashMap<>(); // Para el log
-        validationErrors.forEach(error -> errorsMap.put(error.getField(), error.getMessage()));
+        validationErrors.forEach(error -> errorsMap.put(error.getField(),
+                error.getMessage())); // Formateado para legibilidad
 
-        log.warn("Validation errors: {}", errorsMap);
+        log.warn("Validation errors: {}", errorsMap); // Formateado para legibilidad
 
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST.value(),
@@ -76,7 +82,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(
             Exception ex, WebRequest request) {
-        log.error("An unexpected error occurred: {}", ex.getMessage(), ex);
+        log.error("An unexpected error occurred: {}", ex.getMessage(), ex); // Formateado para legibilidad
         ErrorResponse errorResponse = new ErrorResponse(
                 HttpStatus.INTERNAL_SERVER_ERROR.value(),
                 "An unexpected error occurred. Please try again later.",
@@ -86,5 +92,31 @@ public class GlobalExceptionHandler {
                 null // fieldErrors
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex, WebRequest request) {
+
+        log.error("Data Integrity Violation: {}", ex.getMessage(), ex);
+
+        String detail = "The operation failed due to a database constraint violation.";
+        String mostSpecificCause = ex.getMostSpecificCause().getMessage();
+
+        // Extraer mensaje limpio en caso de violaciones de clave foránea (FK)
+        if (mostSpecificCause != null && mostSpecificCause.contains("violates foreign key constraint")) {
+            detail = "The referenced entity (such as category, supplier, or tax) does not exist.";
+        }
+
+        ErrorResponse errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                "Invalid relational data provided.", // message principal
+                detail,                              // detail estructurado
+                Instant.now(),
+                request.getDescription(false),       // path
+                null                                 // fieldErrors
+        );
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 }

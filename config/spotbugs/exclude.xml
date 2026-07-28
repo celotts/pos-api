@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!-- Exposición de estado interno (DTOs/Entities) -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2" />
+    </Match>
+
+    <!-- Serialización en JPA / Spring DTOs -->
+    <Match>
+        <Bug pattern="SE_BAD_FIELD,SE_NO_SERIALVERSIONID" />
+    </Match>
+
+    <!-- Estilo, variables no leídas y conversión de casos -->
+    <Match>
+        <Bug pattern="URF_UNREAD_FIELD,DLS_DEAD_LOCAL_STORE,DM_CONVERT_CASE" />
+    </Match>
+
+    <!-- Manejo defensivo y nulos comunes en Spring Data/Controllers -->
+    <Match>
+        <Bug pattern="REC_CATCH_EXCEPTION,NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE" />
+    </Match>
+</FindBugsFilter>

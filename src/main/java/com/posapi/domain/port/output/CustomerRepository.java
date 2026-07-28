@@ -17,4 +17,5 @@ public interface CustomerRepository {
     boolean existsByRfc(String rfc);
     Optional<Customer> findByEmail(String email);
     boolean existsByEmail(String email);
+    boolean existsById(UUID id);
 }

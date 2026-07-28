@@ -4,7 +4,7 @@ import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.RoleRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.shared.exception.ResourceNotFoundException;
+import com.posapi.domain.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

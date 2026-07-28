@@ -42,11 +42,13 @@ public class User implements UserDetails {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    @Column(name = "address")
+    @Column(name = "address", nullable = false) // Asumiendo que la dirección no puede ser nula
     private String address;
 
+    @Column(name = "phone", nullable = false) // Asumiendo que el teléfono no puede ser nulo
     private String phone;
 
+    @Column(name = "phone2") // Si phone2 es opcional, no se necesita nullable = false
     private String phone2;
 
     @Column(name = "is_active", nullable = false) // Esta línea ya la tenías, asegúrate que esté correcta
@@ -57,7 +59,7 @@ public class User implements UserDetails {
     private Role role;
 
     // Auditoría
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", updatable = false, nullable = false) // createdAt no puede ser nulo
     private Instant createdAt;
 
     @Column(name = "updated_at")

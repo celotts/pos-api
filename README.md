@@ -153,34 +153,471 @@ Para inspeccionar la base de datos con DBeaver (o cualquier otro cliente Postgre
 El proyecto sigue una Arquitectura Hexagonal, organizada por capas y luego por característica (por ejemplo, `product`, `user`).
 
 ```
-src/main/java/com/posapi
-├── application
-│   └── service
-│       ├── product  (ProductService)
-│       └── user     (UserService)
-├── domain
-│   ├── model
-│   │   ├── product  (Product)
-│   │   └── user     (User)
-│   └── repository
-│       ├── product  (ProductRepository)
-│       └── user     (UserRepository)
-└── infrastructure
-    ├── adapter
-    │   ├── input
-    │   │   └── rest
-    │   │       ├── product  (ProductController, ProductRequest, ProductResponse)
-    │   │       └── user     (User-related REST components)
-    │   └── output
-    │       └── persistence
-    │           ├── product  (ProductJpaRepository, ProductRepositoryAdapter)
-    │           └── user     (UserJpaRepository, UserRepositoryAdapter)
-    ├── config       (SecurityConfig, UserDetailsServiceImpl)
-    ├── exception    (GlobalExceptionHandler, ErrorResponse)
-    └── persistence
-        └── entity
-            ├── product  (ProductEntity)
-            └── user     (UserEntity, UserRole)
+❯ tree src -I "target|.git" | tr '\240' ' '
+src
+├── main
+│   ├── java
+│   │   └── com
+│   │       └── posapi
+│   │           ├── PosApiApplication.java
+│   │           ├── application
+│   │           │   ├── port
+│   │           │   │   ├── accountspayable
+│   │           │   │   │   └── AccountsPayableManagementPort.java
+│   │           │   │   ├── auth
+│   │           │   │   │   └── AuthManagementPort.java
+│   │           │   │   ├── cashaccount
+│   │           │   │   │   └── CashAccountManagementPort.java
+│   │           │   │   ├── category
+│   │           │   │   │   └── CategoryManagementPort.java
+│   │           │   │   ├── customer
+│   │           │   │   │   └── CustomerManagementPort.java
+│   │           │   │   ├── posterminal
+│   │           │   │   │   └── PosTerminalManagementPort.java
+│   │           │   │   ├── product
+│   │           │   │   │   └── ProductManagementPort.java
+│   │           │   │   ├── purchase
+│   │           │   │   │   └── PurchaseManagementPort.java
+│   │           │   │   ├── role
+│   │           │   │   │   └── RoleManagementPort.java
+│   │           │   │   ├── sale
+│   │           │   │   ├── secondary
+│   │           │   │   │   └── PasswordEncoderPort.java
+│   │           │   │   ├── shift
+│   │           │   │   │   └── ShiftManagementPort.java
+│   │           │   │   ├── supplier
+│   │           │   │   │   └── SupplierManagementPort.java
+│   │           │   │   ├── tax
+│   │           │   │   │   └── TaxManagementPort.java
+│   │           │   │   └── user
+│   │           │   │       └── UserManagementPort.java
+│   │           │   └── service
+│   │           │       ├── accountspayable
+│   │           │       │   └── AccountsPayableService.java
+│   │           │       ├── audit
+│   │           │       │   └── AuditLogService.java
+│   │           │       ├── auth
+│   │           │       │   ├── AuthService.java
+│   │           │       │   └── AuthenticationService.java
+│   │           │       ├── bootstrap
+│   │           │       │   └── BootstrapService.java
+│   │           │       ├── cashaccount
+│   │           │       │   └── CashAccountService.java
+│   │           │       ├── category
+│   │           │       │   └── CategoryService.java
+│   │           │       ├── customer
+│   │           │       │   └── CustomerService.java
+│   │           │       ├── posterminal
+│   │           │       │   └── PosTerminalService.java
+│   │           │       ├── product
+│   │           │       │   └── ProductService.java
+│   │           │       ├── purchase
+│   │           │       │   └── PurchaseService.java
+│   │           │       ├── role
+│   │           │       │   └── RoleService.java
+│   │           │       ├── shift
+│   │           │       │   └── ShiftService.java
+│   │           │       ├── supplier
+│   │           │       │   └── SupplierService.java
+│   │           │       ├── tax
+│   │           │       │   └── TaxService.java
+│   │           │       └── user
+│   │           │           └── UserService.java
+│   │           ├── domain
+│   │           │   ├── exception
+│   │           │   │   ├── ApplicationException.java
+│   │           │   │   ├── BadRequestException.java
+│   │           │   │   ├── ConfigurationException.java
+│   │           │   │   ├── ConflictException.java
+│   │           │   │   ├── DuplicateResourceException.java
+│   │           │   │   ├── ForbiddenException.java
+│   │           │   │   ├── InvariantException.java
+│   │           │   │   ├── ResourceNotFoundException.java
+│   │           │   │   └── UnauthorizedException.java
+│   │           │   ├── model
+│   │           │   │   ├── accountspayable
+│   │           │   │   │   ├── AccountsPayable.java
+│   │           │   │   │   ├── ProductList.tsx
+│   │           │   │   │   ├── productService.ts
+│   │           │   │   │   └── types.ts
+│   │           │   │   ├── accountsreceivable
+│   │           │   │   │   ├── AccountsReceivable.java
+│   │           │   │   │   └── ArApStatus.java
+│   │           │   │   ├── audit
+│   │           │   │   │   ├── AuditAction.java
+│   │           │   │   │   └── AuditLog.java
+│   │           │   │   ├── cashaccount
+│   │           │   │   │   ├── CashAccount.java
+│   │           │   │   │   └── CashAccountType.java
+│   │           │   │   ├── category
+│   │           │   │   │   └── Category.java
+│   │           │   │   ├── customer
+│   │           │   │   │   └── Customer.java
+│   │           │   │   ├── inventory
+│   │           │   │   │   ├── InventoryTransaction.java
+│   │           │   │   │   └── TransactionType.java
+│   │           │   │   ├── posterminal
+│   │           │   │   │   └── PosTerminal.java
+│   │           │   │   ├── product
+│   │           │   │   │   └── Product.java
+│   │           │   │   ├── purchase
+│   │           │   │   │   ├── Purchase.java
+│   │           │   │   │   ├── PurchaseItem.java
+│   │           │   │   │   ├── PurchasePaymentStatus.java
+│   │           │   │   │   └── PurchaseStatus.java
+│   │           │   │   ├── role
+│   │           │   │   │   └── Role.java
+│   │           │   │   ├── sale
+│   │           │   │   │   ├── PaymentStatus.java
+│   │           │   │   │   ├── Sale.java
+│   │           │   │   │   └── SaleStatus.java
+│   │           │   │   ├── shift
+│   │           │   │   │   ├── Shift.java
+│   │           │   │   │   └── ShiftStatus.java
+│   │           │   │   ├── supplier
+│   │           │   │   │   └── Supplier.java
+│   │           │   │   ├── tax
+│   │           │   │   │   ├── Tax.java
+│   │           │   │   │   └── TaxEnum.java
+│   │           │   │   └── user
+│   │           │   │       ├── User.java
+│   │           │   │       └── UserRole.java
+│   │           │   └── port
+│   │           │       └── output
+│   │           │           ├── AccountsPayableRepository.java
+│   │           │           ├── AuditLogRepository.java
+│   │           │           ├── CashAccountRepository.java
+│   │           │           ├── CategoryRepository.java
+│   │           │           ├── CustomerRepository.java
+│   │           │           ├── InventoryTransactionRepository.java
+│   │           │           ├── PasswordEncoderPort.java
+│   │           │           ├── PosTerminalRepository.java
+│   │           │           ├── ProductRepository.java
+│   │           │           ├── PurchaseItemRepository.java
+│   │           │           ├── PurchaseRepository.java
+│   │           │           ├── RoleRepository.java
+│   │           │           ├── ShiftRepository.java
+│   │           │           ├── SupplierRepository.java
+│   │           │           ├── TaxRepository.java
+│   │           │           └── UserRepository.java
+│   │           ├── infrastructure
+│   │           │   ├── adapter
+│   │           │   │   ├── input
+│   │           │   │   │   └── rest
+│   │           │   │   │       ├── accountspayable
+│   │           │   │   │       │   ├── AccountsPayableController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── AccountsPayableRequest.java
+│   │           │   │   │       │   │   └── AccountsPayableResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── accountsreceivable
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── auth
+│   │           │   │   │       │   ├── AuthController.java
+│   │           │   │   │       │   └── dto
+│   │           │   │   │       │       ├── LoginRequest.java
+│   │           │   │   │       │       └── LoginResponse.java
+│   │           │   │   │       ├── cashaccount
+│   │           │   │   │       │   ├── CashAccountController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── CashAccountRequest.java
+│   │           │   │   │       │   │   └── CashAccountResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── CashAccountRestMapper.java
+│   │           │   │   │       ├── category
+│   │           │   │   │       │   ├── CategoryController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── CategoryRequest.java
+│   │           │   │   │       │   │   └── CategoryResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── CategoryRestMapper.java
+│   │           │   │   │       ├── customer
+│   │           │   │   │       │   ├── CustomerController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── CustomerRequest.java
+│   │           │   │   │       │   │   └── CustomerResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── CustomerRestMapper.java
+│   │           │   │   │       ├── error
+│   │           │   │   │       │   ├── ErrorResponse.java
+│   │           │   │   │       │   └── GlobalExceptionHandler.java
+│   │           │   │   │       ├── inventory
+│   │           │   │   │       │   ├── InventoryTransactions.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── posterminal
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── PosTerminalRequest.java
+│   │           │   │   │       │   │   └── PosTerminalResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── PosTerminalRestMapper.java
+│   │           │   │   │       ├── product
+│   │           │   │   │       │   ├── ProductController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── ProductRequest.java
+│   │           │   │   │       │   │   └── ProductResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── ProductRestMapper.java
+│   │           │   │   │       ├── purchase
+│   │           │   │   │       │   ├── PurchaseController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── PurchaseItemRequest.java
+│   │           │   │   │       │   │   ├── PurchaseItemResponse.java
+│   │           │   │   │       │   │   ├── PurchaseRequest.java
+│   │           │   │   │       │   │   └── PurchaseResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── purchaseitem
+│   │           │   │   │       │   ├── PurchaseItem.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── role
+│   │           │   │   │       │   ├── RoleController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── RoleRequest.java
+│   │           │   │   │       │   │   └── RoleResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── RoleRestMapper.java
+│   │           │   │   │       ├── sale
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       ├── shift
+│   │           │   │   │       │   ├── ShiftController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── ShiftRequest.java
+│   │           │   │   │       │   │   └── ShiftResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── ShiftRestMapper.java
+│   │           │   │   │       ├── supplier
+│   │           │   │   │       │   ├── SupplierController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── SupplierRequest.java
+│   │           │   │   │       │   │   └── SupplierResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── SupplierRestMapper.java
+│   │           │   │   │       ├── tax
+│   │           │   │   │       │   ├── TaxController.java
+│   │           │   │   │       │   ├── dto
+│   │           │   │   │       │   │   ├── TaxRequest.java
+│   │           │   │   │       │   │   └── TaxResponse.java
+│   │           │   │   │       │   └── mapper
+│   │           │   │   │       │       └── TaxRestMapper.java
+│   │           │   │   │       └── user
+│   │           │   │   │           ├── UserController.java
+│   │           │   │   │           ├── dto
+│   │           │   │   │           │   ├── UserRequest.java
+│   │           │   │   │           │   └── UserResponse.java
+│   │           │   │   │           └── mapper
+│   │           │   │   │               └── UserRestMapper.java
+│   │           │   │   └── output
+│   │           │   │       └── persistence
+│   │           │   │           ├── adapter
+│   │           │   │           │   ├── accounts
+│   │           │   │           │   │   └── AccountsPayablePersistenceAdapter.java
+│   │           │   │           │   ├── audit
+│   │           │   │           │   │   └── AuditLogPersistenceAdapter.java
+│   │           │   │           │   ├── cashaccount
+│   │           │   │           │   │   └── CashAccountPersistenceAdapter.java
+│   │           │   │           │   ├── category
+│   │           │   │           │   │   └── CategoryPersistenceAdapter.java
+│   │           │   │           │   ├── customer
+│   │           │   │           │   │   └── CustomerPersistenceAdapter.java
+│   │           │   │           │   ├── inventory
+│   │           │   │           │   │   └── InventoryTransactionPersistenceAdapter.java
+│   │           │   │           │   ├── posterminal
+│   │           │   │           │   │   └── PosTerminalPersistenceAdapter.java
+│   │           │   │           │   ├── product
+│   │           │   │           │   │   └── ProductPersistenceAdapter.java
+│   │           │   │           │   ├── purchase
+│   │           │   │           │   │   ├── PurchaseItemPersistenceAdapter.java
+│   │           │   │           │   │   └── PurchasePersistenceAdapter.java
+│   │           │   │           │   ├── role
+│   │           │   │           │   │   └── RolePersistenceAdapter.java
+│   │           │   │           │   ├── shift
+│   │           │   │           │   │   └── ShiftPersistenceAdapter.java
+│   │           │   │           │   ├── supplier
+│   │           │   │           │   │   └── SupplierPersistenceAdapter.java
+│   │           │   │           │   ├── tax
+│   │           │   │           │   │   └── TaxPersistenceAdapter.java
+│   │           │   │           │   └── user
+│   │           │   │           │       └── UserPersistenceAdapter.java
+│   │           │   │           ├── entity
+│   │           │   │           │   ├── accountspayable
+│   │           │   │           │   │   ├── AccountsPayableEntity.java
+│   │           │   │           │   │   └── ArApStatus.java
+│   │           │   │           │   ├── accountsreceivable
+│   │           │   │           │   │   └── AccountsReceivableEntity.java
+│   │           │   │           │   ├── audit
+│   │           │   │           │   │   └── AuditLogEntity.java
+│   │           │   │           │   ├── cashaccount
+│   │           │   │           │   │   └── CashAccountEntity.java
+│   │           │   │           │   ├── category
+│   │           │   │           │   │   └── CategoryEntity.java
+│   │           │   │           │   ├── customer
+│   │           │   │           │   │   └── CustomerEntity.java
+│   │           │   │           │   ├── inventory
+│   │           │   │           │   │   └── InventoryTransactionEntity.java
+│   │           │   │           │   ├── paymet
+│   │           │   │           │   │   ├── PaymentEntity.java
+│   │           │   │           │   │   └── PaymentStatus.java
+│   │           │   │           │   ├── posterminal
+│   │           │   │           │   │   └── PosTerminalEntity.java
+│   │           │   │           │   ├── product
+│   │           │   │           │   │   └── ProductEntity.java
+│   │           │   │           │   ├── purchase
+│   │           │   │           │   │   ├── PurchaseEntity.java
+│   │           │   │           │   │   ├── PurchaseItemEntity.java
+│   │           │   │           │   │   └── PurchaseStatus.java
+│   │           │   │           │   ├── role
+│   │           │   │           │   │   └── RoleEntity.java
+│   │           │   │           │   ├── sale
+│   │           │   │           │   │   └── SaleEntity.java
+│   │           │   │           │   ├── shift
+│   │           │   │           │   │   └── ShiftEntity.java
+│   │           │   │           │   ├── supplier
+│   │           │   │           │   │   └── SupplierEntity.java
+│   │           │   │           │   ├── tax
+│   │           │   │           │   │   └── TaxEntity.java
+│   │           │   │           │   └── user
+│   │           │   │           │       ├── UserEntity.java
+│   │           │   │           │       └── UserRole.java
+│   │           │   │           ├── mapper
+│   │           │   │           │   ├── accountspayable
+│   │           │   │           │   │   └── AccountsPayablePersistenceMapper.java
+│   │           │   │           │   ├── audit
+│   │           │   │           │   │   └── AuditLogPersistenceMapper.java
+│   │           │   │           │   ├── cashaccount
+│   │           │   │           │   │   └── CashAccountPersistenceMapper.java
+│   │           │   │           │   ├── category
+│   │           │   │           │   │   └── CategoryPersistenceMapper.java
+│   │           │   │           │   ├── customer
+│   │           │   │           │   │   └── CustomerPersistenceMapper.java
+│   │           │   │           │   ├── inventory
+│   │           │   │           │   │   └── InventoryTransactionPersistenceMapper.java
+│   │           │   │           │   ├── posterminal
+│   │           │   │           │   │   └── PosTerminalPersistenceMapper.java
+│   │           │   │           │   ├── product
+│   │           │   │           │   │   └── ProductPersistenceMapper.java
+│   │           │   │           │   ├── purchase
+│   │           │   │           │   │   ├── PurchaseItemPersistenceMapper.java
+│   │           │   │           │   │   └── PurchasePersistenceMapper.java
+│   │           │   │           │   ├── role
+│   │           │   │           │   │   └── RolePersistenceMapper.java
+│   │           │   │           │   ├── shift
+│   │           │   │           │   │   └── ShiftPersistenceMapper.java
+│   │           │   │           │   ├── supplier
+│   │           │   │           │   │   └── SupplierPersistenceMapper.java
+│   │           │   │           │   ├── tax
+│   │           │   │           │   │   └── TaxPersistenceMapper.java
+│   │           │   │           │   └── user
+│   │           │   │           │       └── UserPersistenceMapper.java
+│   │           │   │           └── repository
+│   │           │   │               ├── accountplayable
+│   │           │   │               │   └── AccountsPayableJpaRepository.java
+│   │           │   │               ├── audit
+│   │           │   │               │   └── AuditLogJpaRepository.java
+│   │           │   │               ├── cashaccount
+│   │           │   │               │   └── CashAccountJpaRepository.java
+│   │           │   │               ├── category
+│   │           │   │               │   └── CategoryJpaRepository.java
+│   │           │   │               ├── customer
+│   │           │   │               │   └── CustomerJpaRepository.java
+│   │           │   │               ├── inventory
+│   │           │   │               │   └── InventoryTransactionJpaRepository.java
+│   │           │   │               ├── posterminal
+│   │           │   │               │   └── PosTerminalJpaRepository.java
+│   │           │   │               ├── product
+│   │           │   │               │   └── ProductJpaRepository.java
+│   │           │   │               ├── purchase
+│   │           │   │               │   ├── PurchaseItemJpaRepository.java
+│   │           │   │               │   └── PurchaseJpaRepository.java
+│   │           │   │               ├── role
+│   │           │   │               │   └── RoleJpaRepository.java
+│   │           │   │               ├── shift
+│   │           │   │               │   └── ShiftJpaRepository.java
+│   │           │   │               ├── supplier
+│   │           │   │               │   └── SupplierJpaRepository.java
+│   │           │   │               ├── tax
+│   │           │   │               │   └── TaxJpaRepository.java
+│   │           │   │               └── user
+│   │           │   │                   └── UserJpaRepository.java
+│   │           │   ├── aspect
+│   │           │   │   ├── AuditAspect.java
+│   │           │   │   ├── Auditable.java
+│   │           │   │   └── LoggableAction.java
+│   │           │   ├── config
+│   │           │   │   ├── AsyncConfig.java
+│   │           │   │   ├── AuditConfig.java
+│   │           │   │   └── WebConfig.java
+│   │           │   ├── filter
+│   │           │   │   └── RequestCachingFilter.java
+│   │           │   └── security
+│   │           │       ├── CustomUserDetails.java
+│   │           │       ├── JwtAuthenticationEntryPoint.java
+│   │           │       ├── JwtRequestFilter.java
+│   │           │       ├── JwtService.java
+│   │           │       ├── JwtUtil.java
+│   │           │       ├── PasswordEncoderAdapter.java
+│   │           │       ├── SecurityConfig.java
+│   │           │       ├── SecurityContextHelper.java
+│   │           │       ├── UserDetailsProvider.java
+│   │           │       └── UserSecurity.java
+│   │           └── shared
+│   │               ├── dto
+│   │               │   ├── ApiResponse.java
+│   │               │   └── PageResponse.java
+│   │               └── mapper
+│   │                   └── EntityMapper.java
+│   └── resources
+│       ├── application-docker.yml
+│       ├── application.yml
+│       ├── db
+│       │   └── migration
+│       │       ├── V1__create_initial_schema.sql
+│       │       └── V1__create_initial_schema2.sql
+│       └── docker
+│           └── init-db.sh
+└── test
+    ├── java
+    │   └── com
+    │       └── posapi
+    │           ├── PosApiApplicationTests.java
+    │           ├── application
+    │           │   └── service
+    │           │       ├── product
+    │           │       │   └── ProductServiceTest.java
+    │           │       └── user
+    │           │           └── UserServiceTest.java
+    │           ├── feature
+    │           │   ├── product
+    │           │   │   └── application
+    │           │   │       └── service
+    │           │   └── user
+    │           │       ├── application
+    │           │       │   └── service
+    │           │       └── infrastructure
+    │           │           └── adapter
+    │           │               └── input
+    │           │                   └── rest
+    │           └── infrastructure
+    │               ├── adapter
+    │               │   └── input
+    │               │       └── rest
+    │               │           ├── product
+    │               │           └── user
+    │               │               └── UserControllerTest.java
+    │               └── security
+    │                   └── JwtUtilTest.java
+    └── resources
+        ├── application-test.yml
+        └── application.yml
+
+217 directories, 240 files
+  ~/develop/java-SpringBoot/pos_api   refactor/arc…nore-cleanup !1 ❯                                                                                                                                                                                              system  23:10:55
+```
+## Comando solo para tree de java
+```bash
+tree src/test/java -I "target|.git" | tr '\240' ' '
 ```
 
 ## Próximos Pasos
