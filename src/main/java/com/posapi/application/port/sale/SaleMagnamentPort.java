@@ -1,7 +1,7 @@
 package com.posapi.application.port.sale;
 
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
+import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse; // Corregir importación si es necesario
 import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
 
 import java.util.List;

@@ -38,7 +38,6 @@ public class PurchaseController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PURCHASING')")
     public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest restRequest) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        // Usar el mapper para convertir el DTO REST a un DTO de aplicación (o dominio)
         PurchaseRequest applicationRequest = mapper.toApplicationPurchaseRequest(restRequest);
         PurchaseResponse createdPurchase = purchaseManagementPort.createPurchase(applicationRequest, currentUserId);
         // Usar el mapper para convertir el DTO de aplicación (o dominio) a un DTO REST

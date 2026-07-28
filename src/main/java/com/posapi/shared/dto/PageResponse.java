@@ -10,7 +10,5 @@ public record PageResponse<T>(
     int totalPages,
     boolean isLast
 ) {
-    // Los métodos de acceso (getters) para los componentes de un record se generan automáticamente.
-    // No es necesario definirlos explícitamente a menos que se quiera añadir lógica personalizada.
-    // Los métodos incorrectos que causaban "missing return statement" han sido eliminados.
+
 }
