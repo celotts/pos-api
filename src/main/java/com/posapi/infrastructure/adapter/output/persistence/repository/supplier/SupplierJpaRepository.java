@@ -4,9 +4,12 @@ import com.posapi.infrastructure.adapter.output.persistence.entity.supplier.Supp
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional; // Importación necesaria para Optional
 import java.util.UUID;
 
 @Repository
 public interface SupplierJpaRepository extends JpaRepository<SupplierEntity, UUID> {
     boolean existsByRfc(String rfc);
+
+    Optional<SupplierEntity> findByRfc(String rfc); // Corregido el tipo de retorno
 }

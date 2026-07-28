@@ -14,4 +14,6 @@ public interface SupplierRepository {
     boolean existsByRfc(String rfc);
 
     boolean existsById(UUID supplierId);
+
+    Optional<Supplier> findByRfc(String rfc);
 }
