@@ -24,6 +24,7 @@ public class Product {
     private UUID categoryId;
     private UUID taxId;
     private UUID supplierId;
+    private ProductType productType; // NUEVO: Atributo para el tipo de producto
     private Instant createdAt;
     private Instant updatedAt;
     private Instant deletedAt;
@@ -37,7 +38,7 @@ public class Product {
     // Método estático para crear un nuevo producto
     public static Product createNew(
             String sku, String name, String description, BigDecimal purchasePrice, BigDecimal salePrice,
-            BigDecimal initialStock, UUID categoryId, UUID taxId, UUID supplierId,
+            BigDecimal initialStock, UUID categoryId, UUID taxId, UUID supplierId, ProductType productType, // NUEVO: productType
             UUID currentUserId, UUID currentUserRoleId) {
         if (purchasePrice.compareTo(BigDecimal.ZERO) < 0 || salePrice.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Prices cannot be negative.");
@@ -57,6 +58,7 @@ public class Product {
                 .categoryId(categoryId)
                 .taxId(taxId)
                 .supplierId(supplierId)
+                .productType(productType) // NUEVO: Asignar productType
                 .createdAt(Instant.now())
                 .createdByUserId(currentUserId)
                 .createdByUserRoleId(currentUserRoleId)
@@ -66,7 +68,7 @@ public class Product {
     // Método de dominio para actualizar los detalles del producto
     public void updateDetails(
             String newName, String newDescription, BigDecimal newPurchasePrice, BigDecimal newSalePrice,
-            UUID newCategoryId, UUID newTaxId, UUID newSupplierId,
+            UUID newCategoryId, UUID newTaxId, UUID newSupplierId, ProductType newProductType, // NUEVO: newProductType
             UUID updatedByUserId, UUID updatedByUserRoleId) {
 
         if (newPurchasePrice != null && newPurchasePrice.compareTo(BigDecimal.ZERO) < 0) {
@@ -83,6 +85,7 @@ public class Product {
         this.categoryId = newCategoryId != null ? newCategoryId : this.categoryId;
         this.taxId = newTaxId != null ? newTaxId : this.taxId;
         this.supplierId = newSupplierId != null ? newSupplierId : this.supplierId;
+        this.productType = newProductType != null ? newProductType : this.productType; // NUEVO: Actualizar productType
 
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
@@ -108,6 +111,7 @@ public class Product {
         if (this.currentStock.subtract(quantity).compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalStateException("Stock cannot go below zero.");
         }
+
         this.currentStock = this.currentStock.subtract(quantity);
         this.updatedAt = Instant.now();
         this.updatedByUserId = updatedByUserId;
