@@ -1,6 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.sale.dto;
 
-import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
+// CORREGIDO: Importación correcta para SaleItemRequest
+import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,11 +12,12 @@ import java.util.UUID;
 @Setter
 @Getter
 public class SaleRequest {
-    // Getters y Setters
     private UUID customerId;
     private BigDecimal discountAmount;
     private UUID posTerminalId;
     private UUID shiftId;
     private List<SaleItemRequest> items;
 
+    // Lombok generará los getters y setters.
+    // Los comentarios de referencia se eliminan para mayor claridad.
 }

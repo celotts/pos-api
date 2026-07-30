@@ -46,4 +46,34 @@ public class ShiftPersistenceAdapter implements ShiftRepository {
                 .map(shiftPersistenceMapper::toDomain)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public void deleteById(UUID id) {
+        shiftJpaRepository.deleteById(id); // Lógica añadida
+    }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return shiftJpaRepository.existsById(id); // Lógica añadida
+    }
+
+    @Override
+    public long count() {
+        return shiftJpaRepository.count(); // Lógica añadida
+    }
+
+    @Override
+    public void delete(Shift entity) {
+        shiftJpaRepository.delete(shiftPersistenceMapper.toEntity(entity)); // Lógica añadida
+    }
+
+    @Override
+    public void deleteAll() {
+        shiftJpaRepository.deleteAll(); // Lógica añadida
+    }
+
+    @Override
+    public void deleteAllById(Iterable<? extends UUID> ids) {
+        shiftJpaRepository.deleteAllById(ids); // Lógica añadida
+    }
 }

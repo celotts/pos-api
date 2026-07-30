@@ -13,4 +13,12 @@ public interface ShiftRepository {
     Optional<Shift> findById(UUID id);
     Page<Shift> findAll(Pageable pageable);
     List<Shift> findAll();
+
+    // Métodos CRUD adicionales para consistencia con otros repositorios de dominio
+    void deleteById(UUID id);
+    boolean existsById(UUID id);
+    long count();
+    void delete(Shift entity);
+    void deleteAll();
+    void deleteAllById(Iterable<? extends UUID> ids);
 }
