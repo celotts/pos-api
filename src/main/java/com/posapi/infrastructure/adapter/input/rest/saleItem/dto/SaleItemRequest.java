@@ -1,17 +1,20 @@
 package com.posapi.infrastructure.adapter.input.rest.saleItem.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Setter
-@Getter
-public class SaleItemRequest {
-    // Getters y Setters
-    private UUID productId;
-    private BigDecimal quantity;
-    private BigDecimal unitPrice; // Puede ser útil si el precio unitario puede variar por venta
-
+public record SaleItemRequest(
+        UUID id,
+        @NotNull(message = "Product ID cannot be null")
+        UUID productId,
+        @NotNull(message = "Quantity cannot be null")
+        @Positive(message = "Quantity must be positive")
+        BigDecimal quantity,
+        @NotNull(message = "Unit price cannot be null")
+        @Positive(message = "Unit price must be positive")
+        BigDecimal unitPrice
+) {
 }
