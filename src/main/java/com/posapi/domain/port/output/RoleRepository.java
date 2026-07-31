@@ -28,9 +28,5 @@ public interface RoleRepository { // Interfaz de dominio limpia, NO EXTIENDE Jpa
     void delete(Role entity); // AÑADIDO
     void deleteAll(); // AÑADIDO
     void deleteAllById(Iterable<? extends UUID> ids); // AÑADIDO
-    boolean existsById(UUID id); // AÑADIDO
-
-    // NO SE INCLUYEN MÉTODOS DE JpaRepository como saveAll, flush, deleteAll(Iterable),
-    // getOne, findOne, findAll(Example), etc., porque son detalles de infraestructura.
-    // El dominio no necesita saber de ellos.
+    boolean existsById(UUID id);
 }

@@ -1,11 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.sale;
 
-import com.posapi.domain.model.sale.PaymentStatus;
-import com.posapi.domain.model.sale.SaleStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -22,46 +18,32 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(name = "sales")
+@Table(name = "sale_items")
 @Getter
 @Setter
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @SQLRestriction("deleted_at IS NULL")
-public class SaleEntity {
+public class SaleItemEntity {
 
     @Id
     private UUID id;
 
-    @Column(name = "customer_id")
-    private UUID customerId;
+    @Column(name = "sale_id", nullable = false)
+    private UUID saleId;
 
-    @Column(name = "sale_date", nullable = false)
-    private Instant saleDate;
+    @Column(name = "product_id", nullable = false)
+    private UUID productId;
 
-    @Column(name = "total_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
+    @Column(nullable = false, precision = 18, scale = 4)
+    private BigDecimal quantity;
 
-    @Column(name = "total_tax_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalTaxAmount;
+    @Column(name = "unit_price", nullable = false, precision = 18, scale = 2)
+    private BigDecimal unitPrice;
 
-    @Column(name = "discount_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal discountAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
-    private SaleStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus;
-
-    @Column(name = "pos_terminal_id")
-    private UUID posTerminalId;
-
-    @Column(name = "shift_id")
-    private UUID shiftId;
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal subtotal;
 
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", updatable = false, insertable = false)

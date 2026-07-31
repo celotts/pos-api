@@ -1,10 +1,10 @@
 package com.posapi.infrastructure.adapter.input.rest.sale;
 
 import com.posapi.application.port.sale.SaleMagnamentPort;
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
+import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
-import com.posapi.infrastructure.adapter.input.rest.sale.mapper.SaleRestMapper;
-import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
+import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,31 +17,27 @@ import java.util.UUID;
 public class SaleController {
 
     private final SaleMagnamentPort saleMagnamentPort;
-    private final SaleRestMapper mapper;
 
-    public SaleController(SaleMagnamentPort saleMagnamentPort, SaleRestMapper mapper) {
+    public SaleController(SaleMagnamentPort saleMagnamentPort) {
         this.saleMagnamentPort = saleMagnamentPort;
-        this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity<SaleResponse> createSale(@RequestBody SaleRequest restRequest) {
-        // En este caso, los DTOs de REST y de la capa de aplicación son los mismos,
-        // pero el mapper proporciona la capa de abstracción.
-        SaleResponse applicationResponse = saleMagnamentPort.createSale(restRequest);
-        return new ResponseEntity<>(mapper.toRestSaleResponse(applicationResponse), HttpStatus.CREATED);
+        SaleResponse response = saleMagnamentPort.createSale(restRequest);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<SaleResponse> getSaleById(@PathVariable UUID id) {
-        SaleResponse applicationResponse = saleMagnamentPort.getSaleById(id);
-        return ResponseEntity.ok(mapper.toRestSaleResponse(applicationResponse));
+        SaleResponse response = saleMagnamentPort.getSaleById(id);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<SaleResponse> updateSale(@PathVariable UUID id, @RequestBody SaleRequest restRequest) {
-        SaleResponse applicationResponse = saleMagnamentPort.updateSale(id, restRequest);
-        return ResponseEntity.ok(mapper.toRestSaleResponse(applicationResponse));
+        SaleResponse response = saleMagnamentPort.updateSale(id, restRequest);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
@@ -52,25 +48,25 @@ public class SaleController {
 
     @PostMapping("/{saleId}/items")
     public ResponseEntity<SaleResponse> addSaleItem(@PathVariable UUID saleId, @RequestBody SaleItemRequest restItemRequest) {
-        SaleResponse applicationResponse = saleMagnamentPort.addSaleItem(saleId, restItemRequest);
-        return ResponseEntity.ok(mapper.toRestSaleResponse(applicationResponse));
+        SaleResponse response = saleMagnamentPort.addSaleItem(saleId, restItemRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{saleId}/items/{itemId}")
     public ResponseEntity<SaleResponse> updateSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId, @RequestBody SaleItemRequest restItemRequest) {
-        SaleResponse applicationResponse = saleMagnamentPort.updateSaleItem(saleId, itemId, restItemRequest);
-        return ResponseEntity.ok(mapper.toRestSaleResponse(applicationResponse));
+        SaleResponse response = saleMagnamentPort.updateSaleItem(saleId, itemId, restItemRequest);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{saleId}/items/{itemId}")
     public ResponseEntity<SaleResponse> deleteSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId) {
-        SaleResponse applicationResponse = saleMagnamentPort.deleteSaleItem(saleId, itemId);
-        return ResponseEntity.ok(mapper.toRestSaleResponse(applicationResponse));
+        SaleResponse response = saleMagnamentPort.deleteSaleItem(saleId, itemId);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
     public ResponseEntity<List<SaleResponse>> getAllSales() {
-        List<SaleResponse> applicationResponses = saleMagnamentPort.getAllSales();
-        return ResponseEntity.ok(mapper.toRestSaleResponseList(applicationResponses));
+        List<SaleResponse> responses = saleMagnamentPort.getAllSales();
+        return ResponseEntity.ok(responses);
     }
 }
