@@ -16,6 +16,7 @@ import com.posapi.domain.port.output.UserRepository;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseRequest;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseResponse;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
+import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemRequest; // Importar PurchaseItemRequest
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import com.posapi.shared.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,13 +26,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -57,9 +61,9 @@ public class PurchaseService implements PurchaseManagementPort {
         List<PurchaseItem> purchaseItems = request.items().stream()
                 .map(itemRequest -> PurchaseItem.createNew(
                         null, // purchaseId se asignará después de guardar la compra
-                        itemRequest.getProductId(), // CORREGIDO: Usar getProductId()
-                        itemRequest.getQuantity(),  // CORREGIDO: Usar getQuantity()
-                        itemRequest.getUnitPrice(), // CORREGIDO: Usar getUnitPrice()
+                        itemRequest.productId(), // Usar productId() para records
+                        itemRequest.quantity(),  // Usar quantity() para records
+                        itemRequest.unitPrice(), // Usar unitPrice() para records
                         currentUserId,
                         currentUserRoleId
                 ))
@@ -82,34 +86,41 @@ public class PurchaseService implements PurchaseManagementPort {
         List<PurchaseItem> savedPurchaseItems = purchaseItemRepository.saveAll(purchaseItems);
 
         // 5. Actualizar stock de productos y registrar transacciones de inventario
-        List<InventoryTransaction> inventoryTransactions = savedPurchaseItems.stream()
-                .map(item -> {
-                    Product product = productRepository.findById(item.getProductId())
-                            .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: "
-                                    + item.getProductId()));
+        List<InventoryTransaction> inventoryTransactions = new ArrayList<>();
+        for (PurchaseItem item : savedPurchaseItems) {
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " + item.getProductId()));
 
-                    // Aumentar stock del producto
-                    product.increaseStock(item.getQuantity(), currentUserId, currentUserRoleId);
-                    productRepository.save(product); // Guardar el producto con el stock actualizado
+            // Aumentar stock del producto
+            product.increaseStock(item.getQuantity(), currentUserId, currentUserRoleId);
+            productRepository.save(product); // Guardar el producto con el stock actualizado
 
-                    // Crear transacción de inventario
-                    return InventoryTransaction.createNew(
-                            product.getId(),
-                            TransactionType.PURCHASE_IN,
-                            item.getQuantity(),
-                            product.getCurrentStock(), // Stock final después de la actualización
-                            savedPurchase.getId(),
-                            "PURCHASE",
-                            "Purchase " + savedPurchase.getId() + " - Item " + item.getId(),
-                            currentUserId,
-                            currentUserRoleId
-                    );
-                })
-                .collect(Collectors.toList());
-
+            // Crear transacción de inventario
+            inventoryTransactions.add(InventoryTransaction.createNew(
+                    product.getId(),
+                    TransactionType.PURCHASE_IN,
+                    item.getQuantity(),
+                    product.getCurrentStock(), // Stock final después de la actualización
+                    savedPurchase.getId(),
+                    "PURCHASE",
+                    "Purchase " + savedPurchase.getId() + " - Item " + item.getId(),
+                    currentUserId,
+                    currentUserRoleId
+            ));
+        }
         inventoryTransactionRepository.saveAll(inventoryTransactions);
 
-        // 6. Mapear a PurchaseResponse
+        // 6. Recalcular totales de la compra
+        BigDecimal totalAmount = savedPurchaseItems.stream()
+                .map(PurchaseItem::getSubtotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal totalTaxAmount = BigDecimal.ZERO; // TODO: Implementar cálculo real de impuestos
+
+        savedPurchase.setTotalAmount(totalAmount);
+        savedPurchase.setTotalTaxAmount(totalTaxAmount);
+        purchaseRepository.save(savedPurchase); // Guardar la compra con los totales actualizados
+
+        // 7. Mapear a PurchaseResponse
         return mapToPurchaseResponse(savedPurchase, savedPurchaseItems);
     }
 
@@ -153,18 +164,85 @@ public class PurchaseService implements PurchaseManagementPort {
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return purchaseRepository.findById(id).map(existingPurchase -> {
+            // 1. Actualizar campos principales de la compra
             existingPurchase.setSupplierId(request.supplierId());
             existingPurchase.setPurchaseDate(request.purchaseDate());
             existingPurchase.setUpdatedAt(Instant.now());
             existingPurchase.setUpdatedByUserId(currentUserId);
             existingPurchase.setUpdatedByUserRoleId(currentUserRoleId);
 
+            // 2. Gestionar ítems de la compra
+            Map<UUID, PurchaseItem> currentItemsMap = purchaseItemRepository.findByPurchaseId(existingPurchase.getId()).stream()
+                    .collect(Collectors.toMap(PurchaseItem::getId, Function.identity()));
+
+            Map<UUID, PurchaseItemRequest> requestItemsMap = request.items().stream()
+                    .filter(itemRequest -> itemRequest.id() != null) // Solo ítems con ID para comparación
+                    .collect(Collectors.toMap(PurchaseItemRequest::id, Function.identity()));
+
+            List<PurchaseItem> itemsToSave = new ArrayList<>();
+            List<InventoryTransaction> inventoryTransactions = new ArrayList<>();
+
+            // Iterar sobre los ítems de la solicitud
+            for (PurchaseItemRequest itemRequest : request.items()) {
+                if (itemRequest.id() == null) {
+                    // Nuevo ítem: Crear, incrementar stock
+                    PurchaseItem newItem = PurchaseItem.createNew(
+                            existingPurchase.getId(),
+                            itemRequest.productId(),
+                            itemRequest.quantity(),
+                            itemRequest.unitPrice(),
+                            currentUserId,
+                            currentUserRoleId
+                    );
+                    itemsToSave.add(newItem);
+                    processStockChange(newItem.getProductId(), newItem.getQuantity(), TransactionType.PURCHASE_IN, existingPurchase.getId(), "PURCHASE_ADD_ITEM", currentUserId, currentUserRoleId, inventoryTransactions);
+                } else {
+                    // Ítem existente: Modificar o mantener
+                    PurchaseItem existingItem = currentItemsMap.get(itemRequest.id());
+                    if (existingItem == null) {
+                        throw new ResourceNotFoundException("PurchaseItem not found with ID: " + itemRequest.id() + " for Purchase: " + id);
+                    }
+
+                    // Eliminar de currentItemsMap para identificar los eliminados al final
+                    currentItemsMap.remove(itemRequest.id());
+
+                    if (!existingItem.getQuantity().equals(itemRequest.quantity()) || !existingItem.getUnitPrice().equals(itemRequest.unitPrice())) {
+                        // Cantidad o precio modificado: Revertir stock antiguo, aplicar nuevo
+                        processStockChange(existingItem.getProductId(), existingItem.getQuantity().negate(), TransactionType.ADJUSTMENT_OUT, existingPurchase.getId(), "PURCHASE_UPDATE_ITEM_OLD_QTY", currentUserId, currentUserRoleId, inventoryTransactions);
+                        existingItem.updateDetails(itemRequest.quantity(), itemRequest.unitPrice(), currentUserId, currentUserRoleId);
+                        processStockChange(existingItem.getProductId(), existingItem.getQuantity(), TransactionType.ADJUSTMENT_IN, existingPurchase.getId(), "PURCHASE_UPDATE_ITEM_NEW_QTY", currentUserId, currentUserRoleId, inventoryTransactions);
+                    }
+                    itemsToSave.add(existingItem);
+                }
+            }
+
+            // Ítems eliminados (los que quedan en currentItemsMap)
+            for (PurchaseItem deletedItem : currentItemsMap.values()) {
+                deletedItem.markAsDeleted(currentUserId, currentUserRoleId);
+                itemsToSave.add(deletedItem);
+                processStockChange(deletedItem.getProductId(), deletedItem.getQuantity().negate(), TransactionType.ADJUSTMENT_OUT, existingPurchase.getId(), "PURCHASE_REMOVE_ITEM", currentUserId, currentUserRoleId, inventoryTransactions);
+            }
+
+            // 3. Guardar ítems y transacciones
+            purchaseItemRepository.saveAll(itemsToSave);
+            inventoryTransactionRepository.saveAll(inventoryTransactions);
+
+            // 4. Recalcular totales de la compra
+            List<PurchaseItem> finalItems = purchaseItemRepository.findByPurchaseId(existingPurchase.getId()).stream()
+                    .filter(item -> item.getDeletedAt() == null) // Solo ítems no eliminados
+                    .collect(Collectors.toList());
+
+            BigDecimal totalAmount = finalItems.stream()
+                    .map(PurchaseItem::getSubtotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal totalTaxAmount = BigDecimal.ZERO; // TODO: Implementar cálculo real de impuestos
+
+            existingPurchase.setTotalAmount(totalAmount);
+            existingPurchase.setTotalTaxAmount(totalTaxAmount);
             Purchase updatedPurchase = purchaseRepository.save(existingPurchase);
 
-            List<PurchaseItem> currentItems = purchaseItemRepository.findByPurchaseId(updatedPurchase.getId());
-            updatedPurchase.setItems(currentItems);
-
-            return mapToPurchaseResponse(updatedPurchase, currentItems);
+            updatedPurchase.setItems(finalItems);
+            return mapToPurchaseResponse(updatedPurchase, finalItems);
         });
     }
 
@@ -204,6 +282,31 @@ public class PurchaseService implements PurchaseManagementPort {
             log.info("Purchase with id {} marked as deleted by user {}", id, currentUserId);
         });
     }
+
+    private void processStockChange(UUID productId, BigDecimal quantityChange, TransactionType transactionType, UUID sourceDocumentId, String notesPrefix, UUID currentUserId, UUID currentUserRoleId, List<InventoryTransaction> transactionsList) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " + productId));
+
+        if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
+            product.increaseStock(quantityChange, currentUserId, currentUserRoleId);
+        } else {
+            product.decreaseStock(quantityChange.negate(), currentUserId, currentUserRoleId);
+        }
+        productRepository.save(product);
+
+        transactionsList.add(InventoryTransaction.createNew(
+                product.getId(),
+                transactionType,
+                quantityChange,
+                product.getCurrentStock(),
+                sourceDocumentId,
+                "PURCHASE",
+                notesPrefix + " - Product " + product.getName(),
+                currentUserId,
+                currentUserRoleId
+        ));
+    }
+
 
     private PurchaseResponse mapToPurchaseResponse(Purchase purchase, List<PurchaseItem> items) {
         Set<UUID> userIds = Stream.of(
