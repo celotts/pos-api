@@ -10,16 +10,19 @@ import java.util.UUID;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record PurchaseItemResponse(
         UUID id,
-        UUID purchaseId,
         UUID productId,
-        String productName, // Nombre del producto para mostrar en la respuesta
-        String productSku,  // SKU del producto para mostrar en la respuesta
+        String productName,
+        String productSku,
         BigDecimal quantity,
         BigDecimal unitPrice,
         BigDecimal subtotal,
         Instant createdAt,
         Instant updatedAt,
         Instant deletedAt,
+        UUID createdByUserId,
+        UUID updatedByUserId,
+        UUID deletedByUserId,
+        // Eliminados los campos de RoleId ya que no existen en PurchaseItem de dominio
         String createdByName,
         String updatedByName,
         String deletedByName
@@ -33,16 +36,19 @@ public record PurchaseItemResponse(
             String deletedByName) {
         return new PurchaseItemResponse(
                 purchaseItem.getId(),
-                purchaseItem.getPurchaseId(),
                 purchaseItem.getProductId(),
                 productName,
                 productSku,
                 purchaseItem.getQuantity(),
                 purchaseItem.getUnitPrice(),
-                purchaseItem.getSubtotal(),
+                purchaseItem.getSubtotal(), // CORREGIDO: Usar getSubtotal()
                 purchaseItem.getCreatedAt(),
                 purchaseItem.getUpdatedAt(),
                 purchaseItem.getDeletedAt(),
+                purchaseItem.getCreatedByUserId(),
+                purchaseItem.getUpdatedByUserId(),
+                purchaseItem.getDeletedByUserId(),
+                // Eliminados los campos de RoleId
                 createdByName,
                 updatedByName,
                 deletedByName

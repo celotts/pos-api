@@ -13,9 +13,9 @@ import com.posapi.domain.port.output.ProductRepository;
 import com.posapi.domain.port.output.PurchaseItemRepository;
 import com.posapi.domain.port.output.PurchaseRepository;
 import com.posapi.domain.port.output.UserRepository;
-import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseRequest;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseResponse;
+import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import com.posapi.shared.dto.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -57,9 +57,9 @@ public class PurchaseService implements PurchaseManagementPort {
         List<PurchaseItem> purchaseItems = request.items().stream()
                 .map(itemRequest -> PurchaseItem.createNew(
                         null, // purchaseId se asignará después de guardar la compra
-                        itemRequest.productId(),
-                        itemRequest.quantity(),
-                        itemRequest.unitPrice(),
+                        itemRequest.getProductId(), // CORREGIDO: Usar getProductId()
+                        itemRequest.getQuantity(),  // CORREGIDO: Usar getQuantity()
+                        itemRequest.getUnitPrice(), // CORREGIDO: Usar getUnitPrice()
                         currentUserId,
                         currentUserRoleId
                 ))
@@ -149,32 +149,18 @@ public class PurchaseService implements PurchaseManagementPort {
     @Override
     @Transactional
     public Optional<PurchaseResponse> updatePurchase(UUID id, PurchaseRequest request, UUID currentUserId) {
-        // Lógica de actualización de compra. Esto es más complejo ya que implica
-        // actualizar ítems existentes, añadir nuevos e incluso eliminar ítems,
-        // lo que a su vez afectaría el stock.
-        // Por ahora, solo se actualizarán los campos de la Purchase principal.
-        // La actualización de ítems y stock se manejaría en un método separado o con lógica más robusta.
-
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return purchaseRepository.findById(id).map(existingPurchase -> {
-            // Actualizar campos de la compra principal
             existingPurchase.setSupplierId(request.supplierId());
             existingPurchase.setPurchaseDate(request.purchaseDate());
             existingPurchase.setUpdatedAt(Instant.now());
             existingPurchase.setUpdatedByUserId(currentUserId);
             existingPurchase.setUpdatedByUserRoleId(currentUserRoleId);
 
-            // Recalcular totales si es necesario (si los ítems se actualizaran)
-            // existingPurchase.recalculateTotals();
-
             Purchase updatedPurchase = purchaseRepository.save(existingPurchase);
 
-            // Para una implementación completa, aquí se debería manejar la lógica de
-            // comparación de ítems de request con ítems existentes,
-            // y realizar las actualizaciones de stock y transacciones de inventario correspondientes.
-            // Por simplicidad, por ahora solo devolvemos la compra principal.
             List<PurchaseItem> currentItems = purchaseItemRepository.findByPurchaseId(updatedPurchase.getId());
             updatedPurchase.setItems(currentItems);
 
@@ -189,8 +175,6 @@ public class PurchaseService implements PurchaseManagementPort {
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         purchaseRepository.findById(id).ifPresent(existingPurchase -> {
-            // Antes de eliminar la compra, se debería revertir el stock de los productos
-            // y registrar las transacciones de inventario correspondientes.
             List<PurchaseItem> itemsToDelete = purchaseItemRepository.findByPurchaseId(existingPurchase.getId());
 
             itemsToDelete.forEach(item -> {
@@ -198,15 +182,13 @@ public class PurchaseService implements PurchaseManagementPort {
                         .orElseThrow(() -> new ResourceNotFoundException("Product not found for ID: " +
                                 item.getProductId()));
 
-                // Disminuir stock del producto (revertir la entrada)
                 product.decreaseStock(item.getQuantity(), currentUserId, currentUserRoleId);
                 productRepository.save(product);
 
-                // Registrar transacción de inventario de reversión
                 InventoryTransaction reverseTransaction = InventoryTransaction.createNew(
                         product.getId(),
-                        TransactionType.ADJUSTMENT_OUT, // O un tipo específico de reversión
-                        item.getQuantity().negate(), // Cantidad negativa
+                        TransactionType.ADJUSTMENT_OUT,
+                        item.getQuantity().negate(),
                         product.getCurrentStock(),
                         existingPurchase.getId(),
                         "PURCHASE_REVERSAL",
@@ -217,14 +199,12 @@ public class PurchaseService implements PurchaseManagementPort {
                 inventoryTransactionRepository.save(reverseTransaction);
             });
 
-            // Marcar la compra como eliminada lógicamente
-            existingPurchase.markAsCancelled(currentUserId, currentUserRoleId); // O markAsDeleted
-            purchaseRepository.save(existingPurchase); // Guardar la compra con estado de eliminado/cancelado
+            existingPurchase.markAsCancelled(currentUserId, currentUserRoleId);
+            purchaseRepository.save(existingPurchase);
             log.info("Purchase with id {} marked as deleted by user {}", id, currentUserId);
         });
     }
 
-    // Método auxiliar para mapear Purchase a PurchaseResponse
     private PurchaseResponse mapToPurchaseResponse(Purchase purchase, List<PurchaseItem> items) {
         Set<UUID> userIds = Stream.of(
                 purchase.getCreatedByUserId(),
@@ -238,15 +218,13 @@ public class PurchaseService implements PurchaseManagementPort {
         String updatedByName = userNames.getOrDefault(purchase.getUpdatedByUserId(), null);
         String deletedByName = userNames.getOrDefault(purchase.getDeletedByUserId(), null);
 
-        // Mapear PurchaseItem a PurchaseItemResponse
         List<PurchaseItemResponse> itemResponses = items.stream()
                 .map(item -> {
                     Product product = productRepository.findById(item.getProductId())
-                            .orElse(null); // No lanzar excepción aquí, solo si el producto no existe
+                            .orElse(null);
                     String productName = (product != null) ? product.getName() : "Unknown Product";
                     String productSku = (product != null) ? product.getSku() : "Unknown SKU";
 
-                    // Obtener nombres de auditoría para el PurchaseItem
                     Set<UUID> itemUserIds = Stream.of(
                             item.getCreatedByUserId(),
                             item.getUpdatedByUserId(),
@@ -278,7 +256,6 @@ public class PurchaseService implements PurchaseManagementPort {
         );
     }
 
-    // Método auxiliar para obtener nombres de usuario
     private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
         if (userIds.isEmpty()) {
             return Map.of();

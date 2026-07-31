@@ -1,6 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.product.dto;
 
 import com.posapi.domain.model.product.Product; // Importar la entidad de dominio Product
+import com.posapi.domain.model.product.ProductType; // Importar ProductType
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ public record ProductResponse(
         UUID categoryId, // Añadido
         UUID taxId,      // Añadido
         UUID supplierId, // Añadido
+        ProductType productType, // NUEVO: Atributo para el tipo de producto
         Instant createdAt,
         Instant updatedAt,
         Instant deletedAt, // Añadido para auditoría
@@ -45,6 +47,7 @@ public record ProductResponse(
                 .categoryId(product.getCategoryId())
                 .taxId(product.getTaxId())
                 .supplierId(product.getSupplierId())
+                .productType(product.getProductType()) // NUEVO: Asignar productType
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .deletedAt(product.getDeletedAt())

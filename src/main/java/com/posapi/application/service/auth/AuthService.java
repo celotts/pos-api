@@ -10,10 +10,17 @@ import com.posapi.infrastructure.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException; // Importar BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails; // Importar UserDetails
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors; // Importar Collectors
 
 @Service
 @RequiredArgsConstructor
@@ -30,31 +37,48 @@ public class AuthService implements AuthManagementPort {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.email(), request.password())
             );
-            // Si la autenticación es exitosa, generamos el token
-            String jwt = jwtService.generateToken(authentication);
+
+            // Obtener UserDetails del objeto de autenticación
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+
+            // 1. Extraer los roles/autoridades
+            Map<String, Object> extraClaims = new HashMap<>();
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(authority -> authority != null ? authority.getAuthority() : "")
+                    .filter(role -> !role.isEmpty())
+                    .collect(Collectors.toList()); // Usar collect(Collectors.toList())
+
+            // 2. Guardar los roles en el token bajo la clave "roles"
+            extraClaims.put("roles", roles);
+
+            // 3. Generar el token JWT con los claims adicionales
+            String jwt = jwtService.generateToken(extraClaims, userDetails);
 
             // Obtener el usuario autenticado para construir UserResponse
             User user = userRepository.findByEmail(request.email())
                     .orElseThrow(() -> new IllegalStateException("Authenticated user not found in repository"));
 
-            // CORREGIDO: Construir UserResponse con los 10 argumentos correctos
+            // Construir UserResponse con los 10 argumentos correctos
             UserResponse userResponse = new UserResponse(
                     user.getId(),
                     user.getEmail(),
                     user.getFullName(),
                     user.getRole().getName(), // Usar el nombre del rol
-                    user.getAddress(), // CORREGIDO
-                    user.getPhone(),  // AÑADIDO
-                    user.getPhone2(), // AÑADIDO
+                    user.getAddress(),
+                    user.getPhone(),
+                    user.getPhone2(),
                     user.getIsActive(),
                     user.getCreatedAt(),
                     user.getUpdatedAt()
             );
 
             return new LoginResponse(jwt, userResponse);
-        } catch (AuthenticationException e) {
+        } catch (BadCredentialsException e) { // Capturar BadCredentialsException específicamente
             log.warn("Authentication failed for user {}: {}", request.email(), e.getMessage());
             throw new IllegalArgumentException("Invalid email or password"); // Mensaje genérico por seguridad
+        } catch (AuthenticationException e) {
+            log.warn("An unexpected authentication error occurred for user {}: {}", request.email(), e.getMessage());
+            throw new IllegalArgumentException("Authentication failed");
         }
     }
 }

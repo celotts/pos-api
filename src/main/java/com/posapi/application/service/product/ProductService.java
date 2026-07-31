@@ -59,6 +59,7 @@ public class ProductService implements ProductManagementPort {
                 productToCreate.getCategoryId(),
                 productToCreate.getTaxId(),
                 productToCreate.getSupplierId(),
+                productToCreate.getProductType(), // PASAR productType
                 currentUserId,
                 currentUserRoleId
         );
@@ -81,7 +82,7 @@ public class ProductService implements ProductManagementPort {
     @Override
     @Transactional
     public Optional<Product> updateProduct(UUID id, Product productChanges, UUID currentUserId) {
-        // 1. Validar existencia de entidades relacionadas al actualizar
+        // 1. Validar existencia de entidades relacionadas con el actualizar
         validateRelatedEntities(
                 productChanges.getCategoryId(),
                 productChanges.getSupplierId(),
@@ -100,6 +101,7 @@ public class ProductService implements ProductManagementPort {
                     productChanges.getCategoryId(),
                     productChanges.getTaxId(),
                     productChanges.getSupplierId(),
+                    productChanges.getProductType(), // PASAR productChanges.getProductType()
                     currentUserId,
                     currentUserRoleId
             );
@@ -143,7 +145,7 @@ public class ProductService implements ProductManagementPort {
     }
 
     /**
-     * Valida que las llaves foráneas existan antes de ejecutar operaciones de persistencia.
+     * Válida adecuada es con las llaves foráneas existan antes de ejecutar operaciones de persistencia.
      */
     private void validateRelatedEntities(UUID categoryId, UUID supplierId, UUID taxId) {
         if (categoryId != null && !categoryRepository.existsById(categoryId)) {

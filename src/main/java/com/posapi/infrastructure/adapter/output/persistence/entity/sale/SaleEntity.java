@@ -1,13 +1,18 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.sale;
 
-import com.posapi.infrastructure.adapter.output.persistence.entity.customer.CustomerEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.posterminal.PosTerminalEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.shift.ShiftEntity;
-import jakarta.persistence.*;
+import com.posapi.domain.model.sale.PaymentStatus;
+import com.posapi.domain.model.sale.SaleStatus;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.generator.EventType;
@@ -18,7 +23,8 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "sales")
-@Data
+@Getter
+@Setter
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -26,12 +32,10 @@ import java.util.UUID;
 public class SaleEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", referencedColumnName = "id")
-    private CustomerEntity customer;
+    @Column(name = "customer_id")
+    private UUID customerId;
 
     @Column(name = "sale_date", nullable = false)
     private Instant saleDate;
@@ -53,13 +57,11 @@ public class SaleEntity {
     @Column(name = "payment_status", nullable = false)
     private PaymentStatus paymentStatus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pos_terminal_id", referencedColumnName = "id")
-    private PosTerminalEntity posTerminal;
+    @Column(name = "pos_terminal_id")
+    private UUID posTerminalId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id", referencedColumnName = "id")
-    private ShiftEntity shift;
+    @Column(name = "shift_id")
+    private UUID shiftId;
 
     @Generated(event = EventType.INSERT)
     @Column(name = "created_at", updatable = false, insertable = false)
@@ -72,7 +74,7 @@ public class SaleEntity {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @Column(name = "created_by_user_id")
+    @Column(name = "created_by_user_id", updatable = false)
     private UUID createdByUserId;
 
     @Column(name = "updated_by_user_id")
@@ -82,35 +84,14 @@ public class SaleEntity {
     private UUID deletedByUserId;
 
     @Generated(event = EventType.INSERT)
-    @Column(name = "created_by_role_id")
+    @Column(name = "created_by_role_id", updatable = false, insertable = false)
     private UUID createdByRoleId;
 
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "updated_by_role_id")
+    @Column(name = "updated_by_role_id", insertable = false)
     private UUID updatedByRoleId;
 
     @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "deleted_by_role_id")
+    @Column(name = "deleted_by_role_id", insertable = false)
     private UUID deletedByRoleId;
-
-    @PrePersist
-    protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = Instant.now();
-        }
-        if (this.status == null) {
-            this.status = SaleStatus.PENDING;
-        }
-        if (this.paymentStatus == null) {
-            this.paymentStatus = PaymentStatus.UNPAID;
-        }
-    }
-
-    public enum SaleStatus {
-        PENDING, COMPLETED, CANCELLED
-    }
-
-    public enum PaymentStatus {
-        UNPAID, PAID, PARTIALLY_PAID
-    }
 }

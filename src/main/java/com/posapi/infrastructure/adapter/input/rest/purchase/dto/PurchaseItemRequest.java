@@ -1,20 +1,28 @@
 package com.posapi.infrastructure.adapter.input.rest.purchase.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-public record PurchaseItemRequest(
-        @NotNull(message = "Product ID cannot be null")
-        UUID productId,
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PurchaseItemRequest {
+    @NotNull(message = "Product ID cannot be null")
+    private UUID productId;
 
-        @NotNull(message = "Quantity cannot be null")
-        @DecimalMin(value = "0.0001", message = "Quantity must be greater than 0")
-        BigDecimal quantity,
+    @NotNull(message = "Quantity cannot be null")
+    @Positive(message = "Quantity must be positive")
+    private BigDecimal quantity;
 
-        @NotNull(message = "Unit price cannot be null")
-        @DecimalMin(value = "0.01", message = "Unit price must be greater than 0")
-        BigDecimal unitPrice
-) { }
+    @NotNull(message = "Unit price cannot be null")
+    @Positive(message = "Unit price must be positive")
+    private BigDecimal unitPrice;
+}
