@@ -4,6 +4,7 @@ import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.sale.Sale;
+import com.posapi.domain.model.sale.SaleItem;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.*;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
@@ -17,6 +18,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,8 +49,9 @@ class SaleServiceTest {
     private SaleService saleService;
 
     private User currentUser;
-    private Product productWithStock;
-    private SaleRequest saleRequest;
+    private Product product;
+    private SaleRequest saleRequestWithSufficientStock;
+    private SaleRequest saleRequestWithInsufficientStock;
 
     @BeforeEach
     void setUp() {
@@ -61,44 +64,67 @@ class SaleServiceTest {
                 .role(Role.builder().id(roleId).build())
                 .build();
 
-        productWithStock = Product.builder()
+        product = Product.builder()
                 .id(productId)
                 .name("Test Product")
                 .currentStock(BigDecimal.TEN) // 10 en stock
                 .build();
 
-        // Solicitud para vender 15 unidades, cuando solo hay 10
-        SaleItemRequest itemRequest = new SaleItemRequest(productId, BigDecimal.valueOf(15), BigDecimal.valueOf(100));
+        // Request para un "happy path" (vender 5)
+        SaleItemRequest sufficientItemRequest = new SaleItemRequest(productId, BigDecimal.valueOf(5), BigDecimal.valueOf(100));
+        saleRequestWithSufficientStock = new SaleRequest();
+        saleRequestWithSufficientStock.setItems(List.of(sufficientItemRequest));
 
-        saleRequest = new SaleRequest();
-        saleRequest.setItems(List.of(itemRequest));
+        // Request para un caso de error (vender 15)
+        SaleItemRequest insufficientItemRequest = new SaleItemRequest(productId, BigDecimal.valueOf(15), BigDecimal.valueOf(100));
+        saleRequestWithInsufficientStock = new SaleRequest();
+        saleRequestWithInsufficientStock.setItems(List.of(insufficientItemRequest));
     }
 
     @Test
     void whenCreateSale_withInsufficientStock_thenThrowExceptionAndDoNotPersist() {
         // Arrange
         when(securityContextHelper.getCurrentUserOrThrow()).thenReturn(currentUser);
-        when(productRepository.findById(productWithStock.getId())).thenReturn(Optional.of(productWithStock));
-
-        // ** LA CORRECCIÓN CLAVE ESTÁ AQUÍ **
-        // Cuando el servicio intente guardar la venta por primera vez,
-        // devolvemos el mismo objeto para que no sea nulo.
+        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
         when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> {
             Sale saleToSave = invocation.getArgument(0);
-            saleToSave.setId(UUID.randomUUID()); // Asignamos un ID como lo haría la BD real
+            saleToSave.setId(UUID.randomUUID());
             return saleToSave;
         });
 
         // Act & Assert
-        // Verificar que se lanza la excepción de negocio esperada (IllegalArgumentException)
         assertThrows(IllegalArgumentException.class, () -> {
-            saleService.createSale(saleRequest);
+            saleService.createSale(saleRequestWithInsufficientStock);
         });
 
-        // Verificar que, aunque se intentó guardar la VENTA inicial,
-        // NUNCA se guardaron los ITEMS ni las TRANSACCIONES DE INVENTARIO.
-        verify(saleRepository, times(1)).save(any(Sale.class)); // Se llama una vez antes de la validación de stock
+        verify(saleRepository, times(1)).save(any(Sale.class));
         verify(saleItemRepository, never()).save(any());
         verify(inventoryTransactionRepository, never()).save(any());
+    }
+
+    @Test
+    void whenCreateSale_withSufficientStock_thenStockShouldDecreaseAndTransactionShouldBeCreated() {
+        // Arrange
+        when(securityContextHelper.getCurrentUserOrThrow()).thenReturn(currentUser);
+        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
+        when(saleRepository.save(any(Sale.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(saleItemRepository.save(any(SaleItem.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(userRepository.findAllById(anySet())).thenReturn(Collections.emptyList());
+
+        // Act
+        saleService.createSale(saleRequestWithSufficientStock);
+
+        // Assert
+        // 1. Verificar que el producto se guarda con el stock disminuido
+        verify(productRepository, times(1)).save(argThat(p ->
+                p.getCurrentStock().equals(BigDecimal.valueOf(5)) // 10 - 5
+        ));
+
+        // 2. Verificar que se guarda la transacción de inventario
+        verify(inventoryTransactionRepository, times(1)).save(any());
+
+        // 3. Verificar que se guarda la venta y sus ítems
+        verify(saleRepository, times(2)).save(any(Sale.class)); // Una para la creación inicial, otra para actualizar totales
+        verify(saleItemRepository, times(1)).save(any(SaleItem.class));
     }
 }
