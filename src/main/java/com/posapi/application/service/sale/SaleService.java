@@ -7,12 +7,9 @@ import com.posapi.domain.model.inventory.InventoryTransaction;
 import com.posapi.domain.model.inventory.TransactionType;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.sale.Sale;
+import com.posapi.domain.model.sale.SaleItem;
 import com.posapi.domain.model.user.User;
-import com.posapi.domain.port.output.CustomerRepository;
-import com.posapi.domain.port.output.InventoryTransactionRepository;
-import com.posapi.domain.port.output.ProductRepository;
-import com.posapi.domain.port.output.SaleRepository;
-import com.posapi.domain.port.output.UserRepository;
+import com.posapi.domain.port.output.*;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemResponse;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
@@ -26,8 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class SaleService implements SaleMagnamentPort {
 
     private final SaleRepository saleRepository;
+    private final SaleItemRepository saleItemRepository;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
     private final InventoryTransactionRepository inventoryTransactionRepository;
@@ -47,16 +49,14 @@ public class SaleService implements SaleMagnamentPort {
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
-        // 1. Validar cliente
         if (request.getCustomerId() != null && !customerRepository.existsById(request.getCustomerId())) {
             throw new ResourceNotFoundException("Customer not found with ID: " + request.getCustomerId());
         }
 
-        // 2. Crear Sale de dominio
         Sale newSale = Sale.createNew(
                 request.getCustomerId(),
-                BigDecimal.ZERO, // Se calculará después de añadir ítems
-                BigDecimal.ZERO, // Se calculará después de añadir ítems
+                BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 request.getDiscountAmount() != null ? request.getDiscountAmount() : BigDecimal.ZERO,
                 request.getPosTerminalId(),
                 request.getShiftId(),
@@ -66,23 +66,18 @@ public class SaleService implements SaleMagnamentPort {
 
         Sale savedSale = saleRepository.save(newSale);
 
-        // 3. Añadir ítems y actualizar stock
-        List<SaleItemResponse> itemResponses = request.getItems().stream()
+        List<SaleItem> savedItems = request.getItems().stream()
                 .map(itemRequest -> addSaleItemInternal(savedSale.getId(), itemRequest, currentUser.getId(), currentUserRoleId))
                 .collect(Collectors.toList());
 
-        // 4. Recalcular totales de la venta
-        BigDecimal totalAmount = itemResponses.stream()
-                .map(SaleItemResponse::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-
+        BigDecimal totalAmount = savedItems.stream().map(SaleItem::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal totalTaxAmount = BigDecimal.ZERO;
 
         savedSale.setTotalAmount(totalAmount.subtract(savedSale.getDiscountAmount()));
         savedSale.setTotalTaxAmount(totalTaxAmount);
         saleRepository.save(savedSale);
 
-        return mapToSaleResponse(savedSale, itemResponses);
+        return mapToSaleResponse(savedSale, savedItems);
     }
 
     @Override
@@ -90,15 +85,18 @@ public class SaleService implements SaleMagnamentPort {
     public SaleResponse getSaleById(UUID saleId) {
         Sale sale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + saleId));
-
-        return mapToSaleResponse(sale, List.of());
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        return mapToSaleResponse(sale, items);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<SaleResponse> getAllSales() {
         return saleRepository.findAll().stream()
-                .map(sale -> mapToSaleResponse(sale, List.of()))
+                .map(sale -> {
+                    List<SaleItem> items = saleItemRepository.findAllBySaleId(sale.getId());
+                    return mapToSaleResponse(sale, items);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -132,7 +130,8 @@ public class SaleService implements SaleMagnamentPort {
         existingSale.setUpdatedByUserRoleId(currentUserRoleId);
 
         Sale updatedSale = saleRepository.save(existingSale);
-        return mapToSaleResponse(updatedSale, List.of());
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        return mapToSaleResponse(updatedSale, items);
     }
 
     @Override
@@ -143,6 +142,16 @@ public class SaleService implements SaleMagnamentPort {
 
         Sale existingSale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + saleId));
+
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        for (SaleItem item : items) {
+            Product product = productRepository.findById(item.getProductId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + item.getProductId()));
+            product.increaseStock(item.getQuantity(), currentUser.getId(), currentUserRoleId);
+            productRepository.save(product);
+            item.markAsDeleted(currentUser.getId(), currentUserRoleId);
+            saleItemRepository.save(item);
+        }
 
         existingSale.markAsDeleted(currentUser.getId(), currentUserRoleId);
         saleRepository.save(existingSale);
@@ -158,12 +167,13 @@ public class SaleService implements SaleMagnamentPort {
         Sale existingSale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + saleId));
 
-        SaleItemResponse addedItem = addSaleItemInternal(saleId, itemRequest, currentUser.getId(), currentUserRoleId);
+        SaleItem addedItem = addSaleItemInternal(saleId, itemRequest, currentUser.getId(), currentUserRoleId);
 
         existingSale.setTotalAmount(existingSale.getTotalAmount().add(addedItem.getSubtotal()));
         saleRepository.save(existingSale);
 
-        return mapToSaleResponse(existingSale, List.of(addedItem));
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        return mapToSaleResponse(existingSale, items);
     }
 
     @Override
@@ -175,10 +185,27 @@ public class SaleService implements SaleMagnamentPort {
         Sale existingSale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + saleId));
 
-        // TODO: Implementar la reversión del ítem anterior y aplicar las nuevas cantidades
-        log.info("Updating item {} for sale {} by user {}", itemId, saleId, currentUser.getId());
+        SaleItem existingItem = saleItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale item not found with ID: " + itemId));
 
-        return mapToSaleResponse(existingSale, List.of());
+        Product product = productRepository.findById(existingItem.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + existingItem.getProductId()));
+
+        product.increaseStock(existingItem.getQuantity(), currentUser.getId(), currentUserRoleId);
+
+        existingItem.updateDetails(itemRequest.getQuantity(), itemRequest.getUnitPrice(), currentUser.getId(), currentUserRoleId);
+
+        product.decreaseStock(existingItem.getQuantity(), currentUser.getId(), currentUserRoleId);
+
+        productRepository.save(product);
+        saleItemRepository.save(existingItem);
+
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        BigDecimal totalAmount = items.stream().map(SaleItem::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        existingSale.setTotalAmount(totalAmount.subtract(existingSale.getDiscountAmount()));
+        saleRepository.save(existingSale);
+
+        return mapToSaleResponse(existingSale, items);
     }
 
     @Override
@@ -190,13 +217,27 @@ public class SaleService implements SaleMagnamentPort {
         Sale existingSale = saleRepository.findById(saleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Sale not found with ID: " + saleId));
 
-        // TODO: Implementar la eliminación del ítem y restaurar el stock del producto
-        log.info("Deleting item {} from sale {} by user {}", itemId, saleId, currentUser.getId());
+        SaleItem existingItem = saleItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Sale item not found with ID: " + itemId));
 
-        return mapToSaleResponse(existingSale, List.of());
+        Product product = productRepository.findById(existingItem.getProductId())
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + existingItem.getProductId()));
+
+        product.increaseStock(existingItem.getQuantity(), currentUser.getId(), currentUserRoleId);
+        productRepository.save(product);
+
+        existingItem.markAsDeleted(currentUser.getId(), currentUserRoleId);
+        saleItemRepository.save(existingItem);
+
+        List<SaleItem> items = saleItemRepository.findAllBySaleId(saleId);
+        BigDecimal totalAmount = items.stream().map(SaleItem::getSubtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        existingSale.setTotalAmount(totalAmount.subtract(existingSale.getDiscountAmount()));
+        saleRepository.save(existingSale);
+
+        return mapToSaleResponse(existingSale, items);
     }
 
-    private SaleItemResponse addSaleItemInternal(UUID saleId, SaleItemRequest itemRequest, UUID currentUserId, UUID currentUserRoleId) {
+    private SaleItem addSaleItemInternal(UUID saleId, SaleItemRequest itemRequest, UUID currentUserId, UUID currentUserRoleId) {
         Product product = productRepository.findById(itemRequest.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with ID: " + itemRequest.getProductId()));
 
@@ -204,7 +245,14 @@ public class SaleService implements SaleMagnamentPort {
             throw new IllegalArgumentException("Insufficient stock for product: " + product.getName());
         }
 
-        BigDecimal subtotal = itemRequest.getQuantity().multiply(itemRequest.getUnitPrice());
+        SaleItem newSaleItem = SaleItem.createNew(
+                saleId,
+                product.getId(),
+                itemRequest.getQuantity(),
+                itemRequest.getUnitPrice(),
+                currentUserId,
+                currentUserRoleId
+        );
 
         product.decreaseStock(itemRequest.getQuantity(), currentUserId, currentUserRoleId);
         productRepository.save(product);
@@ -222,43 +270,43 @@ public class SaleService implements SaleMagnamentPort {
         );
         inventoryTransactionRepository.save(inventoryTransaction);
 
-        String currentUserName = userRepository.findById(currentUserId)
-                .map(User::getUsername)
-                .orElse("System");
-
-        Instant now = Instant.now();
-
-        return new SaleItemResponse(
-                UUID.randomUUID(),
-                saleId,
-                product.getId(),
-                product.getName(),
-                product.getSku(),
-                itemRequest.getQuantity(),
-                itemRequest.getUnitPrice(),
-                subtotal,
-                now,
-                now,
-                now,
-                currentUserId,
-                currentUserId,
-                currentUserRoleId,
-                currentUserRoleId,
-                currentUserId,
-                currentUserRoleId,
-                currentUserName,
-                currentUserName,
-                currentUserName
-        );
+        return saleItemRepository.save(newSaleItem);
     }
 
-    private SaleResponse mapToSaleResponse(Sale sale, List<SaleItemResponse> items) {
-        String createdByName = sale.getCreatedByUserId() != null
-                ? userRepository.findById(sale.getCreatedByUserId()).map(User::getUsername).orElse(null)
-                : null;
-        String updatedByName = sale.getUpdatedByUserId() != null
-                ? userRepository.findById(sale.getUpdatedByUserId()).map(User::getUsername).orElse(null)
-                : null;
+    private SaleResponse mapToSaleResponse(Sale sale, List<SaleItem> items) {
+        Set<UUID> userIds = Stream.concat(
+                Stream.of(sale.getCreatedByUserId(), sale.getUpdatedByUserId(), sale.getDeletedByUserId()),
+                items.stream().flatMap(item -> Stream.of(item.getCreatedByUserId(), item.getUpdatedByUserId(), item.getDeletedByUserId()))
+        ).filter(Objects::nonNull).collect(Collectors.toSet());
+
+        Map<UUID, String> userNames = fetchUserNames(userIds);
+
+        List<SaleItemResponse> itemResponses = items.stream()
+                .map(item -> new SaleItemResponse(
+                        item.getId(),
+                        item.getSaleId(),
+                        item.getProductId(),
+                        productRepository.findById(item.getProductId()).map(Product::getName).orElse("N/A"),
+                        productRepository.findById(item.getProductId()).map(Product::getSku).orElse("N/A"),
+                        item.getQuantity(),
+                        item.getUnitPrice(),
+                        item.getSubtotal(),
+                        item.getCreatedAt(),
+                        item.getUpdatedAt(),
+                        item.getDeletedAt(),
+                        item.getCreatedByUserId(),
+                        item.getUpdatedByUserId(),
+                        item.getDeletedByUserId(),
+                        item.getCreatedByUserRoleId(),
+                        item.getUpdatedByUserRoleId(),
+                        item.getDeletedByUserRoleId(),
+                        userNames.get(item.getCreatedByUserId()),
+                        userNames.get(item.getUpdatedByUserId()),
+                        userNames.get(item.getDeletedByUserId())
+                )).collect(Collectors.toList());
+
+        String createdByName = userNames.get(sale.getCreatedByUserId());
+        String updatedByName = userNames.get(sale.getUpdatedByUserId());
         String customerName = sale.getCustomerId() != null
                 ? customerRepository.findById(sale.getCustomerId()).map(Customer::getFullName).orElse(null)
                 : null;
@@ -278,10 +326,18 @@ public class SaleService implements SaleMagnamentPort {
                 sale.getUpdatedAt(),
                 sale.getCreatedByUserId(),
                 sale.getUpdatedByUserId(),
-                items,
+                itemResponses,
                 createdByName,
                 updatedByName,
                 customerName
         );
+    }
+
+    private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
+        if (userIds.isEmpty()) {
+            return Map.of();
+        }
+        return userRepository.findAllById(userIds).stream()
+                .collect(Collectors.toMap(User::getId, User::getFullName));
     }
 }
