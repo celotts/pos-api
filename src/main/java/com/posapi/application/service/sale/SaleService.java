@@ -10,7 +10,7 @@ import com.posapi.domain.model.sale.Sale;
 import com.posapi.domain.model.sale.SaleItem;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.*;
-import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest; // CORRECTED IMPORT
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemResponse;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;

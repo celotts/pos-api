@@ -1,11 +1,7 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.sale;
 
-import com.posapi.domain.model.sale.PaymentStatus;
-import com.posapi.domain.model.sale.SaleStatus;
-import com.posapi.infrastructure.adapter.output.persistence.entity.customer.CustomerEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.posterminal.PosTerminalEntity;
+import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.shift.ShiftEntity;
 import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -25,45 +21,30 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "sales")
+@Table(name = "sale_items")
 @SQLRestriction("deleted_at IS NULL")
-public class SaleEntity {
+public class SaleItemEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id")
-    private CustomerEntity customer;
-
-    @Column(name = "sale_date", nullable = false)
-    private Instant saleDate;
-
-    @Column(name = "total_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Column(name = "total_tax_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal totalTaxAmount;
-
-    @Column(name = "discount_amount", nullable = false, precision = 18, scale = 2)
-    private BigDecimal discountAmount;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private SaleStatus status;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "payment_status", nullable = false)
-    private PaymentStatus paymentStatus;
+    @JoinColumn(name = "sale_id", nullable = false)
+    private SaleEntity sale; // Relación con SaleEntity
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pos_terminal_id")
-    private PosTerminalEntity posTerminal;
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductEntity product; // Relación con ProductEntity
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "shift_id")
-    private ShiftEntity shift;
+    @Column(nullable = false, precision = 18, scale = 4)
+    private BigDecimal quantity;
+
+    @Column(name = "unit_price", nullable = false, precision = 18, scale = 2)
+    private BigDecimal unitPrice;
+
+    @Column(nullable = false, precision = 18, scale = 2)
+    private BigDecimal subtotal;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
