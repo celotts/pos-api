@@ -2,74 +2,35 @@ package com.posapi.infrastructure.adapter.output.persistence.mapper.sale;
 
 import com.posapi.domain.model.sale.Sale;
 import com.posapi.infrastructure.adapter.output.persistence.entity.sale.SaleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
-import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
-@Component
-public class SalePersistenceMapper {
+@Mapper(componentModel = "spring")
+public interface SalePersistenceMapper {
 
-    public SaleEntity toEntity(Sale domain) {
-        if (domain == null) {
-            return null;
-        }
-        return SaleEntity.builder()
-                .id(domain.getId())
-                .customerId(domain.getCustomerId())
-                .saleDate(domain.getSaleDate())
-                .totalAmount(domain.getTotalAmount())
-                .totalTaxAmount(domain.getTotalTaxAmount())
-                .discountAmount(domain.getDiscountAmount())
-                .status(domain.getStatus())
-                .paymentStatus(domain.getPaymentStatus())
-                .posTerminalId(domain.getPosTerminalId())
-                .shiftId(domain.getShiftId())
-                .createdAt(domain.getCreatedAt())
-                .updatedAt(domain.getUpdatedAt())
-                .deletedAt(domain.getDeletedAt())
-                .createdByUserId(domain.getCreatedByUserId())
-                .updatedByUserId(domain.getUpdatedByUserId())
-                .deletedByUserId(domain.getDeletedByUserId())
-                .createdByRoleId(domain.getCreatedByUserRoleId())
-                .updatedByRoleId(domain.getUpdatedByUserRoleId())
-                .deletedByRoleId(domain.getDeletedByUserRoleId())
-                .build();
-    }
+    @Mapping(target = "customer", expression = "java(domain.getCustomerId() != null ? CustomerEntity.builder().id(domain.getCustomerId()).build() : null)")
+    @Mapping(target = "posTerminal", expression = "java(domain.getPosTerminalId() != null ? PosTerminalEntity.builder().id(domain.getPosTerminalId()).build() : null)")
+    @Mapping(target = "shift", expression = "java(domain.getShiftId() != null ? ShiftEntity.builder().id(domain.getShiftId()).build() : null)")
+    @Mapping(target = "createdByUser", expression = "java(domain.getCreatedByUserId() != null ? UserEntity.builder().id(domain.getCreatedByUserId()).build() : null)")
+    @Mapping(target = "updatedByUser", expression = "java(domain.getUpdatedByUserId() != null ? UserEntity.builder().id(domain.getUpdatedByUserId()).build() : null)")
+    @Mapping(target = "deletedByUser", expression = "java(domain.getDeletedByUserId() != null ? UserEntity.builder().id(domain.getDeletedByUserId()).build() : null)")
+    @Mapping(target = "createdByRole", expression = "java(domain.getCreatedByUserRoleId() != null ? RoleEntity.builder().id(domain.getCreatedByUserRoleId()).build() : null)")
+    @Mapping(target = "updatedByRole", expression = "java(domain.getUpdatedByUserRoleId() != null ? RoleEntity.builder().id(domain.getUpdatedByUserRoleId()).build() : null)")
+    @Mapping(target = "deletedByRole", expression = "java(domain.getDeletedByUserRoleId() != null ? RoleEntity.builder().id(domain.getDeletedByUserRoleId()).build() : null)")
+    SaleEntity toEntity(Sale domain);
 
-    public Sale toDomain(SaleEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        return Sale.builder()
-                .id(entity.getId())
-                .customerId(entity.getCustomerId())
-                .saleDate(entity.getSaleDate())
-                .totalAmount(entity.getTotalAmount())
-                .totalTaxAmount(entity.getTotalTaxAmount())
-                .discountAmount(entity.getDiscountAmount())
-                .status(entity.getStatus())
-                .paymentStatus(entity.getPaymentStatus())
-                .posTerminalId(entity.getPosTerminalId())
-                .shiftId(entity.getShiftId())
-                .createdAt(entity.getCreatedAt())
-                .updatedAt(entity.getUpdatedAt())
-                .deletedAt(entity.getDeletedAt())
-                .createdByUserId(entity.getCreatedByUserId())
-                .updatedByUserId(entity.getUpdatedByUserId())
-                .deletedByUserId(entity.getDeletedByUserId())
-                .createdByUserRoleId(entity.getCreatedByRoleId())
-                .updatedByUserRoleId(entity.getUpdatedByRoleId())
-                .deletedByUserRoleId(entity.getDeletedByRoleId())
-                .build();
-    }
+    @Mapping(target = "customerId", source = "entity.customer.id")
+    @Mapping(target = "posTerminalId", source = "entity.posTerminal.id")
+    @Mapping(target = "shiftId", source = "entity.shift.id")
+    @Mapping(target = "createdByUserId", source = "entity.createdByUser.id")
+    @Mapping(target = "updatedByUserId", source = "entity.updatedByUser.id")
+    @Mapping(target = "deletedByUserId", source = "entity.deletedByUser.id")
+    @Mapping(target = "createdByUserRoleId", source = "entity.createdByRole.id")
+    @Mapping(target = "updatedByUserRoleId", source = "entity.updatedByRole.id")
+    @Mapping(target = "deletedByUserRoleId", source = "entity.deletedByRole.id")
+    Sale toDomain(SaleEntity entity);
 
-    public List<Sale> toDomainList(List<SaleEntity> entities) {
-        return entities.stream()
-                .map(this::toDomain)
-                .collect(Collectors.toList());
-    }
+    List<Sale> toDomainList(List<SaleEntity> entities);
 }

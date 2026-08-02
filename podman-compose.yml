@@ -37,7 +37,8 @@ services:
       JWT_EXPIRATION: ${JWT_EXPIRATION}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      # ADMIN_FULL_NAME: ${ADMIN_FULL_NAME} # ELIMINADO
+      SPRING_AI_OLLAMA_BASE_URL: ${SPRING_AI_OLLAMA_BASE_URL}
+      SPRING_MVC_PATHMATCH_MATCHING_STRATEGY: ant_path_matcher
     depends_on:
       db:
         condition: service_healthy

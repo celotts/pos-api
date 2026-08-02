@@ -1,7 +1,7 @@
 package com.posapi.infrastructure.adapter.input.rest.sale.mapper;
 
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemResponse;
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest; // <-- ¡AÑADIDO!
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemResponse; // <-- ¡CORREGIDO!
 import org.springframework.stereotype.Component;
 
 import java.util.List;

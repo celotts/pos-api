@@ -18,10 +18,25 @@ spring:
     show-sql: true
   flyway:
     enabled: false # Deshabilitar Flyway temporalmente para permitir que Hibernate gestione el esquema.
-                   # Si Flyway es necesario, asegúrate de que tus scripts de migración creen todas las tablas.
+    # Si Flyway es necesario, asegúrate de que tus scripts de migración creen todas las tablas.
   rabbitmq:
     # Dentro de la red de Docker, nos conectamos al servicio 'rabbitmq' (si lo tuvieras).
     host: rabbitmq
+  ai: # Configuración de Spring AI para Docker
+    ollama:
+      base-url: ${SPRING_AI_OLLAMA_BASE_URL:http://host.docker.internal:11434} # Apunta al host desde el contenedor
+      chat:
+        options:
+          model: llama3.2 # Asegúrate de que este modelo esté descargado en tu Ollama local
+  mvc: # Configuración para resolver el problema de patrones de URL de Swagger UI
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+springdoc: # <--- AÑADIDO: Deshabilitar Springdoc
+  swagger-ui:
+    enabled: false # <--- ¡NUEVA LÍNEA!
+  api-docs:
+    enabled: false # <--- ¡NUEVA LÍNEA!
 
 logging:
   level:
