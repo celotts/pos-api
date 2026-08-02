@@ -1,6 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.sale.dto;
 
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest; // <-- ¡AÑADIDO!
 import lombok.Getter;
 import lombok.Setter;
 
