@@ -2,9 +2,13 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.sale;
 
 import com.posapi.domain.model.sale.SaleItem;
 import com.posapi.domain.port.output.SaleItemRepository;
+import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
+import com.posapi.infrastructure.adapter.output.persistence.entity.sale.SaleEntity;
 import com.posapi.infrastructure.adapter.output.persistence.entity.sale.SaleItemEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.sale.SaleItemPersistenceMapper;
+import com.posapi.infrastructure.adapter.output.persistence.repository.product.ProductJpaRepository;
 import com.posapi.infrastructure.adapter.output.persistence.repository.sale.SaleItemJpaRepository;
+import com.posapi.infrastructure.adapter.output.persistence.repository.sale.SaleJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,16 +18,25 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+
 @Component
 @RequiredArgsConstructor
 public class SaleItemPersistenceAdapter implements SaleItemRepository {
 
     private final SaleItemJpaRepository saleItemJpaRepository;
     private final SaleItemPersistenceMapper saleItemPersistenceMapper;
+    private final SaleJpaRepository saleJpaRepository; // Inyectar SaleJpaRepository
+    private final ProductJpaRepository productJpaRepository; // Inyectar ProductJpaRepository
 
     @Override
     public SaleItem save(SaleItem saleItem) {
-        SaleItemEntity saleItemEntity = saleItemPersistenceMapper.toEntity(saleItem);
+        // Buscar las entidades relacionadas
+        SaleEntity saleEntity = saleJpaRepository.findById(saleItem.getSaleId())
+                .orElseThrow(() -> new RuntimeException("Sale not found for ID: " + saleItem.getSaleId()));
+        ProductEntity productEntity = productJpaRepository.findById(saleItem.getProductId())
+                .orElseThrow(() -> new RuntimeException("Product not found for ID: " + saleItem.getProductId()));
+
+        SaleItemEntity saleItemEntity = saleItemPersistenceMapper.toEntity(saleItem, saleEntity, productEntity);
         SaleItemEntity savedEntity = saleItemJpaRepository.save(saleItemEntity);
         return saleItemPersistenceMapper.toDomain(savedEntity);
     }
@@ -58,7 +71,7 @@ public class SaleItemPersistenceAdapter implements SaleItemRepository {
 
     @Override
     public void delete(SaleItem entity) {
-        saleItemJpaRepository.delete(saleItemPersistenceMapper.toEntity(entity));
+        saleItemJpaRepository.deleteById(entity.getId());
     }
 
     @Override

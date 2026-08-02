@@ -1,9 +1,9 @@
 package com.posapi.application.port.sale;
 
-// CORREGIDO: Importación correcta para SaleItemRequest y SaleResponse
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
+// CORREGIDO: Importación correcta para SaleItemRequest
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
 
 import java.util.List;
 import java.util.UUID;

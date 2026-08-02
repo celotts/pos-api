@@ -1,40 +1,41 @@
 package com.posapi.infrastructure.adapter.output.persistence.entity.sale;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
+import com.posapi.infrastructure.adapter.output.persistence.entity.role.RoleEntity;
+import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.SQLRestriction;
-import org.hibernate.generator.EventType;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
-@Entity
-@Table(name = "sale_items")
-@Getter
-@Setter
-@Builder(toBuilder = true)
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "sale_items")
 @SQLRestriction("deleted_at IS NULL")
 public class SaleItemEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @Column(name = "sale_id", nullable = false)
-    private UUID saleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sale_id", nullable = false)
+    private SaleEntity sale; // Relación con SaleEntity
 
-    @Column(name = "product_id", nullable = false)
-    private UUID productId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductEntity product; // Relación con ProductEntity
 
     @Column(nullable = false, precision = 18, scale = 4)
     private BigDecimal quantity;
@@ -45,35 +46,38 @@ public class SaleItemEntity {
     @Column(nullable = false, precision = 18, scale = 2)
     private BigDecimal subtotal;
 
-    @Generated(event = EventType.INSERT)
-    @Column(name = "created_at", updatable = false, insertable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "updated_at", insertable = false)
+    @UpdateTimestamp
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     @Column(name = "deleted_at")
     private Instant deletedAt;
 
-    @Column(name = "created_by_user_id", updatable = false)
-    private UUID createdByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_user_id")
+    private UserEntity createdByUser;
 
-    @Column(name = "updated_by_user_id")
-    private UUID updatedByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_user_id")
+    private UserEntity updatedByUser;
 
-    @Column(name = "deleted_by_user_id")
-    private UUID deletedByUserId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by_user_id")
+    private UserEntity deletedByUser;
 
-    @Generated(event = EventType.INSERT)
-    @Column(name = "created_by_role_id", updatable = false, insertable = false)
-    private UUID createdByRoleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by_role_id")
+    private RoleEntity createdByRole;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "updated_by_role_id", insertable = false)
-    private UUID updatedByRoleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "updated_by_role_id")
+    private RoleEntity updatedByRole;
 
-    @Generated(event = {EventType.INSERT, EventType.UPDATE})
-    @Column(name = "deleted_by_role_id", insertable = false)
-    private UUID deletedByRoleId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "deleted_by_role_id")
+    private RoleEntity deletedByRole;
 }

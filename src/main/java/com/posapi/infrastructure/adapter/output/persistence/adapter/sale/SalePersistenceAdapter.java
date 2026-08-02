@@ -36,14 +36,13 @@ public class SalePersistenceAdapter implements SaleRepository {
 
     @Override
     public List<Sale> findAll() {
-        List<SaleEntity> entities = saleJpaRepository.findAll();
-        return salePersistenceMapper.toDomainList(entities);
+        return salePersistenceMapper.toDomainList(saleJpaRepository.findAll());
     }
 
     @Override
     public Page<Sale> findAll(Pageable pageable) {
-        Page<SaleEntity> entitiesPage = saleJpaRepository.findAll(pageable);
-        return entitiesPage.map(salePersistenceMapper::toDomain);
+        return saleJpaRepository.findAll(pageable)
+                .map(salePersistenceMapper::toDomain);
     }
 
     @Override
