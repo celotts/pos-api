@@ -1,10 +1,16 @@
-package com.posapi.infrastructure.adapter.input.rest.sale;
+package com.posapi.infrastructure.adapter.input.rest.sale.SaleController;
 
 import com.posapi.application.port.sale.SaleMagnamentPort;
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
+import com.posapi.domain.model.sale.Sale;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
-
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
+import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemResponse;
+import com.posapi.infrastructure.adapter.input.rest.sale.mapper.SaleRestMapper;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,19 +19,17 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/sales")
+@RequestMapping("/api/v1/sales")
+@RequiredArgsConstructor
 public class SaleController {
 
     private final SaleMagnamentPort saleMagnamentPort;
-
-    public SaleController(SaleMagnamentPort saleMagnamentPort) {
-        this.saleMagnamentPort = saleMagnamentPort;
-    }
+    private final SaleRestMapper saleRestMapper;
 
     @PostMapping
-    public ResponseEntity<SaleResponse> createSale(@RequestBody SaleRequest restRequest) {
-        SaleResponse response = saleMagnamentPort.createSale(restRequest);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<SaleResponse> createSale(@Valid @RequestBody SaleRequest request) {
+        SaleResponse response = saleMagnamentPort.createSale(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @GetMapping("/{id}")
@@ -34,9 +38,21 @@ public class SaleController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping
+    public ResponseEntity<List<SaleResponse>> getAllSales() {
+        List<SaleResponse> response = saleMagnamentPort.getAllSales();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Page<SaleResponse>> getAllSales(Pageable pageable) {
+        Page<SaleResponse> response = saleMagnamentPort.getAllSales(pageable);
+        return ResponseEntity.ok(response);
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<SaleResponse> updateSale(@PathVariable UUID id, @RequestBody SaleRequest restRequest) {
-        SaleResponse response = saleMagnamentPort.updateSale(id, restRequest);
+    public ResponseEntity<SaleResponse> updateSale(@PathVariable UUID id, @Valid @RequestBody SaleRequest request) {
+        SaleResponse response = saleMagnamentPort.updateSale(id, request);
         return ResponseEntity.ok(response);
     }
 
@@ -47,13 +63,13 @@ public class SaleController {
     }
 
     @PostMapping("/{saleId}/items")
-    public ResponseEntity<SaleResponse> addSaleItem(@PathVariable UUID saleId, @RequestBody SaleItemRequest restItemRequest) {
+    public ResponseEntity<SaleResponse> addSaleItem(@PathVariable UUID saleId, @Valid @RequestBody SaleItemRequest restItemRequest) {
         SaleResponse response = saleMagnamentPort.addSaleItem(saleId, restItemRequest);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{saleId}/items/{itemId}")
-    public ResponseEntity<SaleResponse> updateSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId, @RequestBody SaleItemRequest restItemRequest) {
+    public ResponseEntity<SaleResponse> updateSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId, @Valid @RequestBody SaleItemRequest restItemRequest) {
         SaleResponse response = saleMagnamentPort.updateSaleItem(saleId, itemId, restItemRequest);
         return ResponseEntity.ok(response);
     }
@@ -62,11 +78,5 @@ public class SaleController {
     public ResponseEntity<SaleResponse> deleteSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId) {
         SaleResponse response = saleMagnamentPort.deleteSaleItem(saleId, itemId);
         return ResponseEntity.ok(response);
-    }
-
-    @GetMapping
-    public ResponseEntity<List<SaleResponse>> getAllSales() {
-        List<SaleResponse> responses = saleMagnamentPort.getAllSales();
-        return ResponseEntity.ok(responses);
     }
 }

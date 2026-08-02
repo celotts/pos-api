@@ -5,6 +5,9 @@ import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
 // CORREGIDO: Importación correcta para SaleItemRequest
 import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
 
+import org.springframework.data.domain.Page; // <-- ¡AÑADIDO!
+import org.springframework.data.domain.Pageable; // <-- ¡AÑADIDO!
+
 import java.util.List;
 import java.util.UUID;
 
@@ -68,4 +71,11 @@ public interface SaleMagnamentPort {
      * @return Lista de SaleResponse DTOs.
      */
     List<SaleResponse> getAllSales();
+
+    /**
+     * Lista todas las ventas con paginación.
+     * @param pageable Información de paginación.
+     * @return Página de SaleResponse DTOs.
+     */
+    Page<SaleResponse> getAllSales(Pageable pageable); // <-- ¡AÑADIDO!
 }

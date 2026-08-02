@@ -1,13 +1,11 @@
 package com.posapi.application.service.sale;
 
-import com.posapi.domain.exception.ResourceNotFoundException;
 import com.posapi.domain.model.product.Product;
 import com.posapi.domain.model.role.Role;
 import com.posapi.domain.model.sale.Sale;
 import com.posapi.domain.model.sale.SaleItem;
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.*;
-import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleItemRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import org.junit.jupiter.api.BeforeEach;
