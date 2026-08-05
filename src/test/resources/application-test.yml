@@ -16,10 +16,25 @@ spring:
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl # Use standard naming
         implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl # Use legacy JPA implicit naming
         temp.use_jdbc_metadata_defaults: false # Prevent Hibernate from using JDBC metadata for schema inference
+  app:
+    jwt:
+      secret: dGVzdHNlY3JldGZvcnRlc3RpbmdwdXJwb3Nlc29ubHk=
+      expiration-in-ms: 3600000 # Aquí está definido en 1 hora
 
   flyway:
     enabled: true
     locations: classpath:db/migration
+# ===================================================================
+# APP CONFIGURATION
+# ===================================================================
+app:
+  jwt:
+    secret: ${dGVzdHNlY3JldGZvcnRlc3RpbmdwdXJwb3Nlc29ubHk=}
+    expiration-in-ms: 600000
+  bootstrap:
+    admin:
+      email: test@posapi.com
+      password: TestPassword123!
 
 logging:
   level:

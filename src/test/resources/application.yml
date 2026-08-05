@@ -46,7 +46,7 @@ spring:
 # ===================================================================
 app:
   jwt:
-    secret: dGVzdHNlY3JldGZvcnRlc3RpbmdwdXJwb3Nlc29ubHk=
+    secret: ${dGVzdHNlY3JldGZvcnRlc3RpbmdwdXJwb3Nlc29ubHk=}
     expiration-in-ms: 3600000
   bootstrap:
     admin:
