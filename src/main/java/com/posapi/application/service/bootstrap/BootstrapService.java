@@ -26,11 +26,23 @@ public class BootstrapService implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${admin.email}")
+    @Value("${app.bootstrap.admin.email}")
     private String adminEmail;
 
-    @Value("${admin.password}")
+    @Value("${app.bootstrap.admin.password}")
     private String adminPassword;
+
+    @Value("${app.bootstrap.admin.full-name:Admin User}")
+    private String adminFullName;
+
+    @Value("${app.bootstrap.admin.address:N/A}")
+    private String adminAddress;
+
+    @Value("${app.bootstrap.admin.phone:N/A}")
+    private String adminPhone;
+
+    @Value("${app.bootstrap.admin.phone2:N/A}")
+    private String adminPhone2;
 
     @Override
     @Transactional
@@ -54,15 +66,14 @@ public class BootstrapService implements CommandLineRunner {
             return;
         }
         log.info("Role '{}' already exists.", roleName);
-        roleOptional.get();
     }
 
     private void createOrUpdateAdminUser() {
         Role adminRole = roleRepository
                 .findByName("ADMIN")
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Admin role not found during bootstrap."
-                    )
+                                "Admin role not found during bootstrap."
+                        )
                 );
 
         Optional<User> existingUser = userRepository.findByEmail(adminEmail);
@@ -72,17 +83,18 @@ public class BootstrapService implements CommandLineRunner {
             // Actualizar si el rol ha cambiado
             if (!adminRole.getId().equals(user.getRole().getId())) {
                 user.setRole(adminRole);
-                userRepository.save(user);
                 log.info("Admin user role updated to 'ADMIN'.");
             }
             log.info("Admin user already exists.");
         } else {
             log.info("Admin user not found. Creating...");
-            User adminUser = User.builder() // Formateado para legibilidad
-                    .id(UUID.randomUUID())
+            User adminUser = User.builder()
                     .email(adminEmail)
                     .password(passwordEncoder.encode(adminPassword))
-                    .fullName("Admin User")
+                    .fullName(adminFullName)
+                    .address(adminAddress)
+                    .phone(adminPhone)
+                    .phone2(adminPhone2)
                     .isActive(true)
                     .role(adminRole)
                     .createdAt(Instant.now())

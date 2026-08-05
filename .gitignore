@@ -4,6 +4,7 @@ HELP.md
 # Gradle & Build Output
 .gradle/
 build/
+!build/reports/spotbugs/main.html
 bin/
 out/
 !gradle/wrapper/gradle-wrapper.jar

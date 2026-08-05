@@ -19,18 +19,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CustomerService implements CustomerManagementPort { // CORREGIDO
+public class CustomerService implements CustomerManagementPort {
 
     private final CustomerRepository customerRepository;
     private final UserRepository userRepository;
@@ -40,34 +36,34 @@ public class CustomerService implements CustomerManagementPort { // CORREGIDO
     @Override
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request, UUID currentUserId) {
-        if (customerRepository.existsByRfc(request.rfc())) {
-            throw new DuplicateResourceException("Customer with RFC '" + request.rfc() + "' already exists.");
+        if (request.getRfc() != null && customerRepository.existsByRfc(request.getRfc())) {
+            throw new DuplicateResourceException("Customer with RFC '" + request.getRfc() + "' already exists.");
         }
-        if (request.email() != null && customerRepository.existsByEmail(request.email())) {
-            throw new DuplicateResourceException("Customer with email '" + request.email() + "' already exists.");
+        if (request.getEmail() != null && customerRepository.existsByEmail(request.getEmail())) {
+            throw new DuplicateResourceException("Customer with email '" + request.getEmail() + "' already exists.");
         }
 
         User currentUser = securityContextHelper.getCurrentUserOrThrow();
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         Customer newCustomer = Customer.createNew(
-                request.fullName(),
-                request.email(),
-                request.phoneNumber(),
-                request.address(),
-                request.rfc(),
+                request.getFullName(),
+                request.getEmail(),
+                request.getPhoneNumber(),
+                request.getAddress(),
+                request.getRfc(),
                 currentUserId,
                 currentUserRoleId
         );
 
         Customer savedCustomer = customerRepository.save(newCustomer);
-        return mapToCustomerResponse(savedCustomer);
+        return customerRestMapper.toResponse(savedCustomer);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Optional<CustomerResponse> getCustomerById(UUID id) {
-        return customerRepository.findById(id).map(this::mapToCustomerResponse);
+        return customerRepository.findById(id).map(customerRestMapper::toResponse);
     }
 
     @Override
@@ -75,7 +71,7 @@ public class CustomerService implements CustomerManagementPort { // CORREGIDO
     public PageResponse<CustomerResponse> getAllCustomers(Pageable pageable) {
         Page<Customer> customersPage = customerRepository.findAll(pageable);
         List<CustomerResponse> content = customersPage.getContent().stream()
-                .map(this::mapToCustomerResponse)
+                .map(customerRestMapper::toResponse)
                 .collect(Collectors.toList());
         return new PageResponse<>(
                 content,
@@ -94,27 +90,27 @@ public class CustomerService implements CustomerManagementPort { // CORREGIDO
         UUID currentUserRoleId = currentUser.getRole().getId();
 
         return customerRepository.findById(id).map(existingCustomer -> {
-            if (request.rfc() != null && !request.rfc().equals(existingCustomer.getRfc())) {
-                if (customerRepository.existsByRfc(request.rfc())) {
-                    throw new DuplicateResourceException("Customer with RFC '" + request.rfc() + "' already exists.");
+            if (request.getRfc() != null && !request.getRfc().equals(existingCustomer.getRfc())) {
+                if (customerRepository.existsByRfc(request.getRfc())) {
+                    throw new DuplicateResourceException("Customer with RFC '" + request.getRfc() + "' already exists.");
                 }
             }
-            if (request.email() != null && !request.email().equals(existingCustomer.getEmail())) {
-                if (customerRepository.existsByEmail(request.email())) {
-                    throw new DuplicateResourceException("Customer with email '" + request.email() + "' already exists.");
+            if (request.getEmail() != null && !request.getEmail().equals(existingCustomer.getEmail())) {
+                if (customerRepository.existsByEmail(request.getEmail())) {
+                    throw new DuplicateResourceException("Customer with email '" + request.getEmail() + "' already exists.");
                 }
             }
             existingCustomer.updateDetails(
-                    request.fullName(),
-                    request.email(),
-                    request.phoneNumber(),
-                    request.address(),
-                    request.rfc(),
+                    request.getFullName(),
+                    request.getEmail(),
+                    request.getPhoneNumber(),
+                    request.getAddress(),
+                    request.getRfc(),
                     currentUserId,
                     currentUserRoleId
             );
             Customer updatedCustomer = customerRepository.save(existingCustomer);
-            return mapToCustomerResponse(updatedCustomer);
+            return customerRestMapper.toResponse(updatedCustomer);
         });
     }
 
@@ -134,30 +130,6 @@ public class CustomerService implements CustomerManagementPort { // CORREGIDO
     @Override
     @Transactional(readOnly = true)
     public Optional<CustomerResponse> getCustomerByRfc(String rfc) {
-        return customerRepository.findByRfc(rfc).map(this::mapToCustomerResponse);
-    }
-
-    private CustomerResponse mapToCustomerResponse(Customer customer) {
-        Set<UUID> userIds = Stream.of(
-                customer.getCreatedByUserId(),
-                customer.getUpdatedByUserId(),
-                customer.getDeletedByUserId()
-        ).filter(Objects::nonNull).collect(Collectors.toSet());
-
-        Map<UUID, String> userNames = fetchUserNames(userIds);
-
-        String createdByName = userNames.getOrDefault(customer.getCreatedByUserId(), null);
-        String updatedByName = userNames.getOrDefault(customer.getUpdatedByUserId(), null);
-        String deletedByName = userNames.getOrDefault(customer.getDeletedByUserId(), null);
-
-        return CustomerResponse.fromDomain(customer, createdByName, updatedByName, deletedByName);
-    }
-
-    private Map<UUID, String> fetchUserNames(Set<UUID> userIds) {
-        if (userIds.isEmpty()) {
-            return Map.of();
-        }
-        return userRepository.findAllById(userIds).stream()
-                .collect(Collectors.toMap(User::getId, User::getFullName));
+        return customerRepository.findByRfc(rfc).map(customerRestMapper::toResponse);
     }
 }

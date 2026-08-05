@@ -2,6 +2,7 @@ package com.posapi.infrastructure.adapter.output.persistence.adapter.user;
 
 import com.posapi.domain.model.user.User;
 import com.posapi.domain.port.output.UserRepository;
+import com.posapi.infrastructure.adapter.output.persistence.entity.user.UserEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.user.UserPersistenceMapper;
 import com.posapi.infrastructure.adapter.output.persistence.repository.user.UserJpaRepository;
 import org.springframework.data.domain.Page;
@@ -46,7 +47,16 @@ public class UserPersistenceAdapter implements UserRepository {
 
     @Override
     public User save(User user) {
-        var entity = userPersistenceMapper.toEntity(user);
+        UserEntity entity;
+        if (user.getId() != null) {
+            // If user has an ID, try to load existing entity and update it
+            entity = userJpaRepository.findById(user.getId())
+                    .map(existingEntity -> userPersistenceMapper.updateEntityFromDomain(user, existingEntity))
+                    .orElseGet(() -> userPersistenceMapper.toEntity(user)); // If not found, create new
+        } else {
+            // If no ID, it's a new user
+            entity = userPersistenceMapper.toEntity(user);
+        }
         var savedEntity = userJpaRepository.save(entity);
         return userPersistenceMapper.toDomain(savedEntity);
     }
@@ -83,11 +93,16 @@ public class UserPersistenceAdapter implements UserRepository {
                 .map(userPersistenceMapper::toDomain);
     }
 
+    // Implementación para findAllById(Collection<UUID> ids)
     @Override
     public List<User> findAllById(Collection<UUID> ids) {
-        return List.of();
+        return userJpaRepository.findAllById(ids).stream()
+                .map(userPersistenceMapper::toDomain)
+                .collect(Collectors.toList());
     }
 
+    // Implementación para findAllById(Iterable<UUID> ids)
+    // Este método ya estaba, pero lo mantengo para claridad si la interfaz lo requiere explícitamente
     @Override
     public List<User> findAllById(Iterable<UUID> ids) {
         return userJpaRepository.findAllById(ids).stream()

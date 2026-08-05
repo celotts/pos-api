@@ -5,12 +5,10 @@ import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
-import com.posapi.infrastructure.security.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -41,11 +39,11 @@ class UserControllerTest {
     @MockitoBean
     private UserRestMapper userRestMapper;
 
-    @MockitoBean
-    private JwtService jwtService;
-
-    @MockitoBean
-    private UserDetailsService userDetailsService;
+    // Removed @MockitoBean for JwtService and UserDetailsService
+    // @MockitoBean
+    // private JwtService jwtService;
+    // @MockitoBean
+    // private UserDetailsService userDetailsService;
 
     @SuppressWarnings("null")
     @Test
@@ -55,9 +53,9 @@ class UserControllerTest {
                 .email("test@example.com")
                 .password("password123")
                 .fullName("Test User")
-                .address("123 Test St") // Añadido: Campo @NotBlank en UserRequest
-                .phone("1234567890")   // Añadido: Campo @NotBlank en UserRequest
-                .phone2("0987654321")  // Añadido: Campo opcional para completitud
+                .address("123 Test St")
+                .phone("1234567890")
+                .phone2("0987654321")
                 .roleId(UUID.randomUUID())
                 .isActive(true)
                 .build();
@@ -66,7 +64,7 @@ class UserControllerTest {
                 .id(UUID.randomUUID())
                 .email("test@example.com")
                 .fullName("Test User")
-                .roleName("USER") // Asumiendo que el servicio asigna un nombre de rol
+                .roleName("USER")
                 .address("123 Test St")
                 .phone("1234567890")
                 .phone2("0987654321")

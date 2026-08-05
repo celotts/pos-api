@@ -2,12 +2,17 @@ package com.posapi.infrastructure.adapter.input.rest.customer.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
+@Data
+public class CustomerRequest {
+    @NotBlank
+    private String fullName;
 
-public record CustomerRequest (
-    @NotBlank String fullName,
-    @NotBlank @Email String email,
-    @NotBlank String phoneNumber,
-    @NotBlank String address,
-    @NotBlank String rfc
-){}
+    @Email
+    private String email;
+
+    private String phoneNumber;
+    private String address;
+    private String rfc;
+}

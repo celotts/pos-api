@@ -1,33 +1,16 @@
 package com.posapi.infrastructure.adapter.input.rest.purchase.mapper;
 
-// CORREGIDO: Importación correcta para PurchaseItemRequest
-import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemRequest;
+import com.posapi.domain.model.purchase.PurchaseItem;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseItemResponse;
-import org.springframework.stereotype.Component;
+import org.mapstruct.Mapper;
+import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
-public class PurchaseItemRestMapper {
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface PurchaseItemRestMapper {
 
-    public PurchaseItemRequest toApplicationPurchaseItemRequest(PurchaseItemRequest restPurchaseItemRequest) {
-        return restPurchaseItemRequest;
-    }
+    PurchaseItemResponse toResponse(PurchaseItem purchaseItem);
 
-    public PurchaseItemResponse toRestPurchaseItemResponse(PurchaseItemResponse applicationPurchaseItemResponse) {
-        return applicationPurchaseItemResponse;
-    }
-
-    public List<PurchaseItemRequest> toApplicationPurchaseItemRequestList(List<PurchaseItemRequest> restPurchaseItemRequests) {
-        return restPurchaseItemRequests.stream()
-                .map(this::toApplicationPurchaseItemRequest)
-                .collect(Collectors.toList());
-    }
-
-    public List<PurchaseItemResponse> toRestPurchaseItemResponseList(List<PurchaseItemResponse> applicationPurchaseItemResponses) {
-        return applicationPurchaseItemResponses.stream()
-                .map(this::toRestPurchaseItemResponse)
-                .collect(Collectors.toList());
-    }
+    List<PurchaseItemResponse> toResponseList(List<PurchaseItem> purchaseItems);
 }

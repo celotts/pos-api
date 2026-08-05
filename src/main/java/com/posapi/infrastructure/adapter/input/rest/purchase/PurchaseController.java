@@ -3,7 +3,6 @@ package com.posapi.infrastructure.adapter.input.rest.purchase;
 import com.posapi.application.port.purchase.PurchaseManagementPort;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseRequest;
 import com.posapi.infrastructure.adapter.input.rest.purchase.dto.PurchaseResponse;
-import com.posapi.infrastructure.adapter.input.rest.purchase.mapper.PurchaseRestMapper;
 import com.posapi.infrastructure.security.SecurityContextHelper;
 import com.posapi.shared.dto.PageResponse;
 import jakarta.validation.Valid;
@@ -32,23 +31,19 @@ public class PurchaseController {
 
     private final PurchaseManagementPort purchaseManagementPort;
     private final SecurityContextHelper securityContextHelper;
-    private final PurchaseRestMapper mapper; // Inyectar el mapper
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PURCHASING')")
-    public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest restRequest) {
+    public ResponseEntity<PurchaseResponse> createPurchase(@Valid @RequestBody PurchaseRequest request) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        PurchaseRequest applicationRequest = mapper.toApplicationPurchaseRequest(restRequest);
-        PurchaseResponse createdPurchase = purchaseManagementPort.createPurchase(applicationRequest, currentUserId);
-        // Usar el mapper para convertir el DTO de aplicación (o dominio) a un DTO REST
-        return new ResponseEntity<>(mapper.toRestPurchaseResponse(createdPurchase), HttpStatus.CREATED);
+        PurchaseResponse createdPurchase = purchaseManagementPort.createPurchase(request, currentUserId);
+        return new ResponseEntity<>(createdPurchase, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PURCHASING', 'CASHIER')")
     public ResponseEntity<PurchaseResponse> getPurchaseById(@PathVariable UUID id) {
         return purchaseManagementPort.getPurchaseById(id)
-                .map(mapper::toRestPurchaseResponse) // Usar el mapper para la respuesta
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -60,17 +55,14 @@ public class PurchaseController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         PageResponse<PurchaseResponse> purchases = purchaseManagementPort.getAllPurchases(pageable);
-        return ResponseEntity.ok(mapper.toRestPageResponse(purchases)); // Usar el mapper para la paginación
+        return ResponseEntity.ok(purchases);
     }
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PURCHASING')")
-    public ResponseEntity<PurchaseResponse> updatePurchase(@PathVariable UUID id, @Valid @RequestBody PurchaseRequest restRequest) {
+    public ResponseEntity<PurchaseResponse> updatePurchase(@PathVariable UUID id, @Valid @RequestBody PurchaseRequest request) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        // Usar el mapper para convertir el DTO REST a un DTO de aplicación (o dominio)
-        PurchaseRequest applicationRequest = mapper.toApplicationPurchaseRequest(restRequest);
-        return purchaseManagementPort.updatePurchase(id, applicationRequest, currentUserId)
-                .map(mapper::toRestPurchaseResponse) // Usar el mapper para la respuesta
+        return purchaseManagementPort.updatePurchase(id, request, currentUserId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

@@ -1,6 +1,6 @@
 package com.posapi.infrastructure.adapter.input.rest.product.dto;
 
-import com.posapi.domain.model.product.ProductType; // Importar ProductType
+import com.posapi.domain.model.product.ProductType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -17,5 +17,5 @@ public record ProductRequest(
     @NotNull UUID categoryId,
     UUID taxId,
     UUID supplierId,
-    @NotNull ProductType productType // NUEVO: Atributo para el tipo de producto
+    @NotNull ProductType productType
 ) { }

@@ -4,11 +4,12 @@ import com.posapi.domain.model.product.Product;
 import com.posapi.domain.port.output.ProductRepository;
 import com.posapi.infrastructure.adapter.output.persistence.entity.product.ProductEntity;
 import com.posapi.infrastructure.adapter.output.persistence.mapper.product.ProductPersistenceMapper;
-import com.posapi.infrastructure.adapter.output.persistence.repository.product.ProductJpaRepository;
+import com.posapi.infrastructure.adapter.output.persistence.repository.InternalProductJpaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProductPersistenceAdapter implements ProductRepository {
 
-    private final ProductJpaRepository productJpaRepository;
+    private final InternalProductJpaRepository productJpaRepository;
     private final ProductPersistenceMapper productMapper;
 
     @Override
@@ -39,6 +40,11 @@ public class ProductPersistenceAdapter implements ProductRepository {
     }
 
     @Override
+    public Page<Product> findAll(Pageable pageable) {
+        return productJpaRepository.findAll(pageable).map(productMapper::toDomain);
+    }
+
+    @Override
     public void deleteById(UUID id) {
         productJpaRepository.deleteById(id);
     }
@@ -54,18 +60,7 @@ public class ProductPersistenceAdapter implements ProductRepository {
     }
 
     @Override
-    public Optional<Product> updateStock(UUID productId, BigDecimal quantityChange) {
-        return productJpaRepository.findById(productId)
-                .map(productEntity -> {
-                    Product product = productMapper.toDomain(productEntity);
-                    if (quantityChange.compareTo(BigDecimal.ZERO) > 0) {
-                        product.increaseStock(quantityChange, product.getUpdatedByUserId(), product.getUpdatedByUserRoleId());
-                    } else if (quantityChange.compareTo(BigDecimal.ZERO) < 0) {
-                        product.decreaseStock(quantityChange.abs(), product.getUpdatedByUserId(), product.getUpdatedByUserRoleId());
-                    }
-
-                    ProductEntity updatedProductEntity = productMapper.toEntity(product);
-                    return productMapper.toDomain(productJpaRepository.save(updatedProductEntity));
-                });
+    public List<Product> findAllById(List<UUID> ids) {
+        return productJpaRepository.findAllById(ids).stream().map(productMapper::toDomain).collect(Collectors.toList());
     }
 }
