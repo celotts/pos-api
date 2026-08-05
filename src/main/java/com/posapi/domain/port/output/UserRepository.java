@@ -21,7 +21,10 @@ public interface UserRepository {
     // NUEVOS MÉTODOS REQUERIDOS POR OTROS COMPONENTES:
     List<User> findAll();
     Page<User> findAll(Pageable pageable);
+
+    // Implementación para findAllById(Collection<UUID> ids)
     List<User> findAllById(Collection<UUID> ids);
 
+    // Eliminado: List<User> findAllById(Collection<UUID> ids);
     List<User> findAllById(Iterable<UUID> ids);
 }

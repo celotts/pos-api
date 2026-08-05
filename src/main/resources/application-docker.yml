@@ -6,15 +6,12 @@
 
 spring:
   datasource:
-    # Dentro de la red de Docker, nos conectamos al servicio 'pos_db' en lugar de 'localhost'.
     url: jdbc:postgresql://pos_db:5432/${POSTGRES_DB:pos_db}
     username: ${POSTGRES_USER:product}
     password: ${POSTGRES_PASSWORD:product123}
   jpa:
     hibernate:
-      # Para entornos de desarrollo/pruebas en Docker, permitimos que Hibernate actualice el esquema.
-      # Si se utiliza una herramienta de migración de base de datos como Flyway, esta debería encargarse de la creación del esquema.
-      ddl-auto: update
+      ddl-auto: create-drop
     show-sql: true
   flyway:
     enabled: false # Deshabilitar Flyway temporalmente para permitir que Hibernate gestione el esquema.
@@ -28,9 +25,9 @@ spring:
       chat:
         options:
           model: llama3.2 # Asegúrate de que este modelo esté descargado en tu Ollama local
-  mvc: # Configuración para resolver el problema de patrones de URL de Swagger UI
-    pathmatch:
-      matching-strategy: ant_path_matcher
+  # Removed: mvc: # Configuración para resolver el problema de patrones de URL de Swagger UI
+  # Removed:   pathmatch:
+  # Removed:     matching-strategy: ant_path_matcher
 
 springdoc: # <--- AÑADIDO: Deshabilitar Springdoc
   swagger-ui:

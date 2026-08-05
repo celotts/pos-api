@@ -1,12 +1,11 @@
-package com.posapi.infrastructure.adapter.input.rest.sale.SaleController;
+package com.posapi.infrastructure.adapter.input.rest.sale;
 
 import com.posapi.application.port.sale.SaleMagnamentPort;
-import com.posapi.domain.model.sale.Sale;
+import com.posapi.domain.model.user.User;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleRequest;
 import com.posapi.infrastructure.adapter.input.rest.sale.dto.SaleResponse;
 import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemRequest;
-import com.posapi.infrastructure.adapter.input.rest.saleItem.dto.SaleItemResponse;
-import com.posapi.infrastructure.adapter.input.rest.sale.mapper.SaleRestMapper;
+import com.posapi.infrastructure.security.SecurityContextHelper;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,7 +23,7 @@ import java.util.UUID;
 public class SaleController {
 
     private final SaleMagnamentPort saleMagnamentPort;
-    private final SaleRestMapper saleRestMapper;
+    private final SecurityContextHelper securityContextHelper;
 
     @PostMapping
     public ResponseEntity<SaleResponse> createSale(@Valid @RequestBody SaleRequest request) {
@@ -52,7 +51,8 @@ public class SaleController {
 
     @PutMapping("/{id}")
     public ResponseEntity<SaleResponse> updateSale(@PathVariable UUID id, @Valid @RequestBody SaleRequest request) {
-        SaleResponse response = saleMagnamentPort.updateSale(id, request);
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        SaleResponse response = saleMagnamentPort.updateSale(id, request, currentUser.getId());
         return ResponseEntity.ok(response);
     }
 
@@ -70,7 +70,8 @@ public class SaleController {
 
     @PutMapping("/{saleId}/items/{itemId}")
     public ResponseEntity<SaleResponse> updateSaleItem(@PathVariable UUID saleId, @PathVariable UUID itemId, @Valid @RequestBody SaleItemRequest restItemRequest) {
-        SaleResponse response = saleMagnamentPort.updateSaleItem(saleId, itemId, restItemRequest);
+        User currentUser = securityContextHelper.getCurrentUserOrThrow();
+        SaleResponse response = saleMagnamentPort.updateSaleItem(saleId, itemId, restItemRequest, currentUser.getId());
         return ResponseEntity.ok(response);
     }
 

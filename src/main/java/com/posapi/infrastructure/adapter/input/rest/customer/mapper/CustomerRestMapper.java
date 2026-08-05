@@ -3,47 +3,19 @@ package com.posapi.infrastructure.adapter.input.rest.customer.mapper;
 import com.posapi.domain.model.customer.Customer;
 import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerRequest;
 import com.posapi.infrastructure.adapter.input.rest.customer.dto.CustomerResponse;
-import org.springframework.stereotype.Component;
+import com.posapi.infrastructure.adapter.input.rest.mapper.AuditingMapperConfig;
+import com.posapi.infrastructure.adapter.input.rest.mapper.IgnoreAuditingOnCreate;
+import org.mapstruct.Mapper;
 
-@Component // AÑADIDO: Para que Spring la detecte como un bean
-public class CustomerRestMapper {
+import java.util.List;
 
-    public Customer toDomain(CustomerRequest request) {
-        if (request == null) {
-            return null;
-        }
-        return Customer.builder()
-                .fullName(request.fullName())
-                .email(request.email())
-                .phoneNumber(request.phoneNumber())
-                .address(request.address())
-                .rfc(request.rfc())
-                .build();
-    }
+@Mapper(componentModel = "spring", config = AuditingMapperConfig.class)
+public interface CustomerRestMapper {
 
-    public CustomerResponse toResponse(Customer customer, String createdByName, String updatedByName, String deletedByName) {
-        if (customer == null) {
-            return null;
-        }
-        return new CustomerResponse(
-                customer.getId(),
-                customer.getFullName(),
-                customer.getEmail(),
-                customer.getPhoneNumber(),
-                customer.getAddress(),
-                customer.getRfc(),
-                customer.getCreatedAt(),
-                customer.getUpdatedAt(),
-                customer.getDeletedAt(),
-                customer.getCreatedByUserId(),
-                customer.getUpdatedByUserId(),
-                customer.getDeletedByUserId(),
-                customer.getCreatedByUserRoleId(),
-                customer.getUpdatedByUserRoleId(),
-                customer.getDeletedByUserRoleId(),
-                createdByName,
-                updatedByName,
-                deletedByName
-        );
-    }
+    @IgnoreAuditingOnCreate
+    Customer toDomain(CustomerRequest request);
+
+    CustomerResponse toResponse(Customer customer);
+
+    List<CustomerResponse> toResponseList(List<Customer> customers);
 }

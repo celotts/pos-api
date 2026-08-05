@@ -1,48 +1,23 @@
 package com.posapi.infrastructure.adapter.input.rest.cashaccount.mapper;
 
 import com.posapi.domain.model.cashaccount.CashAccount;
-
 import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountRequest;
 import com.posapi.infrastructure.adapter.input.rest.cashaccount.dto.CashAccountResponse;
-import org.springframework.stereotype.Component;
-import java.util.UUID;
+import com.posapi.infrastructure.adapter.input.rest.mapper.AuditingMapperConfig;
+import com.posapi.infrastructure.adapter.input.rest.mapper.IgnoreAuditingOnCreate;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
-@Component
-public class CashAccountRestMapper {
+import java.util.List;
 
-    /**
-     * Convierte la petición externa (HTTP) al modelo de negocio puro (Dominio).
-     */
-    public CashAccount toDomain(CashAccountRequest request, UUID currentUserId, UUID currentUserRoleId) {
-        if (request == null) return null;
+@Mapper(componentModel = "spring", config = AuditingMapperConfig.class)
+public interface CashAccountRestMapper {
 
-        // 💡 Ajustado para cumplir exactamente con la firma de 6 parámetros de tu dominio
-        return CashAccount.createNew(
-                request.name(),
-                request.accountType(), // CORREGIDO: Ya es un CashAccountType, no necesita valueOf ni toUpperCase
-                request.initialBalance(), // CORREGIDO: Usar initialBalance del request
-                request.currency(),
-                currentUserId,
-                currentUserRoleId
-        );
-    }
+    @IgnoreAuditingOnCreate
+    @Mapping(target = "currentBalance", source = "initialBalance")
+    CashAccount toDomain(CashAccountRequest request);
 
-    /**
-     * Convierte el modelo de negocio (Dominio) a la respuesta que verá el cliente (HTTP).
-     */
-    public CashAccountResponse toResponse(
-            CashAccount cashAccount,
-            String createdByName,
-            String updatedByName,
-            String deletedByName) {
+    CashAccountResponse toResponse(CashAccount cashAccount);
 
-        if (cashAccount == null) return null;
-
-        return CashAccountResponse.fromDomain(
-                cashAccount,
-                createdByName,
-                updatedByName,
-                deletedByName
-        );
-    }
+    List<CashAccountResponse> toResponseList(List<CashAccount> cashAccounts);
 }

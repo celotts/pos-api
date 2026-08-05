@@ -11,7 +11,7 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
@@ -43,12 +43,14 @@ springdoc:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:dGhpc2lzYW5leGFtcGxlYmFzZTY0c2VjcmV0Zm9ySFRNQzI1Ng==}
+    secret: ${JWT_SECRET:dGhpc2lzYW5leG1wbGViYXM2NHNlY3JldGZvcSFRTUMyNTY=}
     expiration-in-ms: ${JWT_EXPIRATION:3600000} # 1 hora
   bootstrap:
     admin:
       email: ${ADMIN_EMAIL:admin@posapi.com}
       password: ${ADMIN_PASSWORD:SuperSecretPassword123!}
+      full-name: ${ADMIN_FULL_NAME:Admin User}     # <-- Agregado
+      address: ${ADMIN_ADDRESS:Bellavista, Queretaro} # <-- Agregado
 
 logging:
   level:

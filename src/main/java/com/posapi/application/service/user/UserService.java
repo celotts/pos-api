@@ -56,17 +56,21 @@ public class UserService implements UserManagementPort {
                         "Default USER role not found. Please run bootstrap."
                 ));
 
+        UUID currentUserId = securityContextHelper.getCurrentUserId();
+        UUID currentUserRoleId = securityContextHelper.getCurrentUserRoleId(); // Obtener el roleId
+
         // CORREGIDO: Pasar todos los argumentos requeridos por User.createNew()
         User newUser = User.createNew(
                 userRequest.email(),
                 passwordEncoder.encode(userRequest.password()),
                 userRequest.fullName(),
                 userRequest.address(),
-                userRequest.phone(),  // AÑADIDO
-                userRequest.phone2(), // AÑADIDO
-                userRole,             // Objeto Role
-                true,                 // isActive como boolean
-                securityContextHelper.getCurrentUserId() // Usar el ID del usuario actual si está disponible
+                userRequest.phone(),
+                userRequest.phone2(),
+                userRole,
+                true,
+                currentUserId,
+                currentUserRoleId // Añadido currentUserRoleId
         );
 
         User savedUser = userRepository.save(newUser);
@@ -118,13 +122,13 @@ public class UserService implements UserManagementPort {
     @Auditable(action = AuditAction.UPDATE, tableName = "users")
     public Optional<UserResponse> updateUser(UUID id, UserRequest userRequest) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
+        UUID currentUserRoleId = securityContextHelper.getCurrentUserRoleId(); // Obtener el roleId
 
         return userRepository.findById(id).map(existingUser -> {
             validateEmailOnUpdate(existingUser, userRequest);
             Role finalRole = validateRoleOnUpdate(existingUser, userRequest);
             String finalPassword = preparePasswordOnUpdate(existingUser, userRequest);
 
-            // CORREGIDO: Pasar todos los argumentos requeridos por User.builder()
             User updateData = User.builder()
                     .email(userRequest.email())
                     .fullName(userRequest.fullName())
@@ -133,7 +137,7 @@ public class UserService implements UserManagementPort {
                     .phone2(userRequest.phone2())
                     .isActive(userRequest.isActive() != null ? userRequest.isActive() : existingUser.getIsActive())
                     .build();
-            User userToUpdate = existingUser.updateWith(updateData, finalPassword, finalRole, currentUserId);
+            User userToUpdate = existingUser.updateWith(updateData, finalPassword, finalRole, currentUserId, currentUserRoleId); // Añadido currentUserRoleId
 
             User savedUser = userRepository.save(userToUpdate);
             return mapToUserResponse(savedUser);
@@ -145,11 +149,11 @@ public class UserService implements UserManagementPort {
     @Auditable(action = AuditAction.DELETE, tableName = "users")
     public void deleteUser(UUID id) {
         UUID currentUserId = securityContextHelper.getCurrentUserId();
-        UUID currentUserRoleId = securityContextHelper.getCurrentUserRoleId();
+        UUID currentUserRoleId = securityContextHelper.getCurrentUserRoleId(); // Obtener el roleId
 
         userRepository.findById(id).ifPresent(user -> {
             log.warn("Soft-deleting user with ID: {}", id);
-            user.markAsDeleted(currentUserId);
+            user.markAsDeleted(currentUserId, currentUserRoleId); // Añadido currentUserRoleId
             userRepository.save(user);
         });
     }

@@ -1,50 +1,23 @@
 package com.posapi.infrastructure.adapter.input.rest.cashaccount.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;// Asumiendo tu ruta de dominio
-import com.posapi.domain.model.cashaccount.CashAccount;
+import com.posapi.domain.model.cashaccount.CashAccountType;
+import com.posapi.infrastructure.adapter.input.rest.dto.BaseResponse;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.UUID;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record CashAccountResponse(
-        UUID id,
-        String name,
-        String accountType,
-        BigDecimal currentBalance,
-        String currency,
-        UUID createdByUserId,
-        UUID updatedByUserId,
-        UUID deletedByUserId,
-        Instant createdAt,
-        Instant updatedAt,
-        Instant deletedAt,
-        String createdByName,
-        String updatedByName,
-        String deletedByName
-) {
-    public static CashAccountResponse fromDomain(
-            CashAccount cashAccount,
-            String createdByName,
-            String updatedByName,
-            String deletedByName) {
-
-        return new CashAccountResponse(
-                cashAccount.getId(),
-                cashAccount.getName(),
-                cashAccount.getAccountType().name(), // Si en tu dominio es un Enum, usa .name() o .toString() aquí
-                cashAccount.getCurrentBalance(),
-                cashAccount.getCurrency(),
-                cashAccount.getCreatedByUserId(),
-                cashAccount.getUpdatedByUserId(),
-                cashAccount.getDeletedByUserId(),
-                cashAccount.getCreatedAt(),
-                cashAccount.getUpdatedAt(),
-                cashAccount.getDeletedAt(),
-                createdByName,
-                updatedByName,
-                deletedByName
-        );
-    }
+@Data
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
+public class CashAccountResponse extends BaseResponse {
+    private String name;
+    private CashAccountType accountType;
+    private BigDecimal currentBalance;
+    private String currency;
 }

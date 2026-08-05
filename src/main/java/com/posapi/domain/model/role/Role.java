@@ -17,7 +17,7 @@ import java.util.UUID;
 @Table(name = "roles") // Mapear a la tabla 'roles'
 public class Role {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @Column(name = "id") // Added this line for explicit mapping
     private UUID id;
 
     @Column(nullable = false, unique = true)

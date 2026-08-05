@@ -1,88 +1,55 @@
 package com.posapi.domain.model.category;
 
-import jakarta.persistence.Column; // CORREGIDO
-import jakarta.persistence.Entity; // CORREGIDO
-import jakarta.persistence.GeneratedValue; // CORREGIDO
-import jakarta.persistence.GenerationType; // CORREGIDO
-import jakarta.persistence.Id; // CORREGIDO
-import jakarta.persistence.Table; // CORREGIDO
-import lombok.Builder;
+import com.posapi.domain.model.base.BaseModel;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor; // Añadir NoArgsConstructor
-import lombok.AllArgsConstructor; // Añadir AllArgsConstructor
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.util.UUID;
 
 @Data
-@Builder(toBuilder = true) // Añadir toBuilder para facilitar actualizaciones
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity // Indicar que es una entidad JPA
-@Table(name = "categories") // Mapear a la tabla 'categories'
-public class Category {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO) // Generación automática de UUID
-    private UUID id;
+@Entity
+@Table(name = "categories")
+public class Category extends BaseModel {
 
-    @Column(nullable = false, unique = true) // 'name' es NOT NULL y UNIQUE
+    @Column(nullable = false, unique = true)
     private String name;
 
-    @Column(name = "created_at")
-    private Instant createdAt;
-
-    @Column(name = "updated_at")
-    private Instant updatedAt;
-
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
-
-    @Column(name = "created_by_user_id") // Corregido para coincidir con SQL
-    private UUID createdByUserId;
-
-    @Column(name = "updated_by_user_id") // Corregido para coincidir con SQL
-    private UUID updatedByUserId;
-
-    @Column(name = "deleted_by_user_id") // Añadido para consistencia con auditoría
-    private UUID deletedByUserId;
-
-    @Column(name = "created_by_role_id") // Añadido para auditoría de rol
-    private UUID createdByRoleId;
-
-    @Column(name = "updated_by_role_id") // Añadido para auditoría de rol
-    private UUID updatedByRoleId;
-
-    @Column(name = "deleted_by_role_id") // Añadido para auditoría de rol
-    private UUID deletedByRoleId;
-
-    // Método estático para crear una nueva categoría
     public static Category createNew(String name, UUID currentUserId, UUID currentUserRoleId) {
-        return Category.builder()
-                .id(UUID.randomUUID())
-                .name(name)
-                .createdAt(Instant.now())
-                .createdByUserId(currentUserId)
-                .createdByRoleId(currentUserRoleId)
-                .build();
+        Category category = new Category();
+        category.setId(UUID.randomUUID());
+        category.setName(name);
+        category.setCreatedAt(Instant.now());
+        category.setCreatedByUserId(currentUserId);
+        category.setCreatedByUserRoleId(currentUserRoleId);
+        return category;
     }
 
-    // Método de dominio para actualizar el nombre de la categoría
     public void updateName(String newName, UUID updatedByUserId, UUID updatedByRoleId) {
         if (newName == null || newName.isBlank()) {
             throw new IllegalArgumentException("Category name cannot be null or empty.");
         }
         this.name = newName;
-        this.updatedAt = Instant.now();
-        this.updatedByUserId = updatedByUserId;
-        this.updatedByRoleId = updatedByRoleId;
+        this.setUpdatedAt(Instant.now());
+        this.setUpdatedByUserId(updatedByUserId);
+        this.setUpdatedByUserRoleId(updatedByRoleId);
     }
 
-    // Método de dominio para marcar la categoría como eliminada (borrado lógico)
     public void markAsDeleted(UUID deletedByUserId, UUID deletedByRoleId) {
-        if (this.deletedAt == null) { // Solo si no ha sido eliminada lógicamente antes
-            this.deletedAt = Instant.now();
-            this.deletedByUserId = deletedByUserId;
-            this.deletedByRoleId = deletedByRoleId;
+        if (this.getDeletedAt() == null) {
+            this.setDeletedAt(Instant.now());
+            this.setDeletedByUserId(deletedByUserId);
+            this.setDeletedByUserRoleId(deletedByRoleId);
         }
     }
 }

@@ -19,6 +19,7 @@ import java.util.UUID;
 public class UserEntity {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(nullable = false, unique = true)
@@ -29,6 +30,17 @@ public class UserEntity {
 
     @Column(name = "full_name", nullable = false)
     private String fullName;
+
+    // --- CAMPOS FALTANTES AGREGADOS ---
+    @Column(nullable = false)
+    private String address;
+
+    @Column(nullable = false)
+    private String phone;
+
+    @Column(name = "phone2", nullable = false)
+    private String phone2;
+    // ----------------------------------
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
@@ -54,4 +66,13 @@ public class UserEntity {
 
     @Column(name = "deleted_by_user_id")
     private UUID deletedByUserId;
+
+    @Column(name = "created_by_role_id")
+    private UUID createdByRoleId;
+
+    @Column(name = "updated_by_role_id")
+    private UUID updatedByRoleId;
+
+    @Column(name = "deleted_by_role_id")
+    private UUID deletedByRoleId;
 }

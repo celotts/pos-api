@@ -2,12 +2,6 @@ package com.posapi.shared.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-/**
- * Contrato unificado e inmutable para respuestas exitosas de la API.
- * Usando Java 21 Records para garantizar inmutabilidad nativa sin Lombok.
- *
- * @param <T> el tipo de datos envuelto en la respuesta
- */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ApiResponse<T>(
         boolean success,
