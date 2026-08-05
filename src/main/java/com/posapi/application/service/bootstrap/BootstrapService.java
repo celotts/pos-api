@@ -26,7 +26,6 @@ public class BootstrapService implements CommandLineRunner {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // Rutas corregidas para coincidir con app.bootstrap.admin en application.yml
     @Value("${app.bootstrap.admin.email}")
     private String adminEmail;
 
@@ -84,7 +83,6 @@ public class BootstrapService implements CommandLineRunner {
             // Actualizar si el rol ha cambiado
             if (!adminRole.getId().equals(user.getRole().getId())) {
                 user.setRole(adminRole);
-                // Removed userRepository.save(user); as changes to managed entities are flushed automatically
                 log.info("Admin user role updated to 'ADMIN'.");
             }
             log.info("Admin user already exists.");
@@ -95,8 +93,8 @@ public class BootstrapService implements CommandLineRunner {
                     .password(passwordEncoder.encode(adminPassword))
                     .fullName(adminFullName)
                     .address(adminAddress)
-                    .phone(adminPhone) // Added phone
-                    .phone2(adminPhone2) // Added phone2
+                    .phone(adminPhone)
+                    .phone2(adminPhone2)
                     .isActive(true)
                     .role(adminRole)
                     .createdAt(Instant.now())

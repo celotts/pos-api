@@ -31,7 +31,6 @@ public class UserEntity {
     @Column(name = "full_name", nullable = false)
     private String fullName;
 
-    // --- CAMPOS FALTANTES AGREGADOS ---
     @Column(nullable = false)
     private String address;
 
@@ -40,7 +39,6 @@ public class UserEntity {
 
     @Column(name = "phone2", nullable = false)
     private String phone2;
-    // ----------------------------------
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;

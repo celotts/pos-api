@@ -29,7 +29,7 @@ public class ProductController {
     private final ProductManagementPort productManagementPort;
     private final ProductRestMapper productRestMapper;
     private final UserRepository userRepository;
-    private final AIService aiService; // Inyectar AIService
+    private final AIService aiService;
 
     @PostMapping
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
@@ -108,7 +108,6 @@ public class ProductController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // NUEVO ENDPOINT: Generar descripción de producto con IA
     @PostMapping("/generate-description")
     public ResponseEntity<String> generateProductDescription(@Valid @RequestBody GenerateDescriptionRequest request) {
         String description = aiService.generateProductDescription(request.productName(), request.characteristics());

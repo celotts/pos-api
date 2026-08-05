@@ -4,7 +4,7 @@ import com.posapi.application.port.user.UserManagementPort;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserRequest;
 import com.posapi.infrastructure.adapter.input.rest.user.dto.UserResponse;
 import com.posapi.infrastructure.adapter.input.rest.user.mapper.UserRestMapper;
-import com.posapi.shared.dto.PageResponse; // Importar PageResponse
+import com.posapi.shared.dto.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -61,12 +61,11 @@ public class UserController {
     // 🛡️ Requiere rol de ADMIN para ver todos los usuarios
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<PageResponse<UserResponse>> getAllUsers( // CORREGIDO: Retorna PageResponse
+    public ResponseEntity<PageResponse<UserResponse>> getAllUsers(
                                                                    @RequestParam(defaultValue = "0") int page,
                                                                    @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        // CORREGIDO: userManagementPort.getAllUsers ya devuelve PageResponse<UserResponse>
-        PageResponse<UserResponse> users = userManagementPort.getAllUsers(pageable); // CORREGIDO: Tipo de variable
+        PageResponse<UserResponse> users = userManagementPort.getAllUsers(pageable);
         return ResponseEntity.ok(users);
     }
 
